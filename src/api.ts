@@ -15,4 +15,5 @@ export const api={
   state:(token:string)=>request<DemoState>('/state','GET',token),
   turn:(token:string,text:string)=>request<{turnId:string;state:string}>('/turns','POST',token,{requestKey:crypto.randomUUID(),text}),
   control:(token:string,action:'pause'|'resume'|'takeover'|'release')=>request<{paused:boolean;humanTakeover:boolean}>('/control','POST',token,{action}),
+  personalAsk:(token:string,brief:string,question:string,history:{question:string;answer:string}[])=>request<{answer:string;questionsRemaining:number;actionsAvailable:false}>('/personal/ask','POST',token,{brief,question,history}),
 };
