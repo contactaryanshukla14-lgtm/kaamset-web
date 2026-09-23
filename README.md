@@ -24,3 +24,5 @@ Copy `.env.example` to `.env.local` only if using another API origin. The API mu
 5. Ask to move the appointment one hour later and check that the event ID is unchanged.
 
 The businesses and customers are fictional. Calendar and Sheet actions use dedicated demo resources. Payment integration is not connected. Provider actions are labelled confirmed only after readback; unresolved writes remain pending verification.
+
+More detail: [pitch and demo](docs/PITCH_AND_DEMO.md), [architecture](docs/ARCHITECTURE.md), [verification](docs/TEST_RESULTS.md), and [work provenance](docs/PROVENANCE.md).
