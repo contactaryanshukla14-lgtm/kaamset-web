@@ -32,7 +32,9 @@ export default function Personal(){
     if(!/\.(md|markdown|txt)$/i.test(file.name)||file.size>12000){
       setError('Choose a Markdown or text file smaller than 12 KB.');return;
     }
-    const content=await file.text();
+    let content:string;
+    try{content=await file.text();}
+    catch{setError('Could not read the selected file. Please try again.');return;}
     if(content.trim().length<20||content.length>12000){setError('The brief must contain 20–12,000 characters.');return;}
     setMarkdown(content);setFileName(file.name);setMode('markdown');
   }
