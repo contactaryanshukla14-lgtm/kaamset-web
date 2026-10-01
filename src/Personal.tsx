@@ -5,10 +5,10 @@ import {api} from './api';
 type Exchange={question:string;answer:string};
 type Mode='questions'|'markdown';
 
-export default function Personal(){
+export default function Personal({initialIdea=''}:{initialIdea?:string}){
   const [mode,setMode]=useState<Mode>('questions');
   const [name,setName]=useState('');
-  const [service,setService]=useState('');
+  const [service,setService]=useState(initialIdea);
   const [area,setArea]=useState('');
   const [price,setPrice]=useState('');
   const [policy,setPolicy]=useState('');
