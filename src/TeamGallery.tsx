@@ -1,0 +1,12 @@
+import {useState} from 'react';
+import {ArrowRight,ShieldCheck} from 'lucide-react';
+import PixelTeammate from './PixelTeammate';
+import {teammates as crew} from './teammates';
+export default function TeamGallery({onAdvisor,onDemo}:{onAdvisor:(idea:string)=>void;onDemo:()=>void}){
+  const [idea,setIdea]=useState('');
+  return <section className="crew-section" id="crew"><div className="crew-heading"><div className="eyebrow dark">YOUR BUSINESS HAS A TEAM NOW</div><h2>Kaam batao.<br/><span>Teammate banao.</span></h2><p>Describe a job in Hindi, Hinglish, Marathi or English. Review the playbook, test the teammate and see its saved work.</p></div>
+    <div className="spawn-console"><div className="spawn-copy"><span className="console-kicker">START WITH ONE BUSINESS PROBLEM</span><label htmlFor="agent-idea">What work keeps piling up?</label><div className="spawn-input"><input id="agent-idea" value={idea} maxLength={1000} onChange={e=>setIdea(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&idea.trim().length>=10)onAdvisor(idea)}} placeholder="Mere Instagram enquiries aur content sambhalo"/><button type="button" disabled={idea.trim().length<10} onClick={()=>onAdvisor(idea)}>Build <ArrowRight size={16}/></button></div><small>Your job is checked before a teammate can act.</small></div><div className="spawn-result"><PixelTeammate id="riya"/><div><span>MEET RIYA</span><strong>Your Instagram studio</strong><p>Start with content drafts. Connected-account posting needs your exact approval.</p><button onClick={()=>onAdvisor(crew[0].job)}>Give Riya a job <ArrowRight size={14}/></button></div></div></div>
+    <div className="crew-grid">{crew.map((member,i)=><article className={`crew-card crew-${member.id}`} key={member.id}><div className="crew-avatar"><PixelTeammate id={member.id}/></div><div className="crew-card-body"><div className="crew-number">{String(i+1).padStart(2,'0')} <span>READY JOB TEMPLATE</span></div><h3>{member.name}</h3><strong>{member.role}</strong><p>{member.text}</p><button className="text-button" onClick={()=>onAdvisor(member.job)}>Choose this job <ArrowRight size={13}/></button></div></article>)}</div>
+    <div className="crew-reality"><ShieldCheck size={19}/><div><strong>Ready teammates today. More specialists ahead.</strong><p>The builder saves each job and its rules. Try the fictional Calendar + Sheet journey to see verified external actions.</p></div><button onClick={onDemo}>Try live booking <ArrowRight size={16}/></button></div>
+  </section>;
+}

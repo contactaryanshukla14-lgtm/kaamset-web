@@ -1,0 +1,395 @@
+<Rive version="1" kind="fragment"><Artboard defaultStateMachineId="0:7" width="124" height="124" name="vijay" id="0:2">
+      <Shape x="102" y="18" name="status-star" id="0:14">
+       <Rectangle originX="0.5" originY="0.5" width="8" height="8" name="Path"/>
+       <Fill name="Fill"><SolidColor colorValue="FFFFD266" name="Color"/></Fill>
+    </Shape><Shape x="30" y="12" name="pixel-1-2" id="0:21">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="38" y="12" name="pixel-1-3" id="0:22">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="46" y="12" name="pixel-1-4" id="0:23">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="54" y="12" name="pixel-1-5" id="0:24">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="62" y="12" name="pixel-1-6" id="0:25">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="70" y="12" name="pixel-1-7" id="0:26">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="78" y="12" name="pixel-1-8" id="0:27">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="86" y="12" name="pixel-1-9" id="0:28">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="20" name="pixel-2-1" id="0:29">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="20" name="pixel-2-2" id="0:30">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="20" name="pixel-2-3" id="0:31">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="20" name="pixel-2-4" id="0:32">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="20" name="pixel-2-5" id="0:33">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="20" name="pixel-2-6" id="0:34">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="20" name="pixel-2-7" id="0:35">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="78" y="20" name="pixel-2-8" id="0:36">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="20" name="pixel-2-9" id="0:37">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="20" name="pixel-2-10" id="0:38">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="14" y="28" name="pixel-3-0" id="0:39">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="28" name="pixel-3-1" id="0:40">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="30" y="28" name="pixel-3-2" id="0:41">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="28" name="pixel-3-3" id="0:42">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="28" name="pixel-3-4" id="0:43">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="28" name="pixel-3-5" id="0:44">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="28" name="pixel-3-6" id="0:45">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="28" name="pixel-3-7" id="0:46">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="78" y="28" name="pixel-3-8" id="0:47">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="28" name="pixel-3-9" id="0:48">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="28" name="pixel-3-10" id="0:49">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="102" y="28" name="pixel-3-11" id="0:50">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="14" y="36" name="pixel-4-0" id="0:51">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="36" name="pixel-4-1" id="0:52">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="30" y="36" name="pixel-4-2" id="0:53">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="36" name="pixel-4-3" id="0:54">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="36" name="pixel-4-4" id="0:55">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="36" name="pixel-4-5" id="0:56">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="36" name="pixel-4-6" id="0:57">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="36" name="pixel-4-7" id="0:58">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="78" y="36" name="pixel-4-8" id="0:59">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="36" name="pixel-4-9" id="0:60">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="36" name="pixel-4-10" id="0:61">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF34394D" name="Color"/></Fill>
+            </Shape><Shape x="102" y="36" name="pixel-4-11" id="0:62">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="14" y="44" name="pixel-5-0" id="0:63">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="44" name="pixel-5-1" id="0:64">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="30" y="44" name="pixel-5-2" id="0:65">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="44" name="pixel-5-3" id="0:66">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="46" y="44" name="pixel-5-4" id="0:67">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="44" name="pixel-5-5" id="0:68">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="44" name="pixel-5-6" id="0:69">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="44" name="pixel-5-7" id="0:70">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="78" y="44" name="pixel-5-8" id="0:71">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="44" name="pixel-5-9" id="0:72">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="44" name="pixel-5-10" id="0:73">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="102" y="44" name="pixel-5-11" id="0:74">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="14" y="52" name="pixel-6-0" id="0:75">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="52" name="pixel-6-1" id="0:76">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="30" y="52" name="pixel-6-2" id="0:77">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="52" name="pixel-6-3" id="0:78">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="52" name="pixel-6-4" id="0:79">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="52" name="pixel-6-5" id="0:80">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="52" name="pixel-6-6" id="0:81">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="52" name="pixel-6-7" id="0:82">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="78" y="52" name="pixel-6-8" id="0:83">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="52" name="pixel-6-9" id="0:84">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="52" name="pixel-6-10" id="0:85">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="102" y="52" name="pixel-6-11" id="0:86">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="14" y="60" name="pixel-7-0" id="0:87">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="60" name="pixel-7-1" id="0:88">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="30" y="60" name="pixel-7-2" id="0:89">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="38" y="60" name="pixel-7-3" id="0:90">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="60" name="pixel-7-4" id="0:91">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="54" y="60" name="pixel-7-5" id="0:92">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="62" y="60" name="pixel-7-6" id="0:93">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="70" y="60" name="pixel-7-7" id="0:94">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="78" y="60" name="pixel-7-8" id="0:95">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="60" name="pixel-7-9" id="0:96">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="94" y="60" name="pixel-7-10" id="0:97">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="102" y="60" name="pixel-7-11" id="0:98">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="68" name="pixel-8-1" id="0:99">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="68" name="pixel-8-2" id="0:100">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="38" y="68" name="pixel-8-3" id="0:101">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="46" y="68" name="pixel-8-4" id="0:102">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="54" y="68" name="pixel-8-5" id="0:103">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="62" y="68" name="pixel-8-6" id="0:104">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="70" y="68" name="pixel-8-7" id="0:105">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="78" y="68" name="pixel-8-8" id="0:106">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFF0BC8D" name="Color"/></Fill>
+            </Shape><Shape x="86" y="68" name="pixel-8-9" id="0:107">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="94" y="68" name="pixel-8-10" id="0:108">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="76" name="pixel-9-2" id="0:109">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="38" y="76" name="pixel-9-3" id="0:110">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="46" y="76" name="pixel-9-4" id="0:111">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF36D8C0" name="Color"/></Fill>
+            </Shape><Shape x="54" y="76" name="pixel-9-5" id="0:112">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="62" y="76" name="pixel-9-6" id="0:113">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="70" y="76" name="pixel-9-7" id="0:114">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="78" y="76" name="pixel-9-8" id="0:115">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="84" name="pixel-10-1" id="0:116">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="84" name="pixel-10-2" id="0:117">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="38" y="84" name="pixel-10-3" id="0:118">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="46" y="84" name="pixel-10-4" id="0:119">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
+            </Shape><Shape x="54" y="84" name="pixel-10-5" id="0:120">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
+            </Shape><Shape x="62" y="84" name="pixel-10-6" id="0:121">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
+            </Shape><Shape x="70" y="84" name="pixel-10-7" id="0:122">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="78" y="84" name="pixel-10-8" id="0:123">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="86" y="84" name="pixel-10-9" id="0:124">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="94" y="84" name="pixel-10-10" id="0:125">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="22" y="92" name="pixel-11-1" id="0:126">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="92" name="pixel-11-2" id="0:127">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="38" y="92" name="pixel-11-3" id="0:128">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="46" y="92" name="pixel-11-4" id="0:129">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
+            </Shape><Shape x="54" y="92" name="pixel-11-5" id="0:130">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFD266" name="Color"/></Fill>
+            </Shape><Shape x="62" y="92" name="pixel-11-6" id="0:131">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FFFFFFFF" name="Color"/></Fill>
+            </Shape><Shape x="70" y="92" name="pixel-11-7" id="0:132">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="78" y="92" name="pixel-11-8" id="0:133">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="86" y="92" name="pixel-11-9" id="0:134">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="94" y="92" name="pixel-11-10" id="0:135">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="100" name="pixel-12-2" id="0:136">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="38" y="100" name="pixel-12-3" id="0:137">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="46" y="100" name="pixel-12-4" id="0:138">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="54" y="100" name="pixel-12-5" id="0:139">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="62" y="100" name="pixel-12-6" id="0:140">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="70" y="100" name="pixel-12-7" id="0:141">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="78" y="100" name="pixel-12-8" id="0:142">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF134D9E" name="Color"/></Fill>
+            </Shape><Shape x="86" y="100" name="pixel-12-9" id="0:143">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="30" y="108" name="pixel-13-2" id="0:144">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="38" y="108" name="pixel-13-3" id="0:145">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="46" y="108" name="pixel-13-4" id="0:146">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="70" y="108" name="pixel-13-7" id="0:147">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="78" y="108" name="pixel-13-8" id="0:148">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape><Shape x="86" y="108" name="pixel-13-9" id="0:149">
+              <Rectangle width="8" height="8" name="Path"/>
+              <Fill name="Fill"><SolidColor colorValue="FF08275A" name="Color"/></Fill>
+            </Shape>
+      <StateMachine name="Idle" id="0:7"><StateMachineLayer name="Loop" id="0:8"><AnyState x="200" y="-120"/><ExitState x="400" y="-120"/><EntryState><StateTransition stateToId="0:12"/></EntryState><AnimationState x="200" animationId="0:6" id="0:12"/></StateMachineLayer></StateMachine>
+      <LinearAnimation loopValue="1" duration="90" name="Sparkle" id="0:6"><KeyedObject objectId="0:14"><KeyedProperty propertyKey="15"><KeyFrameDouble value="0" interpolationType="1"/><KeyFrameDouble value="6.2831855" interpolationType="1" frame="90"/></KeyedProperty></KeyedObject></LinearAnimation>
+      </Artboard></Rive>

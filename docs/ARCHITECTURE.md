@@ -33,8 +33,14 @@ The kill switch disables guest access. Migration 047 is additive. To roll back c
 | Fixed Sheet booking record and readback | Implemented; production journey verification pending |
 | Appointment reschedule and cancellation | Implemented; production journey verification pending |
 | Pause and human takeover | Implemented |
+| Personal brief advisor | Implemented; deployment and live verification pending |
+| Public guest account connection | Not enabled; requires verified business ownership |
 | Support cases and owner decisions | Planned |
 | Scheduled follow-ups | Planned |
 | Paytm payment integration | Not connected |
 
 This table is updated after each live verification. A configured connection alone does not prove a completed provider action.
+
+## Limited personal guest mode
+
+A visitor can upload a short Markdown brief or answer guided business questions, then ask up to eight read-only advisor questions. The browser sends the brief with each question; the backend does not retain the brief or question. This path uses the same opaque guest token and global quota, calls Gemini directly, and cannot reach Composio tools, bookings, messaging, or client workspaces. Real account connection needs verified ownership, scoped consent, and cleanup controls before it can be enabled for public guests.
