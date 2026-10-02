@@ -456,6 +456,7 @@ export type WorkspaceState = {
       output: string;
       sources: string[];
       nextStep: string;
+      copyItems?: {label:string;text:string}[];
     };
   }[];
   connections: {

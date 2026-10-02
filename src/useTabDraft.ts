@@ -2,10 +2,18 @@ import {useEffect,useState} from 'react';
 
 const prefix='kaamset_tab_draft:';
 const lifetime=24*60*60*1000;
-function read<T>(key:string,initial:T):T{
+function read<T extends object>(key:string,initial:T):T{
   if(!key)return initial;
   try{const stored=JSON.parse(sessionStorage.getItem(prefix+key)||'null');
-    return stored&&typeof stored.savedAt==='number'&&Date.now()-stored.savedAt<lifetime&&stored.value ? {...initial,...stored.value}:initial;
+    if(!stored||typeof stored.savedAt!=='number'||stored.savedAt>Date.now()+60000||Date.now()-stored.savedAt>=lifetime||!stored.value||typeof stored.value!=='object')return initial;
+    const restored={...initial};
+    for(const [field,expected] of Object.entries(initial)){
+      const value=stored.value[field];
+      if(Array.isArray(expected)){
+        if(field==='lines'&&Array.isArray(value)&&value.length<=20&&value.every(line=>line&&typeof line.offerId==='string'&&line.offerId.length<=100&&Number.isInteger(line.quantity)&&line.quantity>=0&&line.quantity<=1000))Object.assign(restored,{[field]:value});
+      }else if(typeof value===typeof expected&&(typeof value!=='string'||value.length<=6000))Object.assign(restored,{[field]:value});
+    }
+    return restored;
   }catch{return initial}
 }
 

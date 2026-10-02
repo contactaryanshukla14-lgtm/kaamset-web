@@ -1902,6 +1902,41 @@
 @keyframes opsWorking { from{transform:translateX(-100%)}to{transform:translateX(315%)} }
 @media(prefers-reduced-motion:reduce){.office-team-detail,.ops-progress i{animation:none!important}.ops-progress i{width:100%}}
 
+/* Named teams, readable deliverables and motion driven by real cloud work. */
+.team-identity-strip { margin:20px 0; padding:18px 20px; background:#fff; border:1px solid #dce9f1; border-radius:11px; }
+.team-identity-top,.team-identity-bottom { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.team-identity-top > span:last-child,.team-identity-bottom > span { display:inline-flex; gap:6px; align-items:center; font-size:11px; color:#5a768a; }
+.team-crew-name { font-size:13px; font-weight:750; letter-spacing:.03em; color:#005b85; }
+.team-role-row { display:flex; flex-wrap:wrap; gap:18px 26px; margin:18px 0; }
+.team-role-person { display:flex; align-items:center; gap:10px; min-width:100px; }
+.team-role-person .pixel-avatar { width:29px; height:38px; }
+.team-role-person > div:last-child { display:grid; gap:5px; }
+.team-role-person strong { font-size:12px; color:#143b56; }
+.team-role-person small { font-size:10px; color:#5d7688; }
+.team-identity-bottom { justify-content:flex-start; gap:15px; border-top:1px solid #e9f0f5; padding-top:12px; }
+.team-identity-bottom .team-attention { color:#996123; }
+.team-job-stages { display:flex; flex-wrap:wrap; gap:12px; list-style:none; padding:0; margin:13px 0 0; }
+.team-job-stages li { display:inline-flex; align-items:center; gap:5px; font-size:10px; color:#758b98; }
+.team-job-stages li i { width:6px; height:6px; background:#b6cbd5; }
+.team-job-stages .is-done { color:#287961; }
+.team-job-stages .is-working { color:#007bb0; }
+.team-job-stages .is-working i { background:#00ace0; animation:pixelSignal 1300ms steps(3,end) infinite; }
+.copy-items { margin:20px 0; }
+.copy-items-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:7px; margin-bottom:12px; }
+.copy-items-heading h4 { margin:0!important; font-size:16px!important; }
+.copy-items-heading > span { color:#5d7b8d; font-size:11px; }
+.copy-item { border:1px solid #b7dcec; background:#f6fcff; border-radius:10px; padding:16px 18px; margin:10px 0; animation:deskCardIn 220ms ease both; }
+.copy-item > div { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:13px; }
+.copy-item strong { font-size:12px; color:#005c81; }
+.office-root .copy-item p { white-space:pre-wrap; font-size:14px!important; line-height:1.8; color:#26495f; margin:0; user-select:text; }
+.copy-feedback { color:#258568; font-size:11px; display:block; margin:10px 0; }
+.office-status i { animation:none; }
+.office-status.status-working i,.office-status.status-queued i { animation:pixelSignal 1600ms steps(3,end) infinite; }
+.ready-team-gallery .office-job-card { animation:deskCardIn 200ms ease both; }
+.ready-team-gallery .office-job-card .ready-crew-name { display:block; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#46798f; margin-bottom:8px; font-weight:700; }
+@keyframes pixelSignal { 0%,100%{opacity:.45}50%{opacity:1} }
+@media(max-width:680px){.team-identity-strip{padding:16px}.team-role-row{gap:16px 20px}.copy-item{padding:15px}.copy-item > div{align-items:flex-start}.copy-items-heading{align-items:flex-start;flex-direction:column}.team-job-stages{gap:8px}.team-identity-top > span:last-child{font-size:10px}}
+
 .office-merchant-welcome { padding:30px 34px; margin-bottom:24px; border-radius:16px 16px 16px 3px; background:linear-gradient(110deg,#06274f,#033d64); position:relative; overflow:hidden; }
 .office-root .office-merchant-welcome h1 { color:white; }
 .office-root .office-merchant-welcome p { color:#c4d9e8; }

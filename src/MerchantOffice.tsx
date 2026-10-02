@@ -55,6 +55,8 @@ import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,type ReadyT
 import MerchantOps,{type OpsPage} from "./MerchantOps";
 import UpiSettings from "./UpiSettings";
 const TeammateTask = lazy(() => import("./TeammateTask"));
+const TeamIdentity = lazy(() => import("./TeamIdentity"));
+const CopyItems = lazy(() => import("./CopyItems"));
 import "./office.css";
 
 const storageKey = "kaamset_merchant_workspace_token";
@@ -1480,7 +1482,7 @@ export default function MerchantOffice() {
                               <>
                                 <p className="office-work-preview">{t.result.output.replace(/[#*]/g, "").slice(0,200)}{t.result.output.length>200?"…":""}</p>
                                 <details className="office-work-artifact"><summary>Read full result</summary>
-                                <ResultText text={t.result.output} />
+                                <ResultText text={t.result.output} />{t.result.copyItems?.length?<CopyItems items={t.result.copyItems} onError={setError}/>:null}
                                 <button
                                   className="office-text"
                                   onClick={() =>
@@ -1587,6 +1589,7 @@ export default function MerchantOffice() {
                         <p className="office-team-outcome">
                           {readyTeams.find(t=>t.code===current.presetId)?.tag||current.plan.outcome}
                         </p>
+                        <TeamIdentity team={current} workspace={workspace}/>
                         {current.state==='active'&&<TeammateTask key={current.id} token={token!} team={current} workspace={workspace} initialRequest={task?.blueprintId===current.id?task.text:undefined} requestToEdit={task?.blueprintId===current.id&&task.version?{text:task.text,version:task.version}:undefined} onChange={()=>refresh()} onError={setError} onDesk={selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]?()=>navigate(deskFor[current.presetId as ReadyTeamId]!):undefined}/>}
                         <details className="teammate-job-details" open={current.state!=='active'}><summary>Team, rules & approved job</summary><p>{current.plan.outcome}</p>
                         <div className="office-team-members">
@@ -1682,7 +1685,7 @@ export default function MerchantOffice() {
                             <div className="office-card-head"><Status value={t.state}/><small>{new Date(t.createdAt).toLocaleString('en-IN')}</small></div>
                             <h4>{t.result?.title||t.text}</h4>{['failed','waiting_owner'].includes(t.state)&&<button className="office-secondary" disabled={!!busy} onClick={()=>setTask({blueprintId:current.id,text:t.text,version:Date.now()})}>Edit this task <RefreshCw size={14}/></button>}
                             {!!t.checkpoint?.stages.length&&<div className="office-stage-trail">{t.checkpoint.stages.map(s=><span key={s.role}><Check size={13}/>{s.specialistName} · {s.role==='specialist'?'Prepared':'Reviewed'}</span>)}</div>}
-                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/><button className="office-text" onClick={()=>void act("Copying result",async()=>{await navigator.clipboard.writeText(t.result!.output);setNotice("Result copied. Review before sending or publishing.")})}><Copy size={14}/> Copy result</button><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||(['queued','working'].includes(t.state)?'Your cloud team is working. You can close this browser and return to the result.':'Open the approved job and recheck its setup to continue.')}</p>}
+                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/>{!!t.result.copyItems?.length&&<CopyItems items={t.result.copyItems} onError={setError}/>}<button className="office-text" onClick={()=>void act("Copying result",async()=>{await navigator.clipboard.writeText(t.result!.output);setNotice("Result copied. Review before sending or publishing.")})}><Copy size={14}/> Copy result</button><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||(['queued','working'].includes(t.state)?'Your cloud team is working. You can close this browser and return to the result.':'Open the approved job and recheck its setup to continue.')}</p>}
                           </article>)}
                           {!workspace.tasks.some(t=>t.blueprintId===current.id)&&<p className="office-footnote">Saved results and progress will appear here after your first task.</p>}
                         </section>
