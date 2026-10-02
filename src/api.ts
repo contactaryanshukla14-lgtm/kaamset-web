@@ -313,10 +313,10 @@ export const api = {
       token,
       { revision: b.revision, action },
     ),
-  runTeammate: (token: string, id: string, text: string) =>
+  runTeammate: (token: string, id: string, text: string, requestKey: string = crypto.randomUUID()) =>
     request<{ id: string }>(`/teammates/${id}/run`, "POST", token, {
       text,
-      requestKey: crypto.randomUUID(),
+      requestKey,
     }),
   connect: (token: string, toolkit: string) =>
     request<{ url: string }>(`/connections/${toolkit}`, "POST", token),
@@ -453,6 +453,7 @@ export type WorkspaceState = {
   providers?: { sarvam: boolean; cognee: boolean; paytm: boolean };
   posts?: ContentPost[];
   payments?: Payment[];
+  whatsappLinked?: boolean;
   channels?: Record<
     string,
     { ready: boolean; enabled: boolean; error?: string }

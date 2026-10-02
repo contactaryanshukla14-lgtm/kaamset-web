@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowRight,
   Copy,
@@ -29,6 +29,9 @@ export default function WebsiteStudio({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [copied, setCopied] = useState("");
+  const [readingPhotos, setReadingPhotos] = useState(false);
+  const uploadSequence = useRef(0);
+  const inFlight = useRef(false);
   const vijay = workspace?.blueprints.find(
     (b) => b.state === "active" && b.plan.skills.includes("website_publish"),
   );
@@ -39,7 +42,8 @@ export default function WebsiteStudio({
     ["queued", "working"].includes(site.state),
   );
   async function run(fn: () => Promise<unknown>) {
-    if (busy) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError("");
     try {
@@ -49,6 +53,7 @@ export default function WebsiteStudio({
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      inFlight.current = false;
     }
   }
   return (
@@ -144,10 +149,13 @@ export default function WebsiteStudio({
           type="file"
           accept="image/jpeg,image/png"
           multiple
+          disabled={busy || readingPhotos}
           onChange={async (e) => {
+            const sequence = ++uploadSequence.current;
+            setApproved(false); setReadingPhotos(true); setError("");
             const files = Array.from(e.target.files || []);
             try {
-              if (files.length > 3 || files.some((f) => f.size > 1500000))
+              if (files.length > 3 || files.some((f) => f.size > 1500000 || !["image/jpeg", "image/png"].includes(f.type)))
                 throw new Error(
                   "Choose up to three photos, under 1.5 MB each.",
                 );
@@ -167,14 +175,17 @@ export default function WebsiteStudio({
                   rightsConfirmed: true as const,
                 })),
               );
-              setPhotos(assets);
+              if (sequence === uploadSequence.current) setPhotos(assets);
               setApproved(false);
             } catch (e) {
               setError((e as Error).message);
+            } finally {
+              if (sequence === uploadSequence.current) setReadingPhotos(false);
             }
           }}
         />
       </label>
+      {readingPhotos && <p role="status">Preparing your photos for review…</p>}
       {!!photos.length && (
         <div className="website-photo-review">
           {photos.map((p, i) => (
@@ -204,6 +215,7 @@ export default function WebsiteStudio({
         <input
           type="checkbox"
           checked={approved}
+          disabled={busy || readingPhotos || !!cloudWorking}
           onChange={(e) => setApproved(e.target.checked)}
         />{" "}
         I approve publishing these business facts, contact details and photos. I
@@ -214,6 +226,8 @@ export default function WebsiteStudio({
         className="button button-primary"
         disabled={
           busy ||
+          readingPhotos ||
+          !!cloudWorking ||
           !token ||
           !vijay ||
           !approved ||
@@ -236,7 +250,7 @@ export default function WebsiteStudio({
           })
         }
       >
-        Build & publish with my website team <Globe size={17} />
+        {cloudWorking ? "Your website team is working in the cloud…" : "Build & publish with my website team"} <Globe size={17} />
       </button>
       <p className="small-muted">
         Your team works in the cloud. You can close the browser and return to

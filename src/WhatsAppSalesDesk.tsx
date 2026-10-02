@@ -30,37 +30,58 @@ function Status({ value, children }: { value: string; children?: ReactNode }) {
 
 function SalesRules({ teams, current, busy, onSave }: {
   teams: Teammate[]; current?: WhatsAppSalesState["settings"]; busy: boolean;
-  onSave: (settings: WhatsAppSalesSetup) => Promise<void>;
+  onSave: (settings: WhatsAppSalesSetup) => Promise<boolean>;
 }) {
-  const [draft, setDraft] = useState<WhatsAppSalesSetup>(() => ({
+  const defaults = (): WhatsAppSalesSetup => ({
     approved: true, blueprintId: current?.blueprintId || teams.at(-1)?.id || "",
     language: current?.language || "auto", tone: current?.tone || "friendly",
     deliveryArea: current?.deliveryArea || null, discountLimitPercent: current?.discountLimitPercent ?? 0,
     ownerHelp: current?.ownerHelp || ["Complaints, refunds and cancellations", "Missing stock, delivery facts or booking availability", "Discounts and commercial exceptions"],
     followup: current?.followup || { enabled: false, afterMinutes: [1440], quietStart: 21, quietEnd: 9 },
     summary: current?.summary || { enabled: true, at: "19:00" },
-  }));
+  });
+  const [draft, setDraft] = useState<WhatsAppSalesSetup>(defaults);
   const [approved, setApproved] = useState(false), [reminders, setReminders] = useState(draft.followup.afterMinutes.join(", "));
   const [ownerHelp, setOwnerHelp] = useState(draft.ownerHelp.join("\n"));
+  const dirty = useRef(false), observed = useRef(JSON.stringify(current));
+  const [serverChanged, setServerChanged] = useState(false);
+  function reload() {
+    const next = defaults();
+    setDraft(next); setReminders(next.followup.afterMinutes.join(", ")); setOwnerHelp(next.ownerHelp.join("\n"));
+    dirty.current = false; observed.current = JSON.stringify(current); setServerChanged(false); setApproved(false);
+  }
+  useEffect(() => {
+    const signature = JSON.stringify(current);
+    if (observed.current === signature) return;
+    observed.current = signature; setApproved(false);
+    if (dirty.current) { setServerChanged(true); return; }
+    reload();
+  }, [current]);
   const helpLines = ownerHelp.split("\n").map((s) => s.trim()).filter(Boolean);
   const validHelp = helpLines.length <= 4 && helpLines.every((s) => s.length >= 3 && s.length <= 200);
   const validArea = !draft.deliveryArea?.trim() || draft.deliveryArea.trim().length >= 2;
   const minutes = reminders.split(",").map((s) => Number(s.trim()));
   const validReminders = !draft.followup.enabled || minutes.length >= 1 && minutes.length <= 3 &&
     minutes.every((m, i) => Number.isInteger(m) && m >= 15 && m <= 10080 && (!i || m > minutes[i - 1]));
-  const edited = (next: WhatsAppSalesSetup) => { setDraft(next); setApproved(false); };
+  const validDiscount = Number.isInteger(draft.discountLimitPercent) && draft.discountLimitPercent >= 0 && draft.discountLimitPercent <= 30;
+  const validSummary = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(draft.summary.at);
+  const validTeam = teams.some((team) => team.id === draft.blueprintId);
+  const edited = (next: WhatsAppSalesSetup) => { dirty.current = true; setDraft(next); setApproved(false); };
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!approved || !draft.blueprintId || !validReminders || !validHelp || !validArea || busy) return;
-    await onSave({ ...draft, deliveryArea: draft.deliveryArea?.trim() || null,
+    if (!approved || !validTeam || !validReminders || !validHelp || !validArea || !validDiscount || !validSummary || serverChanged || busy) return;
+    const saved = await onSave({ ...draft, deliveryArea: draft.deliveryArea?.trim() || null,
       ownerHelp: helpLines,
       followup: { ...draft.followup, afterMinutes: draft.followup.enabled ? minutes : draft.followup.afterMinutes } });
+    if (saved) { dirty.current = false; setApproved(false); setServerChanged(false); }
   }
   return <form className="wa-rules" onSubmit={submit}>
     <div className="wa-section-title"><div><span className="office-eyebrow">ONLY THE RULES THIS JOB NEEDS</span><h3>How should Saathi work for you?</h3></div><Settings2 size={22} /></div>
+    {serverChanged && <div className="wa-approval-summary" role="status"><div><strong>Your saved sales rules changed.</strong><p>Your edits are preserved. Reload the latest rules before approving another change.</p><button type="button" className="office-text" disabled={busy} onClick={reload}>Reload saved rules</button></div></div>}
+    <fieldset className="wa-rules-fields" disabled={busy}>
     <div className="office-form-row">
       <label>Which team?<select value={draft.blueprintId} onChange={(e) => edited({ ...draft, blueprintId: e.target.value })} required>
-        {!teams.length && <option value="">Build your WhatsApp team first</option>}
+        <option value="">{teams.length ? "Choose a WhatsApp team" : "Build your WhatsApp team first"}</option>
         {teams.map((t) => <option value={t.id} key={t.id}>{teamName(t)} · {stateLabel(t.state)}</option>)}
       </select></label>
       <label>Replies in<select value={draft.language} onChange={(e) => edited({ ...draft, language: e.target.value as WhatsAppSalesSetup["language"] })}>
@@ -71,13 +92,14 @@ function SalesRules({ teams, current, busy, onSave }: {
     </div>
     <label>Discount requests above this limit need your help (%)<input type="number" min={0} max={30} step={1} value={draft.discountLimitPercent} onChange={(e) => edited({ ...draft, discountLimitPercent: Number(e.target.value) })} /></label>
     <p className="wa-help">Quoted amounts come from approved prices. This limit helps route discount requests; it does not authorise changing your prices.</p>
-    <label>When should the team ask you?<textarea rows={3} maxLength={800} value={ownerHelp} onChange={(e) => { setOwnerHelp(e.target.value); setApproved(false); }} /><small>Up to 4 rules, one per line. Keep each under 200 characters.</small></label>
+    {!validDiscount && <p className="wa-form-error" role="alert">Use a whole-number discount limit from 0 to 30.</p>}
+    <label>When should the team ask you?<textarea rows={3} maxLength={800} value={ownerHelp} onChange={(e) => { dirty.current = true; setOwnerHelp(e.target.value); setApproved(false); }} /><small>Up to 4 rules, one per line. Keep each under 200 characters.</small></label>
     {!validHelp && <p className="wa-form-error" role="alert">Use up to 4 owner-help rules, with 3–200 characters per line.</p>}
     {!validArea && <p className="wa-form-error" role="alert">Describe the service area with at least 2 characters, or leave it empty for owner confirmation.</p>}
     <fieldset className="wa-rule-group"><legend>Unpaid payment reminders</legend>
       <label className="office-check"><input type="checkbox" checked={draft.followup.enabled} onChange={(e) => edited({ ...draft, followup: { ...draft.followup, enabled: e.target.checked } })} /><span>Let Milan follow up on accepted, unpaid orders</span></label>
       {draft.followup.enabled && <div className="wa-followup-options office-view-enter">
-        <label>Minutes after the payment request<input value={reminders} onChange={(e) => { setReminders(e.target.value); setApproved(false); }} placeholder="e.g. 60, 1440" inputMode="text" /><small>Up to 3 increasing times, 15 minutes to 7 days.</small></label>
+        <label>Minutes after the payment request<input value={reminders} onChange={(e) => { dirty.current = true; setReminders(e.target.value); setApproved(false); }} placeholder="e.g. 60, 1440" inputMode="text" /><small>Up to 3 increasing times, 15 minutes to 7 days.</small></label>
         {!validReminders && <p className="wa-form-error" role="alert">Use 1–3 increasing whole numbers, for example 60, 1440.</p>}
         <p className="wa-help">Milan stops reminders after verified payment, customer opt-out or owner takeover.</p>
       </div>}
@@ -85,8 +107,9 @@ function SalesRules({ teams, current, busy, onSave }: {
     <fieldset className="wa-rule-group"><legend>WhatsApp sending hours · India time</legend><div className="office-form-row">{(["quietStart", "quietEnd"] as const).map((key) => <label key={key}>{key === "quietStart" ? "Quiet hours begin" : "Resume automatic sending at"}<select value={draft.followup[key]} onChange={(e) => edited({ ...draft, followup: { ...draft.followup, [key]: Number(e.target.value) } })}>{Array.from({ length: 24 }, (_,h) => <option key={h} value={h}>{String(h).padStart(2,"0")}:00 IST</option>)}</select></label>)}</div><p className="wa-help">Automatic and scheduled messages wait during your quiet hours.{draft.followup.quietStart === draft.followup.quietEnd && " Equal times mean no quiet period."}</p></fieldset>
     <div className="wa-summary-option"><label className="office-check"><input type="checkbox" checked={draft.summary.enabled} onChange={(e) => edited({ ...draft, summary: { ...draft.summary, enabled: e.target.checked } })} /><span>Prepare my daily summary in this workspace</span></label>{draft.summary.enabled && <label>India time<input type="time" value={draft.summary.at} required onChange={(e) => edited({ ...draft, summary: { ...draft.summary, at: e.target.value } })} /></label>}</div>
     <div className="wa-approval-summary"><ShieldCheck size={21} /><div><strong>Review the job before it goes live</strong><p>Tara handles enquiries and asks customers to accept an exact quote. Chotu requests and verifies Paytm payment. {draft.followup.enabled ? "Milan follows your reminder schedule." : "No automatic payment reminders."} Sending follows your quiet hours. Missing facts and commercial exceptions come to you. A payment is separate from delivery or fulfilment.</p></div></div>
-    <label className="office-check"><input type="checkbox" checked={approved} onChange={(e) => setApproved(e.target.checked)} /><span>I approve these reply, payment and follow-up rules for my business.</span></label>
-    <button className="office-primary" disabled={busy || !approved || !draft.blueprintId || !validReminders || !validHelp || !validArea}>{busy ? <LoaderCircle size={16} className="spin" /> : <Check size={16} />} Save approved job rules</button>
+    <label className="office-check"><input type="checkbox" checked={approved} disabled={serverChanged} onChange={(e) => setApproved(e.target.checked)} /><span>I approve these reply, payment and follow-up rules for my business.</span></label>
+    </fieldset>
+    <button className="office-primary" disabled={busy || serverChanged || !approved || !validTeam || !validReminders || !validHelp || !validArea || !validDiscount || !validSummary}>{busy ? <LoaderCircle size={16} className="spin" /> : <Check size={16} />} Save approved job rules</button>
   </form>;
 }
 
@@ -99,6 +122,8 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   const [selected, setSelected] = useState(""), [search, setSearch] = useState(""), [filter, setFilter] = useState("all"), [reply, setReply] = useState("");
   const [editing, setEditing] = useState(false), [liveConsent, setLiveConsent] = useState(false);
   const actionInFlight = useRef(false), chat = useRef<HTMLDivElement>(null);
+  const readSequence = useRef(0), tokenRef = useRef(token);
+  tokenRef.current = token;
   const replyAttempt = useRef<{ conversationId: string; text: string; key: string } | null>(null);
   const teams = workspace.blueprints.filter((b) => b.plan.skills.includes("whatsapp_enquiries"));
   const assigned = teams.find((b) => b.id === sales.settings?.blueprintId);
@@ -108,9 +133,9 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
     ...(sales.settings?.followup.enabled ? [["whatsapp_sales_followup", "Follow up on unpaid accepted orders"]] : []),
   ].filter(([skill]) => !assigned.plan.skills.includes(skill)).map(([,description]) => description) : [];
   const connected = wa?.state === "connected", enabled = !!wa?.salesAutoReplyEnabled;
-  const running = enabled && assigned?.state === "active";
   const hasPaytm = !!workspace.paymentSetup?.configured, hasOffers = !!workspace.commerce?.offers.length;
   const controlled = !!workspace.controls?.humanTakeover || !!workspace.controls?.paused;
+  const running = enabled && connected && !controlled && assigned?.state === "active";
   const current = sales.conversations.find((c) => c.id === selected);
   const rows = sales.conversations.filter((c) => (filter === "all" || c.stage === filter) &&
     `${c.customerName} ${c.recipient}`.toLowerCase().includes(search.toLowerCase())).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -130,7 +155,9 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
 
   async function read() {
     if (!token) return;
+    const sequence = ++readSequence.current;
     const [linkState, desk] = await Promise.allSettled([api.whatsapp(token), api.whatsappSales(token)]);
+    if (tokenRef.current !== token || sequence !== readSequence.current) return;
     const errors: string[] = [];
     if (linkState.status === "fulfilled") setWa(linkState.value);
     else errors.push(`WhatsApp connection: ${linkState.reason instanceof Error ? linkState.reason.message : "could not load"}`);
@@ -139,21 +166,23 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
     setLoaded(true); setReadError(errors.join(" "));
   }
   async function act(title: string, fn: () => Promise<unknown>) {
-    if (actionInFlight.current || !token) return;
+    if (actionInFlight.current || !token) return false;
     actionInFlight.current = true; setBusy(title); setError("");
-    try { await fn(); await Promise.all([read(), onChange()]); }
-    catch (e) { setError((e as Error).message); }
+    try { await fn(); await Promise.all([read(), onChange()]); return true; }
+    catch (e) { setError(e instanceof Error ? e.message : "This action could not be confirmed. Refresh the desk before retrying."); await read(); return false; }
     finally { actionInFlight.current = false; setBusy(""); }
   }
   useEffect(() => {
+    setWa(null); setSales(workspace.whatsappSales || empty); setLoaded(false); setSelected(""); setReply(""); replyAttempt.current = null;
     if (!token) return;
     let cancelled = false, polling = false;
     async function poll() {
       if (polling) return;
       polling = true;
+      const sequence = ++readSequence.current;
       try {
         const [linkState, desk] = await Promise.allSettled([api.whatsapp(token!), api.whatsappSales(token!)]);
-        if (!cancelled) {
+        if (!cancelled && sequence === readSequence.current) {
           const errors: string[] = [];
           if (linkState.status === "fulfilled") setWa(linkState.value);
           else errors.push(`WhatsApp connection: ${linkState.reason instanceof Error ? linkState.reason.message : "could not load"}`);
@@ -171,23 +200,29 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   useEffect(() => { setReply(""); }, [selected]);
   useEffect(() => { setLiveConsent(false); }, [sales.settings?.revision, assigned?.revision]);
   useEffect(() => {
-    if (!selected && sales.conversations.length) setSelected(sales.conversations[0].id);
+    if (!sales.conversations.some((conversation) => conversation.id === selected)) setSelected(sales.conversations[0]?.id || "");
   }, [selected, sales.conversations]);
   useEffect(() => {
     const node = chat.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [selected]);
+  }, [selected, current?.history.length]);
   async function goLive() {
     await act("Checking and starting your WhatsApp team", async () => {
       if (!assigned || !liveConsent || !token || missingSkills.length) return;
-      if (!enabled) await api.whatsappAction(token, "enable");
-      if (assigned.state === "active") {
-        await api.teammateControl(token, assigned, "activate");
-        return;
+      let enabledForCheck = false;
+      try {
+        if (!enabled) { await api.whatsappAction(token, "enable"); enabledForCheck = true; }
+        const checked = await api.recheckTeammate(token, assigned);
+        if (checked.feasibility.state !== "ready_to_test") throw new Error(checked.feasibility.blockers.join(" ") || "Review the remaining team setup before going live.");
+        await api.teammateControl(token, checked, "activate");
+        setLiveConsent(false);
+      } catch (error) {
+        if (enabledForCheck) {
+          try { await api.whatsappAction(token, "disable"); }
+          catch { throw new Error(`${error instanceof Error ? error.message : "Activation failed."} Automatic reply status could not be confirmed. Refresh the desk and pause WhatsApp before retrying.`); }
+        }
+        throw error;
       }
-      const checked = await api.recheckTeammate(token, assigned);
-      if (checked.feasibility.state !== "ready_to_test") throw new Error(checked.feasibility.blockers.join(" ") || "Review the remaining team setup before going live.");
-      if (checked.state !== "active") await api.teammateControl(token, checked, "activate");
     });
   }
 
@@ -218,7 +253,7 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
           </div>{showPairingQr && <div className="wa-qr"><QRCodeSVG value={wa!.qr!} size={196} marginSize={4} /><span>Scan in WhatsApp · Linked devices</span></div>}{pairing && !showPairingQr && <div className="wa-qr-pending" role="status"><LoaderCircle size={28} className="spin" /><p>{wa.state === "pairing" ? "Finishing your connection…" : "Preparing your QR…"}</p></div>}
         </section>
         {paymentSettings}
-        {teams.length ? <SalesRules key={sales.settings?.revision ?? "new"} teams={teams} current={sales.settings} busy={!!busy} onSave={async (settings) => { await act("Saving your approved sales rules", () => api.configureWhatsAppSales(token!, settings)); }} /> : <div className="wa-build-first"><PixelTeammate id="tara" /><div><h3>Meet Saathi, led by Tara.</h3><p>Tell the builder your business’s WhatsApp job. It checks the work and creates a team proposal before activation.</p><button className="office-primary" onClick={onBuild}>Create WhatsApp Sales & Payments <ArrowRight size={16} /></button></div></div>}
+        {!loaded ? <p role="status">Loading your saved sales rules…</p> : teams.length ? <SalesRules teams={teams} current={sales.settings} busy={!!busy} onSave={(settings) => act("Saving your approved sales rules", () => api.configureWhatsAppSales(token!, settings))} /> : <div className="wa-build-first"><PixelTeammate id="tara" /><div><h3>Meet Saathi, led by Tara.</h3><p>Tell the builder your business’s WhatsApp job. It checks the work and creates a team proposal before activation.</p><button className="office-primary" onClick={onBuild}>Create WhatsApp Sales & Payments <ArrowRight size={16} /></button></div></div>}
       </div>
     </details>
 

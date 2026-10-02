@@ -53,6 +53,15 @@ import "./office.css";
 
 const storageKey = "kaamset_merchant_workspace_token";
 const legacyStorageKey = "kaamset_workspace_token";
+const pageKey = "kaamset_merchant_page";
+const jobDraftKey = "kaamset_merchant_job_draft";
+const connectionAttemptKey = "kaamset_connection_attempt";
+
+function restoredPage(): Page {
+  if (["instagram", "gmail", "googlecalendar", "googlesheets"].includes(new URLSearchParams(location.search).get("connected") || "")) return "connections";
+  const value = sessionStorage.getItem(pageKey);
+  return pages.some((p) => p.id === value) ? value as Page : "work";
+}
 
 function ResultText({ text }: { text: string }) {
   const inline = (value: string) =>
@@ -905,11 +914,11 @@ export default function MerchantOffice() {
       localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey),
     ),
     [workspace, setWorkspace] = useState<WorkspaceState | null>(null),
-    [page, setPage] = useState<Page>("work"),
+    [page, setPage] = useState<Page>(restoredPage),
     [busy, setBusy] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [job, setJob] = useState(""),
+    [job, setJob] = useState(() => sessionStorage.getItem(jobDraftKey) || ""),
     [task, setTask] = useState(""),
     [selected, setSelected] = useState(""),
     [accountOpen, setAccountOpen] = useState(
@@ -929,11 +938,23 @@ export default function MerchantOffice() {
       rules: string[];
       format: string;
     } | null>(null);
+  const [recipeImportOpen,setRecipeImportOpen]=useState(false),[recipeText,setRecipeText]=useState(''),[recipeError,setRecipeError]=useState(''),[recipeCopied,setRecipeCopied]=useState(false);
+  function loadRecipe(text:string){
+    if(new Blob([text]).size>20000)throw new Error('Use a teammate recipe under 20 KB.');
+    let r;try{r=JSON.parse(text)}catch{throw new Error('Paste the complete recipe JSON or choose its .json file.');}
+    if(!r||r.format!=='kaamset-teammate-v1'||typeof r.request!=='string'||r.request.trim().length<10||r.request.length>2000||!Array.isArray(r.rules)||r.rules.length>12||r.rules.some((x:unknown)=>typeof x!=='string'||!x.trim()||x.length>300))throw new Error('This is not a supported teammate recipe.');
+    setJob(`${r.request}\nRules: ${r.rules.join('; ')}`.slice(0,2000));setNotice('Recipe loaded. Review the job text; your own facts and connections will be checked.');setRecipeImportOpen(false);setRecipeText('');navigate('work');
+  }
   const legacyRestore = useRef(!localStorage.getItem(storageKey) && !!localStorage.getItem(legacyStorageKey));
   const tokenRef = useRef(token),
     inFlight = useRef(false),
     buildAttempt = useRef<{ request: string; key: string } | null>(null),
-    importFile = useRef<HTMLInputElement>(null);
+    taskAttempt = useRef<{ blueprintId: string; text: string; key: string } | null>(null),
+    importFile = useRef<HTMLInputElement>(null),
+    jobInput = useRef<HTMLTextAreaElement>(null),
+    menuButton = useRef<HTMLButtonElement>(null),
+    sidebar = useRef<HTMLElement>(null),
+    pageContent = useRef<HTMLElement>(null);
   function acceptToken(next: string) {
     localStorage.setItem(storageKey, next);
     legacyRestore.current = false;
@@ -947,6 +968,9 @@ export default function MerchantOffice() {
     setTask("");
     setJob("");
     buildAttempt.current = null;
+    taskAttempt.current = null;
+    sessionStorage.removeItem(jobDraftKey);
+    sessionStorage.removeItem(connectionAttemptKey);
     setMenu(false);
   }
   async function refresh(t = tokenRef.current) {
@@ -1020,6 +1044,49 @@ export default function MerchantOffice() {
     };
   }, [token]);
   useEffect(() => {
+    if(!sharing&&!recipeImportOpen)return;
+    const modal=document.querySelector<HTMLElement>('.office-modal[role="dialog"]'),previous=document.activeElement as HTMLElement|null;
+    const items=()=>Array.from(modal?.querySelectorAll<HTMLElement>('button:not(:disabled),textarea,input,a[href]')||[]);
+    items()[0]?.focus();const overflow=document.body.style.overflow;document.body.style.overflow='hidden';
+    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){setSharing(null);setRecipeImportOpen(false)}if(e.key==='Tab'){const list=items(),first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}};
+    document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);document.body.style.overflow=overflow;previous?.focus()};
+  }, [!!sharing,recipeImportOpen]);
+  useEffect(() => { sessionStorage.setItem(pageKey, page); }, [page]);
+  useEffect(() => { sessionStorage.setItem(jobDraftKey, job); }, [job]);
+  useEffect(() => {
+    if (!menu) return;
+    const first = sidebar.current?.querySelector<HTMLButtonElement>("button");
+    first?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setMenu(false); menuButton.current?.focus(); }
+      if (event.key !== "Tab") return;
+      const items = Array.from(sidebar.current?.querySelectorAll<HTMLElement>("a[href],button:not(:disabled)") || []);
+      const firstItem = items[0], lastItem = items.at(-1);
+      if (event.shiftKey && document.activeElement === firstItem) { event.preventDefault(); lastItem?.focus(); }
+      else if (!event.shiftKey && document.activeElement === lastItem) { event.preventDefault(); firstItem?.focus(); }
+    };
+    document.addEventListener("keydown", key);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", key); document.body.style.overflow = previousOverflow; };
+  }, [menu]);
+  useEffect(() => {
+    if (!workspace || page !== "connections") return;
+    const params = new URLSearchParams(location.search);
+    const callback = params.get("connected");
+    const attempt = callback || sessionStorage.getItem(connectionAttemptKey);
+    if (!attempt || !["instagram", "gmail", "googlecalendar", "googlesheets"].includes(attempt)) return;
+    sessionStorage.removeItem(connectionAttemptKey);
+    if (callback) { params.delete("connected"); history.replaceState({}, "", `${location.pathname}${params.size ? `?${params}` : ""}`); }
+    void act("Checking your returned connection", async () => {
+      const result = await api.refreshConnection(token!, attempt);
+      await refresh();
+      setNotice((result as {status?: string}).status === "connected"
+        ? "Account connected. Review its permissions in the relevant desk before enabling actions."
+        : "Account authorization is not finished. Choose Continue connection to start a fresh authorization, or check again after completing it.");
+    });
+  }, [!!workspace, page]);
+  useEffect(() => {
     if (workspace) {
       setBrief(workspace.brief);
       setBriefApproved(workspace.briefApproved);
@@ -1050,7 +1117,9 @@ export default function MerchantOffice() {
       sessionStorage.removeItem("kaamset_setup_draft");
       setJob(setup.goal);
       setBusy("Designing your team");
-      const b = await api.build(r.token, setup.goal);
+      buildAttempt.current = {request: setup.goal, key: crypto.randomUUID()};
+      const b = await api.build(r.token, setup.goal, buildAttempt.current.key);
+      buildAttempt.current = null;
       setSelected(b.id);
       await refresh(r.token);
       setPage("team");
@@ -1100,6 +1169,24 @@ export default function MerchantOffice() {
   function navigate(next: Page) {
     setPage(next);
     setMenu(false);
+    requestAnimationFrame(() => { pageContent.current?.focus({preventScroll: true}); window.scrollTo({top: 0, behavior: "instant"}); });
+  }
+  function useJob(text: string) {
+    setJob(text);
+    requestAnimationFrame(() => {
+      jobInput.current?.focus({preventScroll: true});
+      jobInput.current?.scrollIntoView({block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
+    });
+  }
+  async function connectApp(id: string, title: string, restart = false) {
+    await act(`Opening ${title} connection`, async () => {
+      if (restart) await api.disconnect(token!, id);
+      const r = await api.connect(token!, id);
+      sessionStorage.setItem(pageKey, "connections");
+      sessionStorage.setItem(connectionAttemptKey, id);
+      await refresh();
+      window.location.assign(r.url);
+    });
   }
   const pending =
       (workspace?.tasks.filter((t) => ["queued", "working"].includes(t.state)).length || 0) +
@@ -1167,7 +1254,7 @@ export default function MerchantOffice() {
               onClick={() => setMenu(false)}
             />
           )}
-          <aside className={`office-sidebar ${menu ? "mobile-open" : ""}`}>
+          <aside ref={sidebar} id="office-navigation" className={`office-sidebar ${menu ? "mobile-open" : ""}`}>
             <Brand />
             <button
               className="office-business-switch"
@@ -1180,11 +1267,12 @@ export default function MerchantOffice() {
               </div>
               <Settings size={15} />
             </button>
-            <nav>
+            <nav aria-label="Business workspace">
               {pages.map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   className={page === id ? "selected" : ""}
+                  aria-current={page === id ? "page" : undefined}
                   onClick={() => navigate(id)}
                 >
                   <Icon size={18} />
@@ -1224,7 +1312,10 @@ export default function MerchantOffice() {
             <header className="office-topbar">
               <button
                 className="office-mobile-menu"
-                aria-label="Open navigation"
+                ref={menuButton}
+                aria-label={menu ? "Close navigation" : "Open navigation"}
+                aria-expanded={menu}
+                aria-controls="office-navigation"
                 onClick={() => setMenu(!menu)}
               >
                 <Menu size={22} />
@@ -1270,7 +1361,7 @@ export default function MerchantOffice() {
                 </button>
               </div>
             </header>
-            <main className="office-content office-view-enter" key={page}>
+            <main ref={pageContent} tabIndex={-1} className="office-content office-view-enter" key={page} aria-label={pages.find((p) => p.id === page)?.label}>
               {error && (
                 <div className="office-error" role="alert">
                   {error}
@@ -1354,6 +1445,8 @@ export default function MerchantOffice() {
                       <span>WHAT SHOULD YOUR NEXT TEAM DO?</span>
                     </div>
                     <textarea
+                      ref={jobInput}
+                      aria-label="Describe the work for your AI team"
                       rows={3}
                       maxLength={2000}
                       value={job}
@@ -1386,8 +1479,7 @@ export default function MerchantOffice() {
                         key={j.id}
                         className="office-job-card"
                         onClick={() => {
-                          setJob(j.text);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
+                          useJob(j.text);
                         }}
                       >
                         <PixelTeammate id={j.id} />
@@ -1585,33 +1677,10 @@ export default function MerchantOffice() {
                       try {
                         if (f.size > 20000)
                           throw new Error("Use a teammate recipe under 20 KB.");
-                        const r = JSON.parse(await f.text());
-                        if (
-                          r.format !== "kaamset-teammate-v1" ||
-                          typeof r.request !== "string" ||
-                          r.request.length > 2000 ||
-                          !Array.isArray(r.rules) ||
-                          r.rules.some(
-                            (x: unknown) =>
-                              typeof x !== "string" || x.length > 300,
-                          )
-                        )
-                          throw new Error(
-                            "This is not a supported teammate recipe.",
-                          );
-                        setJob(
-                          `${r.request}\nRules: ${r.rules.join("; ")}`.slice(
-                            0,
-                            2000,
-                          ),
-                        );
-                        setNotice(
-                          "Recipe loaded. Review the job text; your own facts and connections will be checked.",
-                        );
-                        navigate("work");
+                        loadRecipe(await f.text());
                       } catch (e) {
                         setError((e as Error).message);
-                      }
+                      } finally { e.target.value=""; }
                     }}
                   />
                   <button
@@ -1620,6 +1689,7 @@ export default function MerchantOffice() {
                   >
                     <Upload size={15} /> Import a partner’s teammate recipe
                   </button>
+                  <button className="office-text" onClick={()=>{setRecipeImportOpen(true);setRecipeError('')}}><Copy size={15}/> Paste a teammate recipe</button>
                   {!current ? (
                     <section className="office-empty">
                       <Users size={30} />
@@ -1764,9 +1834,7 @@ export default function MerchantOffice() {
                             disabled={!!busy}
                             onClick={() =>
                               act("Preparing teammate recipe", async () =>
-                                setSharing(
-                                  await api.recipe(token!, current.id),
-                                ),
+                                { setRecipeCopied(false);setSharing(await api.recipe(token!, current.id)); },
                               )
                             }
                           >
@@ -1799,7 +1867,13 @@ export default function MerchantOffice() {
                                         token!,
                                         current.id,
                                         task,
+                                        (() => {
+                                          if (taskAttempt.current?.blueprintId !== current.id || taskAttempt.current.text !== task)
+                                            taskAttempt.current = {blueprintId: current.id, text: task, key: crypto.randomUUID()};
+                                          return taskAttempt.current.key;
+                                        })(),
                                       );
+                                      taskAttempt.current = null;
                                       await refresh();
                                       navigate("work");
                                     },
@@ -1889,7 +1963,10 @@ export default function MerchantOffice() {
                   token={token}
                   teammates={workspace.blueprints}
                   posts={workspace.posts || []}
+                  instagramReady={workspace.connections.some(c=>c.toolkit==='instagram'&&c.status==='connected'&&!!c.identity)}
+                  onConnect={() => navigate("connections")}
                   onChange={() => refresh()}
+                  onBuild={() => { setJob("Create Riya to draft captions and publish my exact owner-approved static photo posts to my business Instagram on a schedule. Publishing only for now; ask me for approval of each post."); navigate("work"); }}
                 />
               )}
               {page === "website" && (
@@ -2027,37 +2104,18 @@ export default function MerchantOffice() {
                             value={connected?.status || "not_connected"}
                           />
                           <div className="office-actions">
-                            {!connected ? (
+                            {connected?.status !== "connected" ? (
                               <button
                                 className="office-secondary"
                                 disabled={!!busy}
                                 onClick={() =>
-                                  act(
-                                    `Opening ${title} connection`,
-                                    async () => {
-                                      const r = await api.connect(token!, id);
-                                      await refresh();
-                                      window.location.assign(r.url);
-                                    },
-                                  )
+                                  connectApp(id, title, !!connected)
                                 }
                               >
-                                Connect <ArrowUpRight size={14} />
+                                {connected ? "Continue connection" : "Connect"} <ArrowUpRight size={14} />
                               </button>
                             ) : (
                               <>
-                                <button
-                                  className="office-secondary"
-                                  disabled={!!busy}
-                                  onClick={() =>
-                                    act("Checking app connection", async () => {
-                                      await api.refreshConnection(token!, id);
-                                      await refresh();
-                                    })
-                                  }
-                                >
-                                  Check connection
-                                </button>
                                 <button
                                   className="office-text"
                                   disabled={!!busy}
@@ -2072,6 +2130,11 @@ export default function MerchantOffice() {
                                 </button>
                               </>
                             )}
+                            {connected && <button className="office-secondary" disabled={!!busy} onClick={() => act("Checking app connection", async () => {
+                              const result = await api.refreshConnection(token!, id) as {status?: string};
+                              await refresh();
+                              setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : `${title} still needs authorization. Choose Continue connection to try again.`);
+                            })}>Check connection</button>}
                           </div>
                           {connected?.identity && (
                             <small>@{connected.identity.username}</small>
@@ -2252,6 +2315,7 @@ export default function MerchantOffice() {
           onToken={acceptToken}
         />
       )}
+      {recipeImportOpen&&<div className="office-modal-overlay"><section className="office-modal" role="dialog" aria-modal="true" aria-labelledby="import-recipe-title"><button className="office-close" aria-label="Close recipe import" onClick={()=>setRecipeImportOpen(false)}><X size={20}/></button><h2 id="import-recipe-title">Import a teammate recipe</h2><p>Paste the recipe your partner shared. Review the job next; it uses your own business facts and connections.</p><label htmlFor="import-recipe-text">Recipe JSON<textarea id="import-recipe-text" rows={8} maxLength={20000} value={recipeText} onChange={e=>{setRecipeText(e.target.value);setRecipeError('')}}/></label>{recipeError&&<p role="alert" className="office-error">{recipeError}</p>}<button className="office-primary" disabled={!recipeText.trim()} onClick={()=>{try{loadRecipe(recipeText)}catch(e){setRecipeError((e as Error).message)}}}>Review imported job <ArrowRight size={16}/></button></section></div>}
       {sharing && (
         <div className="office-modal-overlay">
           <section
@@ -2305,13 +2369,14 @@ export default function MerchantOffice() {
                   a = document.createElement("a");
                 a.href = url;
                 a.download = "kaamset-teammate.json";
-                a.click();
-                URL.revokeObjectURL(url);
-                setSharing(null);
+                document.body.appendChild(a);a.click();a.remove();
+                setTimeout(()=>URL.revokeObjectURL(url),60000);
+                setNotice('Recipe download requested. You can also copy the reviewed recipe here.');
               }}
             >
               Download reviewed recipe <Download size={16} />
             </button>
+            <button className="office-secondary" onClick={async()=>{try{await navigator.clipboard.writeText(JSON.stringify(sharing,null,2));setRecipeCopied(true)}catch{setError('Copy could not finish. Download the recipe instead.')}}}>{recipeCopied?'Recipe copied':'Copy reviewed recipe'} <Copy size={16}/></button>
           </section>
         </div>
       )}
