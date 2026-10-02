@@ -4,8 +4,8 @@
 
 - Public pixel workspace deployed at https://kaamset-web.vercel.app.
 - Frontend TypeScript and Vite production build pass.
-- Railway API and worker are SUCCESS on merged backend 87a54780.
-- Foundation release CI passed 2,383 unit tests, 75 PostgreSQL journeys, 19/19 database gates and zero production vulnerability findings.
+- Railway API and worker are SUCCESS on merged backend a876de39.
+- Foundation release CI passed 2,388 unit tests, 75 PostgreSQL journeys, 19/19 database gates and zero production vulnerability findings.
 - Actual Gemini 3.1 Pro HIGH cloud website generation published a fictional business site. Desktop and phone-width browser checks showed approved offer cards, grounded Hinglish copy and FAQs; the phone page had no horizontal overflow.
 - A different guest could not control the first guest's teammate or read its approved brief, sites or blueprints. Public website projection excluded the bearer, blueprint and source quotes.
 - A real signed customer quote accepted successfully after the route-length repair. Duplicate acceptance reserved recorded stock once, from 10 to 8. One product order is confirmed; payment correctly remains setup_needed.
@@ -14,7 +14,9 @@
 
 ## Model reliability repair
 
-Actual Google calls intermittently returned HTTP 429. The frontend refreshes usage after failed actions, displays safe saved task reasons and animates Vijay while the cloud worker is queued or working. Backend repair bounds ordinary Flash thinking and supplies safe provider capacity/access/validation errors without logging prompts, business facts or raw provider errors. Explicit Pro HIGH website generation is preserved. Three model and five website regressions plus eight builder tests pass locally. A configured Flash LOW blueprint probe passed in 7.5 seconds. CI and deployed retry checks belong to the backend release.
+Actual Google calls intermittently returned HTTP 429. The frontend refreshes usage after failed actions, displays safe saved task reasons and animates Vijay while the cloud worker is queued or working. The deployed backend repair bounds ordinary Flash thinking and supplies safe provider capacity/access/validation errors without logging prompts, business facts or raw provider errors. Explicit Pro HIGH website generation is preserved. A fresh stock task returned STOP but failed strict response validation; a separate builder attempt returned provider_busy. These failures are distinct and neither is a completed task.
+
+Backend PR #264, merged as 98572eb0, mirrors existing validator length/count limits into provider schemas and clarifies exact source quote requirements. TypeScript and 21 targeted tests pass. An actual configured stock worker process accepted that bounded schema and completed in 6.4 seconds with four verified quotes using fictional live records in an in-memory store. Full current-head CI passed 2,389 unit tests, 75 PostgreSQL journeys, 19 database gates, production image/assets and zero production vulnerabilities. Railway marked the new API and worker deployments NEEDS_APPROVAL; the previous approved release remains running. Fresh persisted stock, builder and website retry checks await that deployment.
 
 ## Requires merchant setup and live verification
 
