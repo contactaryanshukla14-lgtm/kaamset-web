@@ -1,28 +1,33 @@
-# KaamSet web
+# KaamSet — Your business. Your AI team.
 
-Standalone React/Vite frontend for the KaamSet fictional service-merchant hackathon demonstration.
+React/Vite owner workspace for Indian businesses: basic setup, natural-language team creation, customer/Instagram/website/assistant desks, approved knowledge, shared teammate recipes and merchant-owned app connections.
 
-Public URL: <https://kaamset-web.vercel.app>
+Public domain: [kaamset-web.vercel.app](https://kaamset-web.vercel.app).
 
-The frontend connects to the shared Foundation API at `VITE_KAAMSET_API_URL`. The default is the deployed Railway API. No provider credentials, connected-account IDs, tenant IDs or platform administrator tokens are shipped to the browser. A server-issued guest token stays in `sessionStorage` and expires after 24 hours. The API enforces the exact public origin and scopes the token to the fictional demonstration namespace.
+## Owner flow
 
-## Run locally
+Enter your business, approve a short business brief, and describe the first job. Review the AI team proposal and any required connections before activation. Saved cloud work continues after leaving the page. Verify your email to recover the workspace on another device; sign-in, password recovery and server logout use revocable Foundation identity sessions.
+
+Vijay coordinates asset review, design and Pro HIGH writing before publishing a safe business website. Owners supply approved photos; no automatic image search/generation is claimed. Sales, Instagram and reminder desks retain their explicit approval and external-verification requirements.
+
+Paytm setup is available under Connections and Orders & payments after saving the business account. Merchant credentials are encrypted on the API, never bundled here. Test and production modes are separate. A payment is collected only after signed server verification; Paytm merchant credentials/activation are still needed for a real provider payment.
+
+The older fictional booking workflow is retained at `/demo`. Existing pitch and hackathon notes refer to that workflow; they do not define the default merchant product.
+
+## Development
 
 ```sh
 npm ci
 npm run dev
+npm run build
 ```
 
-Copy `.env.example` to `.env.local` only if using another API origin. The API must permit that origin. `npm run build` checks TypeScript and produces static assets for Vercel.
+The API defaults to the Railway Foundation service. Set `VITE_KAAMSET_API_URL` for a different production API. The development proxy can use `KAAMSET_LOCAL_API_URL` for an isolated local backend. Never place server provider credentials in frontend variables.
 
-## Judge path
+This owner release requires backend migrations 055–056 and the matching API/worker release. See [merchant implementation and setup](https://github.com/contactaryanshukla14-lgtm/brainforge-backend/blob/master/docs/KAAMSET-MERCHANT-PRODUCT.md).
 
-1. Choose **Try the AI team** and launch Aamchi Appliance Care.
-2. Ask about an AC that is not cooling in Andheri; check the quoted visit price and scope.
-3. Request an appointment tomorrow after 4 PM and ask to continue in Marathi.
-4. Select a numbered live opening. Switch to the merchant workbench to see Calendar and Sheet confirmation.
-5. Ask to move the appointment one hour later and check that the event ID is unchanged.
+Guest workspaces expire after 24 hours. Saved early-access workspaces have bounded daily usage. Subscription billing and arbitrary execution across every app in an integration catalogue are outside this release.
 
-The businesses and customers are fictional. Calendar and Sheet actions use dedicated demo resources. Payment integration is not connected. Provider actions are labelled confirmed only after readback; unresolved writes remain pending verification.
+## Verification
 
-More detail: [pitch and demo](docs/PITCH_AND_DEMO.md), [architecture](docs/ARCHITECTURE.md), [verification](docs/TEST_RESULTS.md), and [work provenance](docs/PROVENANCE.md).
+Production TypeScript/Vite builds pass. Real-provider browser checks completed three-step onboarding, team creation/activation, specialist/reviewer work after leaving the page, and three-stage website generation/publication. Desktop and phone layouts/navigation were inspected; screenshots are in `docs/screenshots`.
