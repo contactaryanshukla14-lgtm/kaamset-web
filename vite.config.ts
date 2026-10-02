@@ -7,7 +7,7 @@ export default defineConfig({
       "/v1": {
         target:
           process.env.KAAMSET_LOCAL_API_URL ||
-          "https://foundation-production-api-production.up.railway.app",
+          "http://127.0.0.1:3001",
         changeOrigin: true,
         configure(proxy) {
           proxy.on("proxyReq", (request) => request.removeHeader("origin"));

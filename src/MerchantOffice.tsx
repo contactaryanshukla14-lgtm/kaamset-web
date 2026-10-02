@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
   Activity,
@@ -9,8 +9,11 @@ import {
   ChevronRight,
   Cloud,
   Copy,
-  Download,
   FileText,
+  ShoppingBag,
+  Wallet,
+  BookOpen,
+  TrendingUp,
   Globe,
   Instagram,
   LayoutDashboard,
@@ -38,9 +41,10 @@ import {
   type WorkspaceState,
 } from "./api";
 import PixelTeammate from "./PixelTeammate";
-import InboxPanel from "./InboxPanel";
-import WebsiteStudio from "./WebsiteStudio";
-import WhatsAppSalesDesk from "./WhatsAppSalesDesk";
+const InboxPanel = lazy(() => import("./InboxPanel"));
+const WebsiteStudio = lazy(() => import("./WebsiteStudio"));
+const WhatsAppSalesDesk = lazy(() => import("./WhatsAppSalesDesk"));
+import DeskLoading from "./DeskLoading";
 import { memberCharacter, teamName, websiteStageName } from "./team-identity";
 import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
 import {
@@ -49,12 +53,14 @@ import {
   OrderDesk,
   SharedBrain,
 } from "./MerchantTools";
+import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,type ReadyTeamId} from "./ReadyTeams";
+import MerchantOps,{type OpsPage} from "./MerchantOps";
+import UpiSettings from "./UpiSettings";
 import "./office.css";
 
 const storageKey = "kaamset_merchant_workspace_token";
 const legacyStorageKey = "kaamset_workspace_token";
 const pageKey = "kaamset_merchant_page";
-const jobDraftKey = "kaamset_merchant_job_draft";
 const connectionAttemptKey = "kaamset_connection_attempt";
 
 function restoredPage(): Page {
@@ -111,6 +117,7 @@ function ResultText({ text }: { text: string }) {
 type Page =
   | "work"
   | "team"
+  | "counter" | "shop" | "khata" | "money" | "requests"
   | "customers"
   | "whatsapp"
   | "marketing"
@@ -122,8 +129,13 @@ type Page =
 const pages = [
   { id: "work", label: "My work", Icon: LayoutDashboard },
   { id: "team", label: "My AI team", Icon: Users },
+  {id:"counter",label:"Arjun · Counter",Icon:ShoppingBag},
+  {id:"shop",label:"Tara · Online dukaan",Icon:Globe},
+  {id:"khata",label:"Naina · Khata",Icon:BookOpen},
+  {id:"money",label:"Money desk",Icon:Wallet},
+  {id:"requests",label:"Customer requests",Icon:TrendingUp},
   { id: "customers", label: "Customer desk", Icon: MessageCircle },
-  { id: "whatsapp", label: "WhatsApp · Saathi", Icon: MessageCircle },
+  { id: "whatsapp", label: "Aarav · WhatsApp", Icon: MessageCircle },
   { id: "marketing", label: "Instagram studio", Icon: Instagram },
   { id: "website", label: "Website team", Icon: Globe },
   { id: "assistant", label: "Milan · Assistant", Icon: Activity },
@@ -131,38 +143,6 @@ const pages = [
   { id: "connections", label: "Connections", Icon: Link2 },
   { id: "business", label: "Business & memory", Icon: Brain },
 ] as const;
-const jobs = [
-  {
-    name: "Milo · Sales team",
-    id: "milo",
-    tag: "Enquiries → bookings → payments",
-    text: "Create my sales team to answer enquiries from my connected Gmail and WhatsApp, qualify customers, quote approved products or services, capture orders and book appointments on my approved calendar. Send Paytm payment requests only after the customer accepts the exact quote. Follow up within my approved rules; escalate discounts, complaints and missing stock.",
-  },
-  {
-    name: "Rang · Instagram team",
-    id: "riya",
-    tag: "Content, comments & customer DMs",
-    text: "Manage my business Instagram: plan captions and owner-approved photo posts, publish on my approved schedule, answer routine comments and eligible inbound DMs, qualify interest and coordinate approved bookings or orders. Ask me for content approval and commercial exceptions. Check each required account permission.",
-  },
-  {
-    name: "Udaan · Website team",
-    id: "vijay",
-    tag: "Assets → design → copy → live link",
-    text: "Create and publish a polished mobile business website from my approved facts and photos. Use a team to curate assets, design the customer journey, write grounded copy and verify the site. Give me a usable KaamSet website link.",
-  },
-  {
-    name: "Milan · Personal assistant",
-    id: "milan",
-    tag: "Remember commitments. Follow through.",
-    text: "Act as Milan, my personal assistant. Draft personalised WhatsApp reminders and schedule exact messages I approve to opted-in contacts. Help me remember appointments and ask customers to share agreed payment details. Stop collection reminders once payment is verified.",
-  },
-  {
-    name: "Saathi · WhatsApp Sales & Payments",
-    id: "tara",
-    tag: "Enquiry → approved quote → verified payment",
-    text: "Build Saathi, my WhatsApp Sales & Payments team. Tara is the only speaking teammate in each customer conversation. Understand English, Hindi and Hinglish; answer from approved business facts, gather order requirements, quote approved products or services within my discount rules and capture customer acceptance. Milo checks the quote and order. Chotu creates the merchant Paytm payment request only after the customer accepts the exact quote and verifies payment with the provider. Milan follows up only within my approved unpaid reminder schedule and stops after verified payment. Escalate missing stock, delivery promises, complaints and exceptions to me. Tell me what job-specific facts and account connections are still needed.",
-  },
-];
 const languageOptions = [
   "Hinglish",
   "English",
@@ -182,7 +162,7 @@ const initial: BusinessSetup = {
   city: "",
   language: "Hinglish",
   description: "",
-  goal: "",
+  goal: `Ready team: ${selectedReadyTeam(new URLSearchParams(location.search).get("team")) || "sia"}`,
   contact: "",
   rules:
     "Ask me about discounts, complaints, stock and delivery exceptions. Never invent business facts.",
@@ -265,32 +245,32 @@ function Setup({
         <aside className="office-story">
           <span className="office-eyebrow">YOUR BUSINESS, WITH AN AI TEAM</span>
           <h1>
-            Aap kaam bataiye.
+            Apni team chuniye.
             <br />
             <em>Team sambhal legi.</em>
           </h1>
           <p>
-            Turn the work on your mind into a team that knows your business,
-            uses your apps, and keeps working in the cloud.
+            Ready AI teammates learn your business, prepare useful work,
+            and handle the live apps you connect from your cloud office.
           </p>
           <div className="office-crew-scene">
             <div className="scene-orbit" />
             <div className="scene-member scene-riya">
-              <PixelTeammate id="riya" />
+              <PixelTeammate id="baba" />
               <span>
-                Riya <small>Marketing</small>
+                Arjun <small>Counter</small>
               </span>
             </div>
             <div className="scene-member scene-milo">
-              <PixelTeammate id="milo" />
+              <PixelTeammate id="ma" />
               <span>
-                Milo <small>Sales</small>
+                Naina <small>Khata</small>
               </span>
             </div>
             <div className="scene-member scene-vijay">
-              <PixelTeammate id="vijay" />
+              <PixelTeammate id="tara" />
               <span>
-                Vijay <small>Websites</small>
+                Tara <small>Dukaan</small>
               </span>
             </div>
             <div className="scene-cloud">
@@ -419,30 +399,10 @@ function Setup({
               </>
             ) : (
               <>
-                <h2>What work can we take off your plate?</h2>
-                <p>Start with one outcome. You can add more teams later.</p>
-                <label>
-                  Describe the job
-                  <textarea
-                    autoFocus
-                    value={setup.goal}
-                    rows={4}
-                    maxLength={2000}
-                    onChange={(e) => field("goal", e.target.value)}
-                    placeholder="Instagram par enquiries ka jawab do, appointments book karo, aur mujhe exceptions batao."
-                    required
-                  />
-                </label>
-                <div className="office-job-chips">
-                  {jobs.map((j) => (
-                    <button
-                      type="button"
-                      key={j.id}
-                      onClick={() => field("goal", j.text)}
-                    >
-                      {j.name}
-                    </button>
-                  ))}
+                <h2>Who should help you first?</h2>
+                <p>Choose a ready teammate. No payment account is needed to start preparing work.</p>
+                <div className="ready-onboarding-grid" role="group" aria-label="Choose your first teammate">
+                  {readyTeams.filter(t=>!['saathi','rang','udaan','raabta'].includes(t.code)).map(t=><button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={setup.goal===`Ready team: ${t.code}`} onClick={()=>field("goal",`Ready team: ${t.code}`)}><PixelTeammate id={t.id}/><span><strong>{t.name}</strong><small>{t.tag}</small></span>{setup.goal===`Ready team: ${t.code}`&&<Check size={16}/>}</button>)}
                 </div>
                 <label>
                   When should your team ask you?
@@ -490,7 +450,7 @@ function Setup({
                   </>
                 ) : (
                   <>
-                    {step === 2 ? "Create my AI team" : "Continue"}
+                    {step === 2 ? "Open my teammate" : "Continue"}
                     <ArrowRight size={17} />
                   </>
                 )}
@@ -815,7 +775,7 @@ function PaymentSettings({
           }
         />
       </div>
-      <h3>{workspace.paymentSetup?.configured ? "Paytm is connected to this business." : "Connect Paytm once. Your team handles the requests."}</h3>
+      <h3>{workspace.paymentSetup?.configured ? "Paytm Checkout settings are saved." : "Add Paytm Checkout for automatic verification."}</h3>
       <p>
         Send an accepted order’s payment request, let the customer pay, then
         verify the transaction with Paytm before marking it collected.
@@ -918,9 +878,8 @@ export default function MerchantOffice() {
     [busy, setBusy] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [job, setJob] = useState(() => sessionStorage.getItem(jobDraftKey) || ""),
     [task, setTask] = useState(""),
-    [selected, setSelected] = useState(""),
+    [selected, setSelected] = useState(()=>sessionStorage.getItem("kaamset_selected_teammate")||""),
     [accountOpen, setAccountOpen] = useState(
       window.location.pathname === "/reset-password",
     ),
@@ -932,26 +891,15 @@ export default function MerchantOffice() {
     [menu, setMenu] = useState(false),
     [brief, setBrief] = useState(""),
     [briefApproved, setBriefApproved] = useState(false),
-    [sharing, setSharing] = useState<{
-      name: string;
-      request: string;
-      rules: string[];
-      format: string;
-    } | null>(null);
-  const [recipeImportOpen,setRecipeImportOpen]=useState(false),[recipeText,setRecipeText]=useState(''),[recipeError,setRecipeError]=useState(''),[recipeCopied,setRecipeCopied]=useState(false);
-  function loadRecipe(text:string){
-    if(new Blob([text]).size>20000)throw new Error('Use a teammate recipe under 20 KB.');
-    let r;try{r=JSON.parse(text)}catch{throw new Error('Paste the complete recipe JSON or choose its .json file.');}
-    if(!r||r.format!=='kaamset-teammate-v1'||typeof r.request!=='string'||r.request.trim().length<10||r.request.length>2000||!Array.isArray(r.rules)||r.rules.length>12||r.rules.some((x:unknown)=>typeof x!=='string'||!x.trim()||x.length>300))throw new Error('This is not a supported teammate recipe.');
-    setJob(`${r.request}\nRules: ${r.rules.join('; ')}`.slice(0,2000));setNotice('Recipe loaded. Review the job text; your own facts and connections will be checked.');setRecipeImportOpen(false);setRecipeText('');navigate('work');
-  }
+    [sharing,setSharing]=useState<{name:string;url:string}|null>(null);
+  const [choosingTeam,setChoosingTeam]=useState<ReadyTeamId|null>(null),[recipeCopied,setRecipeCopied]=useState(false);
+  useEffect(()=>{if(selected)sessionStorage.setItem("kaamset_selected_teammate",selected);else sessionStorage.removeItem("kaamset_selected_teammate")},[selected]);
+  const sharedLinkSeen=useRef(false);
   const legacyRestore = useRef(!localStorage.getItem(storageKey) && !!localStorage.getItem(legacyStorageKey));
+  const workspaceRef=useRef(workspace);workspaceRef.current=workspace;
   const tokenRef = useRef(token),
     inFlight = useRef(false),
-    buildAttempt = useRef<{ request: string; key: string } | null>(null),
     taskAttempt = useRef<{ blueprintId: string; text: string; key: string } | null>(null),
-    importFile = useRef<HTMLInputElement>(null),
-    jobInput = useRef<HTMLTextAreaElement>(null),
     menuButton = useRef<HTMLButtonElement>(null),
     sidebar = useRef<HTMLElement>(null),
     pageContent = useRef<HTMLElement>(null);
@@ -966,10 +914,8 @@ export default function MerchantOffice() {
     setPage("work");
     setSelected("");
     setTask("");
-    setJob("");
-    buildAttempt.current = null;
+    setChoosingTeam(null);
     taskAttempt.current = null;
-    sessionStorage.removeItem(jobDraftKey);
     sessionStorage.removeItem(connectionAttemptKey);
     setMenu(false);
   }
@@ -1035,24 +981,25 @@ export default function MerchantOffice() {
       }
     };
     void run();
-    const timer = setInterval(() => {
-      if (document.visibilityState === "visible") void run();
-    }, 6000);
+    let timer:ReturnType<typeof setTimeout>;
+    const tick=async()=>{if(document.visibilityState==='visible')await run();if(!cancelled){const currentWork=workspaceRef.current;const pending=currentWork?.tasks.some(t=>['queued','working'].includes(t.state))||currentWork?.sites?.some(s=>['queued','designing','publishing'].includes(s.state));timer=setTimeout(tick,pending?4500:18000)}};
+    timer=setTimeout(tick,6000);
+    const wake=()=>{if(document.visibilityState==='visible')void run()};document.addEventListener('visibilitychange',wake);window.addEventListener('focus',wake);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      clearTimeout(timer);document.removeEventListener("visibilitychange",wake);window.removeEventListener("focus",wake);
     };
   }, [token]);
   useEffect(() => {
-    if(!sharing&&!recipeImportOpen)return;
+    if(!sharing)return;
     const modal=document.querySelector<HTMLElement>('.office-modal[role="dialog"]'),previous=document.activeElement as HTMLElement|null;
     const items=()=>Array.from(modal?.querySelectorAll<HTMLElement>('button:not(:disabled),textarea,input,a[href]')||[]);
     items()[0]?.focus();const overflow=document.body.style.overflow;document.body.style.overflow='hidden';
-    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){setSharing(null);setRecipeImportOpen(false)}if(e.key==='Tab'){const list=items(),first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}};
+    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){setSharing(null)}if(e.key==='Tab'){const list=items(),first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}};
     document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);document.body.style.overflow=overflow;previous?.focus()};
-  }, [!!sharing,recipeImportOpen]);
+  }, [!!sharing]);
   useEffect(() => { sessionStorage.setItem(pageKey, page); }, [page]);
-  useEffect(() => { sessionStorage.setItem(jobDraftKey, job); }, [job]);
+  useEffect(()=>{if(!workspace||sharedLinkSeen.current)return;const code=selectedReadyTeam(new URLSearchParams(location.search).get("team"));if(code){sharedLinkSeen.current=true;setChoosingTeam(code)}},[!!workspace]);
   useEffect(() => {
     if (!menu) return;
     const first = sidebar.current?.querySelector<HTMLButtonElement>("button");
@@ -1115,17 +1062,13 @@ export default function MerchantOffice() {
       acceptToken(r.token);
       setWorkspace(r.workspace);
       sessionStorage.removeItem("kaamset_setup_draft");
-      setJob(setup.goal);
-      setBusy("Designing your team");
-      buildAttempt.current = {request: setup.goal, key: crypto.randomUUID()};
-      const b = await api.build(r.token, setup.goal, buildAttempt.current.key);
-      buildAttempt.current = null;
+      const id=selectedReadyTeam(setup.goal.replace("Ready team: ","")) || "sia";
+      setBusy("Preparing your ready teammate");
+      const b=await api.readyTeam(r.token,id);
       setSelected(b.id);
       await refresh(r.token);
       setPage("team");
-      setNotice(
-        "Your team proposal is ready. Review its rules and any setup needed.",
-      );
+      setNotice("Your teammate is ready for review. Activate it to prepare work; add live connections when you need them.");
       if (r.workspace.providers?.cognee)
         void api
           .remember(r.token)
@@ -1137,17 +1080,12 @@ export default function MerchantOffice() {
           );
     });
   }
-  async function build(request = job) {
-    await act("Designing your team", async () => {
-      if (!token) return;
-      if (buildAttempt.current?.request !== request) buildAttempt.current = { request, key: crypto.randomUUID() };
-      const b = await api.build(token, request, buildAttempt.current.key);
-      buildAttempt.current = null;
-      setSelected(b.id);
-      await refresh();
-      setPage("team");
-    });
+  async function configureReadyTeam(id:ReadyTeamId,options:Record<string,boolean>,revision?:number){
+    await act("Saving teammate setup",async()=>{if(!token)return;const b=await api.readyTeam(token,id,options,revision);setSelected(b.id);await refresh();setChoosingTeam(null);navigate("team");setNotice("Review the saved job, then activate your teammate. Live actions wait for their required connections.");});
   }
+  const deskFor:Partial<Record<ReadyTeamId,Page>>={arjun:'counter',dukaan:'shop',naina:'khata',nazar:'money',kabir:'requests',ira:'requests',sahaj:'assistant',rang:'marketing',udaan:'website',raabta:'customers',saathi:'whatsapp'};
+  function openReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);sessionStorage.setItem("kaamset_selected_teammate",b.id);navigate(deskFor[id]||'team')}else setChoosingTeam(id)}
+  function askReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);setTask(readyTeams.find(t=>t.code===id)!.example);navigate('team')}else setChoosingTeam(id)}
   const current =
     workspace?.blueprints.find((b) => b.id === selected) ||
     workspace?.blueprints.at(-1);
@@ -1157,12 +1095,7 @@ export default function MerchantOffice() {
   ) {
     await act("Updating your team", async () => {
       if (!token) return;
-      const r = await api.teammateControl(token, b, action);
-      if ("rebuild" in r) {
-        setJob(r.rebuild);
-        const rebuilt = await api.build(token, r.rebuild);
-        setSelected(rebuilt.id);
-      }
+      await api.teammateControl(token, b, action);
       await refresh();
     });
   }
@@ -1170,13 +1103,6 @@ export default function MerchantOffice() {
     setPage(next);
     setMenu(false);
     requestAnimationFrame(() => { pageContent.current?.focus({preventScroll: true}); window.scrollTo({top: 0, behavior: "instant"}); });
-  }
-  function useJob(text: string) {
-    setJob(text);
-    requestAnimationFrame(() => {
-      jobInput.current?.focus({preventScroll: true});
-      jobInput.current?.scrollIntoView({block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"});
-    });
   }
   async function connectApp(id: string, title: string, restart = false) {
     await act(`Opening ${title} connection`, async () => {
@@ -1221,11 +1147,12 @@ export default function MerchantOffice() {
       ) : !workspace ? (
         <main className="office-loading">
           <Brand />
-          <LoaderCircle className="spin" />
+          {!error && <LoaderCircle className="spin" />}
           <h2>Opening your cloud office</h2>
           {error && (
             <>
               <p className="office-error">{error}</p>
+              <button className="office-primary" disabled={!!busy} onClick={()=>void act("Reopening your workspace",async()=>{await refresh()})}>Try again <RefreshCw size={16}/></button>
               <button
                 className="office-secondary"
                 onClick={() => setAccountOpen(true)}
@@ -1268,7 +1195,7 @@ export default function MerchantOffice() {
               <Settings size={15} />
             </button>
             <nav aria-label="Business workspace">
-              {pages.map(({ id, label, Icon }) => (
+              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading">{group==='daily'?'YOUR DUKAAN':group==='channels'?'CUSTOMER CHANNELS':'YOUR SETUP'}</span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   className={page === id ? "selected" : ""}
@@ -1279,7 +1206,7 @@ export default function MerchantOffice() {
                   {label}
                   {id === "work" && pending > 0 && <b>{pending}</b>}
                 </button>
-              ))}
+              ))}</div>)}
             </nav>
             <div className="office-sidebar-bottom">
               <div className="office-cloud-state">
@@ -1396,17 +1323,19 @@ export default function MerchantOffice() {
                   stopped until you resume the team.
                 </div>
               )}
+              <Suspense fallback={<DeskLoading label="Opening your teammate’s desk"/>}>
+              {['counter','shop','khata','money','requests'].includes(page)&&<MerchantOps key={page} page={page as OpsPage} token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={setChoosingTeam} onCatalogue={()=>navigate('business')} onPayments={()=>navigate('connections')} onAsk={askReadyTeam}/>}
               {page === "work" && (
                 <>
-                  <div className="office-heading">
+                  <div className="office-heading office-merchant-welcome">
                     <div>
                       <span className="office-eyebrow">
                         YOUR DAY, WITH LESS BUSYWORK
                       </span>
                       <h1>Namaste, {workspace.business?.name}.</h1>
                       <p>
-                        Give your team an outcome. Come back to work you can
-                        use.
+                        Choose a teammate. Give it work. Come back to a result
+                        you can use.
                       </p>
                     </div>
                     <span className="office-heading-icon">
@@ -1415,18 +1344,18 @@ export default function MerchantOffice() {
                   </div>
                   <div className="office-summary">
                     <div>
-                      <span>Working in the cloud</span>
-                      <strong>{pending.toString().padStart(2, "0")}</strong>
+                      <span>Saved bills</span>
+                      <strong>{workspace.merchantOps?.summary.bills||0}</strong>
                     </div>
                     <div>
-                      <span>Ready to review</span>
+                      <span>Outstanding udhaar</span>
                       <strong>
-                        {needsAttention.toString().padStart(2, "0")}
+                        ₹{((workspace.merchantOps?.summary.outstandingCreditPaise||0)/100).toLocaleString('en-IN')}
                       </strong>
                     </div>
                     <div>
-                      <span>Completed jobs</span>
-                      <strong>{completed.toString().padStart(2, "0")}</strong>
+                      <span>Unmet customer requests</span>
+                      <strong>{workspace.merchantOps?.summary.unmetRequests||0}</strong>
                     </div>
                     <div>
                       <span>Verified collections</span>
@@ -1439,58 +1368,9 @@ export default function MerchantOffice() {
                       </strong>
                     </div>
                   </div>
-                  <section className="office-composer">
-                    <div className="office-composer-label">
-                      <Sparkles size={18} />
-                      <span>WHAT SHOULD YOUR NEXT TEAM DO?</span>
-                    </div>
-                    <textarea
-                      ref={jobInput}
-                      aria-label="Describe the work for your AI team"
-                      rows={3}
-                      maxLength={2000}
-                      value={job}
-                      onChange={(e) => setJob(e.target.value)}
-                      placeholder="Describe the work in your own words. ‘Handle my salon enquiries and book appointments.’"
-                    />
-                    <div>
-                      <VoiceInput
-                        token={token}
-                        enabled={!!workspace.providers?.sarvam}
-                        onText={setJob}
-                        onError={setError}
-                      />
-                      <button
-                        className="office-primary"
-                        disabled={!!busy || job.trim().length < 10}
-                        onClick={() => build()}
-                      >
-                        Build my team <ArrowRight size={17} />
-                      </button>
-                    </div>
-                  </section>
-                  <div className="office-section-heading">
-                    <h2>Start with work that matters.</h2>
-                    <p>Use a starting brief, then make the team yours.</p>
-                  </div>
-                  <div className="office-job-grid">
-                    {jobs.map((j) => (
-                      <button
-                        key={j.id}
-                        className="office-job-card"
-                        onClick={() => {
-                          useJob(j.text);
-                        }}
-                      >
-                        <PixelTeammate id={j.id} />
-                        <div>
-                          <h3>{j.name}</h3>
-                          <p>{j.tag}</p>
-                        </div>
-                        <ArrowUpRight size={18} />
-                      </button>
-                    ))}
-                  </div>
+                  <p className="office-cloud-summary"><Cloud size={15}/>{pending} cloud jobs running <span>·</span>{needsAttention} setups / orders need review <span>·</span>{completed} jobs completed <small>Totals cover saved workspace records.</small></p>
+                  <div className="office-merchant-shortcuts"><button onClick={()=>navigate('counter')}><ShoppingBag size={21}/><span><strong>Make a bill</strong><small>Arjun’s counter</small></span><ArrowRight size={17}/></button><button onClick={()=>navigate('khata')}><BookOpen size={21}/><span><strong>Check udhaar</strong><small>Naina’s ledger</small></span><ArrowRight size={17}/></button><button onClick={()=>navigate('shop')}><Globe size={21}/><span><strong>Share my shop</strong><small>Tara’s storefront</small></span><ArrowRight size={17}/></button></div>
+                  <ReadyTeamGallery workspace={workspace} busy={!!busy} onChoose={openReadyTeam}/>
                   <div className="office-section-heading">
                     <h2>Recent work</h2>
                     <button
@@ -1506,7 +1386,7 @@ export default function MerchantOffice() {
                       <div>
                         <h3>Your first result starts with a clear job.</h3>
                         <p>
-                          Create a team, review its setup, then give it work.
+                          Choose a teammate, review its setup, then give it work.
                           Every result stays in this workspace.
                         </p>
                       </div>
@@ -1663,42 +1543,18 @@ export default function MerchantOffice() {
                       className="office-primary"
                       onClick={() => navigate("work")}
                     >
-                      <Plus size={16} /> New team
+                      <Plus size={16} /> Choose another teammate
                     </button>
                   </div>
-                  <input
-                    hidden
-                    type="file"
-                    ref={importFile}
-                    accept=".json"
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      try {
-                        if (f.size > 20000)
-                          throw new Error("Use a teammate recipe under 20 KB.");
-                        loadRecipe(await f.text());
-                      } catch (e) {
-                        setError((e as Error).message);
-                      } finally { e.target.value=""; }
-                    }}
-                  />
-                  <button
-                    className="office-text"
-                    onClick={() => importFile.current?.click()}
-                  >
-                    <Upload size={15} /> Import a partner’s teammate recipe
-                  </button>
-                  <button className="office-text" onClick={()=>{setRecipeImportOpen(true);setRecipeError('')}}><Copy size={15}/> Paste a teammate recipe</button>
                   {!current ? (
                     <section className="office-empty">
                       <Users size={30} />
-                      <h3>Describe a job to create your first team.</h3>
+                      <h3>Choose your first ready teammate.</h3>
                       <button
                         className="office-primary"
                         onClick={() => navigate("work")}
                       >
-                        Create a team
+                        Choose a ready teammate
                       </button>
                     </section>
                   ) : (
@@ -1719,7 +1575,7 @@ export default function MerchantOffice() {
                           </button>
                         ))}
                       </aside>
-                      <section className="office-card office-team-detail">
+                      <section className="office-card office-team-detail" key={current.id}>
                         <div className="office-card-head">
                           <span className="office-eyebrow">
                             YOUR TEAM BRIEF
@@ -1769,27 +1625,12 @@ export default function MerchantOffice() {
                                 className="office-text"
                                 onClick={() => navigate("business")}
                               >
-                                Update business facts
+                                {current.plan.skills.some(s=>["bill_review","shop_publish"].includes(s))?"Add products & prices":"Update business facts"}
                               </button>
                             </div>
                           </div>
                         )}
-                        {current.plan.alternative && (
-                          <div className="office-setup-needed">
-                            <h3>An achievable job to start with</h3>
-                            <p>{current.plan.alternative}</p>
-                            {current.plan.assessment ===
-                              "needs_scope_change" && (
-                              <button
-                                className="office-secondary"
-                                disabled={!!busy}
-                                onClick={() => control(current, "accept_scope")}
-                              >
-                                Accept and check this job
-                              </button>
-                            )}
-                          </div>
-                        )}
+                        {current.plan.alternative&&<div className="office-setup-needed"><h3>Choose a supported ready teammate</h3><p>This older job needs a supported scope. Choose a ready teammate and review its settings.</p><button className="office-secondary" onClick={()=>navigate("work")}>Browse ready teammates</button></div>}
                         <div className="office-actions">
                           <button
                             className="office-primary"
@@ -1829,17 +1670,8 @@ export default function MerchantOffice() {
                           >
                             <RefreshCw size={15} /> Recheck setup
                           </button>
-                          <button
-                            className="office-text"
-                            disabled={!!busy}
-                            onClick={() =>
-                              act("Preparing teammate recipe", async () =>
-                                { setRecipeCopied(false);setSharing(await api.recipe(token!, current.id)); },
-                              )
-                            }
-                          >
-                            <Download size={15} /> Share recipe
-                          </button>
+                          {selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]&&current.state==='active'&&<button className="office-secondary" onClick={()=>navigate(deskFor[current.presetId as ReadyTeamId]!)}>Open teammate’s desk <ArrowRight size={15}/></button>}
+                          {selectedReadyTeam(current.presetId)&&<><button className="office-secondary" disabled={!!busy} onClick={()=>setChoosingTeam(current.presetId as ReadyTeamId)}>Configure teammate</button><button className="office-text" disabled={!!busy} onClick={()=>{const url=new URL("/",location.origin);url.searchParams.set("team",current.presetId!);setRecipeCopied(false);setSharing({name:teamName(current),url:url.toString()})}}><Copy size={15}/> Share teammate</button></>}
                         </div>
                         {current.state === "active" && (
                           <div className="office-team-task">
@@ -1853,7 +1685,9 @@ export default function MerchantOffice() {
                                 placeholder="Prepare customer replies for today’s offer. Explain what needs my attention…"
                               />
                             </label>
+                            {selectedReadyTeam(current.presetId)&&<button className="office-text" onClick={()=>setTask(readyTeams.find(t=>t.code===current.presetId)!.example)}>Try a useful first task <Sparkles size={15}/></button>}
                             <div className="office-actions">
+                              <VoiceInput token={token} enabled={!!workspace.providers?.sarvam} onText={setTask} onError={setError}/>
                               <button
                                 className="office-primary"
                                 disabled={
@@ -1935,6 +1769,16 @@ export default function MerchantOffice() {
                             </p>
                           </div>
                         )}
+                        <section className="office-team-results" aria-label="This teammate’s work">
+                          <div className="office-card-head"><h3>This teammate’s work</h3><button className="office-text" onClick={()=>navigate('work')}>All workspace results <ArrowRight size={15}/></button></div>
+                          {workspace.tasks.filter(t=>t.blueprintId===current.id).slice(-3).reverse().map((t,index)=><article className="office-team-result" key={t.id}>
+                            <div className="office-card-head"><Status value={t.state}/><small>{new Date(t.createdAt).toLocaleString('en-IN')}</small></div>
+                            <h4>{t.result?.title||t.text}</h4>
+                            {!!t.checkpoint?.stages.length&&<div className="office-stage-trail">{t.checkpoint.stages.map(s=><span key={s.role}><Check size={13}/>{s.specialistName} · {s.role==='specialist'?'Prepared':'Reviewed'}</span>)}</div>}
+                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||'Your cloud team is working. You can close this browser and return to the result.'}</p>}
+                          </article>)}
+                          {!workspace.tasks.some(t=>t.blueprintId===current.id)&&<p className="office-footnote">Saved results and progress will appear here after your first task.</p>}
+                        </section>
                       </section>
                     </div>
                   )}
@@ -1952,7 +1796,7 @@ export default function MerchantOffice() {
                   token={token}
                   workspace={workspace}
                   onChange={() => refresh()}
-                  onBuild={() => { setJob(jobs[4].text); navigate("work"); }}
+                  onBuild={() => setChoosingTeam("saathi")}
                   onBusiness={() => navigate("business")}
                   onTeam={(id) => { setSelected(id); navigate("team"); }}
                   paymentSettings={<PaymentSettings token={token!} workspace={workspace} onChange={() => refresh()} onSaveAccount={() => setAccountOpen(true)} />}
@@ -1966,7 +1810,7 @@ export default function MerchantOffice() {
                   instagramReady={workspace.connections.some(c=>c.toolkit==='instagram'&&c.status==='connected'&&!!c.identity)}
                   onConnect={() => navigate("connections")}
                   onChange={() => refresh()}
-                  onBuild={() => { setJob("Create Riya to draft captions and publish my exact owner-approved static photo posts to my business Instagram on a schedule. Publishing only for now; ask me for approval of each post."); navigate("work"); }}
+                  onBuild={() => setChoosingTeam("rang")}
                 />
               )}
               {page === "website" && (
@@ -1974,10 +1818,7 @@ export default function MerchantOffice() {
                   token={token}
                   workspace={workspace}
                   onChange={() => refresh()}
-                  onBuild={() => {
-                    setJob(jobs[2].text);
-                    navigate("work");
-                  }}
+                  onBuild={() => setChoosingTeam("udaan")}
                 />
               )}
               {page === "assistant" && (
@@ -1986,10 +1827,7 @@ export default function MerchantOffice() {
                   workspace={workspace}
                   onChange={() => refresh()}
                   onPair={() => navigate("whatsapp")}
-                  onBuild={() => {
-                    setJob(jobs[3].text);
-                    navigate("work");
-                  }}
+                  onBuild={() => setChoosingTeam("sahaj")}
                 />
               )}
               {page === "orders" && (
@@ -1999,6 +1837,7 @@ export default function MerchantOffice() {
                     workspace={workspace}
                     onChange={() => refresh()}
                   />
+                  <UpiSettings token={token!} saved={!!workspace.account?.saved} onSaveAccount={()=>setAccountOpen(true)} onChange={()=>refresh()}/>
                   <PaymentSettings
                     token={token!}
                     workspace={workspace}
@@ -2181,6 +2020,7 @@ export default function MerchantOffice() {
                       </button>
                     </article>
                   </div>
+                  <UpiSettings token={token!} saved={!!workspace.account?.saved} onSaveAccount={()=>setAccountOpen(true)} onChange={()=>refresh()}/>
                   <PaymentSettings
                     token={token!}
                     workspace={workspace}
@@ -2298,6 +2138,7 @@ export default function MerchantOffice() {
                   </section>
                 </>
               )}
+              </Suspense>
             </main>
             <footer className="office-footer">
               <span>kaamset · Made for the work of your business.</span>
@@ -2315,71 +2156,8 @@ export default function MerchantOffice() {
           onToken={acceptToken}
         />
       )}
-      {recipeImportOpen&&<div className="office-modal-overlay"><section className="office-modal" role="dialog" aria-modal="true" aria-labelledby="import-recipe-title"><button className="office-close" aria-label="Close recipe import" onClick={()=>setRecipeImportOpen(false)}><X size={20}/></button><h2 id="import-recipe-title">Import a teammate recipe</h2><p>Paste the recipe your partner shared. Review the job next; it uses your own business facts and connections.</p><label htmlFor="import-recipe-text">Recipe JSON<textarea id="import-recipe-text" rows={8} maxLength={20000} value={recipeText} onChange={e=>{setRecipeText(e.target.value);setRecipeError('')}}/></label>{recipeError&&<p role="alert" className="office-error">{recipeError}</p>}<button className="office-primary" disabled={!recipeText.trim()} onClick={()=>{try{loadRecipe(recipeText)}catch(e){setRecipeError((e as Error).message)}}}>Review imported job <ArrowRight size={16}/></button></section></div>}
-      {sharing && (
-        <div className="office-modal-overlay">
-          <section
-            className="office-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="share-title"
-          >
-            <button
-              className="office-close"
-              aria-label="Close recipe sharing"
-              onClick={() => setSharing(null)}
-            >
-              <X size={20} />
-            </button>
-            <h2 id="share-title">Share a teammate recipe</h2>
-            <p>
-              Your partner can import this job into their own workspace. Review
-              this text for private names, contacts or commercial information
-              before downloading.
-            </p>
-            <label>
-              Job to share
-              <textarea
-                rows={6}
-                maxLength={2000}
-                value={sharing.request}
-                onChange={(e) =>
-                  setSharing({ ...sharing, request: e.target.value })
-                }
-              />
-            </label>
-            <details>
-              <summary>Included operating rules</summary>
-              {sharing.rules.map((r, i) => (
-                <p key={i}>{r}</p>
-              ))}
-            </details>
-            <p className="office-footnote">
-              The file excludes your business playbook, connections, customer
-              messages, payment credentials and receipts. Your partner must
-              approve their own setup.
-            </p>
-            <button
-              className="office-primary"
-              onClick={() => {
-                const blob = new Blob([JSON.stringify(sharing, null, 2)], {
-                    type: "application/json",
-                  }),
-                  url = URL.createObjectURL(blob),
-                  a = document.createElement("a");
-                a.href = url;
-                a.download = "kaamset-teammate.json";
-                document.body.appendChild(a);a.click();a.remove();
-                setTimeout(()=>URL.revokeObjectURL(url),60000);
-                setNotice('Recipe download requested. You can also copy the reviewed recipe here.');
-              }}
-            >
-              Download reviewed recipe <Download size={16} />
-            </button>
-            <button className="office-secondary" onClick={async()=>{try{await navigator.clipboard.writeText(JSON.stringify(sharing,null,2));setRecipeCopied(true)}catch{setError('Copy could not finish. Download the recipe instead.')}}}>{recipeCopied?'Recipe copied':'Copy reviewed recipe'} <Copy size={16}/></button>
-          </section>
-        </div>
-      )}
+      {choosingTeam&&workspace&&<ReadyTeamSetup key={choosingTeam} code={choosingTeam} workspace={workspace} busy={!!busy} onClose={()=>setChoosingTeam(null)} onSave={configureReadyTeam}/>}
+      {sharing&&<div className="office-modal-overlay"><section className="office-modal" role="dialog" aria-modal="true" aria-labelledby="share-title"><button className="office-close" aria-label="Close teammate sharing" onClick={()=>setSharing(null)}><X size={20}/></button><h2 id="share-title">Share {sharing.name}</h2><p>Your partner chooses this ready teammate using their own business facts, connections and approvals.</p><label>Teammate setup link<input readOnly value={sharing.url} onFocus={e=>e.target.select()}/></label><p className="office-footnote">This link contains only the teammate choice. Your business records and connected accounts remain in your workspace.</p><button className="office-primary" onClick={async()=>{try{await navigator.clipboard.writeText(sharing.url);setRecipeCopied(true)}catch{setError('Copy could not finish. Select and copy the setup link above.')}}}><Copy size={16}/>{recipeCopied?'Link copied':'Copy setup link'}</button></section></div>}
     </div>
   );
 }
