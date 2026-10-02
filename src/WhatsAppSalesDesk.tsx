@@ -122,6 +122,10 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   const speaker = workspace.blueprints.find((b) => b.id === current?.speakerBlueprintId);
   const speakerName = speaker?.teamIdentity?.lead || "Tara";
   const pairing = wa && ["pairing", "qr", "connecting", "reconnecting"].includes(wa.state);
+  const showPairingQr = wa?.state === "qr" && !!wa.qr;
+  const pairingError = pairing ? undefined : wa?.error && wa.canLink && /qr|pairing|expired|timed out/i.test(wa.error)
+    ? "The pairing code expired. Choose Show pairing QR for a fresh code, then scan it in WhatsApp."
+    : wa?.error;
   const latestDigest = sales.digests.at(-1);
 
   async function read() {
@@ -206,12 +210,12 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
           <article><span className={`wa-step-number ${sales.settings && assigned?.state === "active" && enabled ? "done" : ""}`}>{sales.settings && assigned?.state === "active" && enabled ? <Check size={16} /> : "3"}</span><h3>Approve & go live</h3><p>Review who replies, when to follow up and when the team asks you.</p>{!teams.length ? <button className="office-text" onClick={onBuild}>Build Saathi <ArrowRight size={14} /></button> : <button className="office-text" onClick={() => onTeam(assigned?.id || teams.at(-1)!.id)}>Review my team <ArrowRight size={14} /></button>}</article>
         </div>
         <section className="wa-pairing">
-          <div><span className="office-eyebrow">WHATSAPP · YOUR CLOUD SESSION</span><h3>{connected ? "Your account is paired." : pairing ? "Scan to pair your business number." : "Bring your WhatsApp conversations here."}</h3><p>On your phone, open WhatsApp → Settings → Linked devices → Link a device. Only scan this QR for your own account.</p>{wa?.error && <p className="wa-form-error">{wa.error}</p>}
+          <div><span className="office-eyebrow">WHATSAPP · YOUR CLOUD SESSION</span><h3>{connected ? "Your account is paired." : pairing ? "Scan to pair your business number." : "Bring your WhatsApp conversations here."}</h3><p>On your phone, open WhatsApp → Settings → Linked devices → Link a device. Only scan this QR for your own account.</p>{pairingError && <p className="wa-form-error">{pairingError}</p>}
             {!connected && <p className="wa-help">{wa?.canReconnect ? "Your cloud session lost its connection. Reconnect here; saved conversations and orders stay in your workspace." : "KaamSet runs the linked session in the cloud. Your computer can be off while that session stays connected."}</p>}
             {loaded && wa && !wa.linked && !wa.canLink && !wa.canReconnect && !wa.error && <p className="wa-form-error">Cloud pairing is unavailable for this workspace. Your setup stays saved; the connection must be enabled before the team can reply.</p>}
             <div className="office-actions">{wa?.canLink && <button className="office-primary" disabled={!!busy} onClick={() => act("Preparing your pairing QR", () => api.whatsappAction(token!,"link"))}>Show pairing QR <MessageCircle size={16} /></button>}{wa?.canReconnect && <button className="office-primary" disabled={!!busy} onClick={() => act("Reconnecting your cloud WhatsApp session", () => api.whatsappAction(token!,"reconnect"))}>Reconnect <RefreshCw size={16} /></button>}{wa?.linked && <button className="office-text" disabled={!!busy} onClick={() => act("Unlinking this WhatsApp device", () => api.whatsappAction(token!,"unlink"))}>Unlink device</button>}</div>
             <small>Uses the existing WhatsApp Web linked-device adapter. Your account remains subject to WhatsApp’s linked-device requirements.</small>
-          </div>{wa?.qr && <div className="wa-qr"><QRCodeSVG value={wa.qr} size={196} marginSize={4} /><span>Scan in WhatsApp · Linked devices</span></div>}{pairing && !wa.qr && <div className="wa-qr-pending" role="status"><LoaderCircle size={28} className="spin" /><p>Preparing your QR…</p></div>}
+          </div>{showPairingQr && <div className="wa-qr"><QRCodeSVG value={wa!.qr!} size={196} marginSize={4} /><span>Scan in WhatsApp · Linked devices</span></div>}{pairing && !showPairingQr && <div className="wa-qr-pending" role="status"><LoaderCircle size={28} className="spin" /><p>{wa.state === "pairing" ? "Finishing your connection…" : "Preparing your QR…"}</p></div>}
         </section>
         {paymentSettings}
         {teams.length ? <SalesRules key={sales.settings?.revision ?? "new"} teams={teams} current={sales.settings} busy={!!busy} onSave={async (settings) => { await act("Saving your approved sales rules", () => api.configureWhatsAppSales(token!, settings)); }} /> : <div className="wa-build-first"><PixelTeammate id="tara" /><div><h3>Meet Saathi, led by Tara.</h3><p>Tell the builder your business’s WhatsApp job. It checks the work and creates a team proposal before activation.</p><button className="office-primary" onClick={onBuild}>Create WhatsApp Sales & Payments <ArrowRight size={16} /></button></div></div>}
