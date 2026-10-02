@@ -20,6 +20,14 @@ Backend PR #264, merged and approved as 98572eb0, mirrors existing validator len
 
 PR #265 clarifies the available-stock/reservation policy in canonical facts and the LLM prompt, compares website price formats in paise, and saves a bounded factual rejection reason. TypeScript and 28 targeted tests pass. An actual configured stock worker-process probe retained eight cases, rejected a second deduction and ignored injected stock/profit claims (5.8 seconds, three exact quotes). Pro HIGH in-memory website probes passed using the visible fictional brief; another probe was correctly blocked by a forbidden claim phrase. These probes made no database/external writes. Full CI, deployment and fresh persisted retries remain separate gates.
 
+## Latest release status
+
+Backend PR #265 is merged as fe4d1388. Current-head CI passed all 2,392 unit tests, 75 PostgreSQL journeys, 19 database gates, production container/assets and zero production vulnerabilities. Railway marked its API and worker deployments NEEDS_APPROVAL because the commit author is not linked to the workspace. Both services continue serving approved 98572eb0 until that approval and rollout finish.
+
+Frontend PR #3 is merged as 0f28bbe8 and deployed READY as dpl_Dqju8Z8ctW6aDFYjnJFp8qCjCTYu. Local and Vercel TypeScript/Vite builds passed. The live UI now labels stock as available for new orders and explains once-only reservation. Browser reload restored one accepted order, eight available units and zero verified collections; the revised native screenshot is saved.
+
+After fe4d1388 reaches SUCCESS on both services: explicitly queue a fresh stock task and check its answer for eight available cases without a second deduction; publish a new approved website through the merchant UI, close that test tab while working, reopen and verify the published page/link. Those checks remain pending and must not be reported as passed. The impossible-demand and duplicate-acceptance checks already passed on 98572eb0.
+
 ## Requires merchant setup and live verification
 
 - Instagram Business/Creator account, appropriate Meta permissions and approved posting/reply rules.
