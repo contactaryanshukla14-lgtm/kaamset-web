@@ -44,6 +44,10 @@ Desktop and 390px phone screens were inspected with keyboard/modal and reduced-m
 
 ## Verification
 
+The latest teammate interaction puts work ahead of configuration, with role-specific starters, search/category controls, real job progress and expandable results. Scoped unapproved task/counter drafts survive desk changes and reload in this tab; approvals and photos are not restored. Failed work has a focused edit path. The task editor is lazy-loaded, leaving the main production bundle at approximately 391 KB before gzip.
+
+Exact built-bundle checks passed category/search/empty states, draft separation and approval reset, result expansion, keyboard focus and 360/390/768/1440px layouts without JavaScript errors or horizontal overflow. Actual isolated worker/model tests produced grounded Naina reminders, a Sia adversarial refusal and Riya captions with confirmed prices and explicit unknown-stock wording. No new live payment or external channel action is claimed. Preserve the matching API/worker release gate before promoting this frontend.
+
 Brand fonts are served from `public/fonts` with swap rendering and a heading-font preload. The blocking Google Fonts stylesheet import is removed. Original SIL notices are included with the font assets; Indian-script text retains the device's appropriate fallback font.
 
 Production TypeScript/Vite builds pass. Real-provider browser checks completed three-step onboarding, team creation/activation, specialist/reviewer work after leaving the page, and three-stage website generation/publication. Desktop and phone layouts/navigation were inspected; screenshots are in `docs/screenshots`.

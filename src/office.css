@@ -1835,6 +1835,67 @@
 .office-team-result h4 { margin:16px 0; color:#092c52; font-size:17px; line-height:1.5; }
 .office-team-result summary { cursor:pointer; font-size:13px; font-weight:600; color:#006b93; padding:10px 0; }
 .office-team-result > p,.office-team-result details > p { font-size:12px; color:#547082; line-height:1.8; }
+
+/* The work comes first; configuration stays a deliberate, quieter step. */
+.teammate-compose { padding:24px; background:linear-gradient(130deg,#effaff,#f8fcff); border:1px solid #baddf0; border-radius:14px; margin:24px 0; }
+.teammate-compose-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.teammate-compose-head h3 { font-size:21px; line-height:1.35; margin:9px 0 0; color:#002b59; }
+.teammate-compose-head .pixel-avatar { width:42px; height:55px; flex:0 0 42px; }
+.teammate-starters { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:20px; }
+.teammate-starters button { display:inline-flex; align-items:center; gap:7px; border:1px solid #c5e0ed; border-radius:8px; background:#fff; padding:10px 12px; color:#005a80; font-size:12px; cursor:pointer; transition:background 140ms ease,border-color 140ms ease,transform 140ms ease; }
+.teammate-starters button:hover { background:#e1f6ff; border-color:#00a8dc; transform:translateY(-1px); }
+.office-root .teammate-task-label { display:flex; flex-direction:row; justify-content:space-between; align-items:center; text-align:left; gap:10px; font-size:13px; font-weight:650; color:#123954; margin:0 0 9px; }
+.teammate-task-label small { font-weight:400; font-size:11px; color:#617887; }
+.teammate-compose textarea { width:100%; padding:15px; border:1px solid #c8dae5; border-radius:9px; background:#fff; min-height:112px; font:inherit; font-size:14px; line-height:1.65; color:#15394f; resize:vertical; transition:border-color 140ms ease,box-shadow 140ms ease; }
+.teammate-compose textarea:focus { outline:none; border-color:#009ecb; box-shadow:0 0 0 3px #00b9f116; }
+.teammate-compose textarea:disabled { background:#f2f7fa; }
+.teammate-compose-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:7px 0 16px; }
+.teammate-draft-note { font-size:11px; color:#577384; }
+.teammate-compose .office-actions { margin:0; }
+.teammate-explainer { font-size:11px!important; color:#587489!important; line-height:1.7; margin:15px 0 0!important; }
+.teammate-live { display:flex; align-items:center; gap:12px; padding:16px; background:#e3f5fe; border:1px solid #b9e1f3; border-radius:9px; margin-top:20px; color:#005f85; }
+.teammate-live > div { flex:1; }
+.teammate-live strong { font-size:13px; }
+.teammate-live p { font-size:12px; margin:5px 0 0; line-height:1.65; }
+.office-root .teammate-job-details { padding:17px 0; margin:12px 0 20px; border-top:1px solid #e0eaf0; border-bottom:1px solid #e0eaf0; color:#314e62; }
+.teammate-job-details summary { font-size:13px; font-weight:650; color:#124568; cursor:pointer; }
+.teammate-job-details > p { margin:18px 0!important; font-size:13px!important; line-height:1.8; color:#456475; }
+.office-team-detail > h2 { font-size:27px; line-height:1.3; }
+.office-team-detail .office-team-outcome { font-size:14px; color:#4a687c; }
+.office-root .office-team-results { margin-top:22px; }
+.office-team-results .office-team-result { background:#fff; padding:20px; box-shadow:0 3px 13px #00305405; }
+.office-root .office-team-result .office-result,.office-root .office-work-artifact .office-result { font-size:14px; color:#294b60; line-height:1.85; }
+.office-root .office-result p { font-size:inherit!important; color:inherit!important; }
+.office-result :is(ul,ol) { padding-left:23px; margin:12px 0; }
+.office-result li { margin-bottom:7px; }
+.office-root .office-work-preview { color:#4d6576; font-size:13px; line-height:1.75; margin:14px 0; }
+.office-work-artifact summary { color:#006d95; font-size:13px; cursor:pointer; padding:8px 0; }
+.ops-draft-status { display:flex; align-items:center; gap:12px; justify-content:space-between; background:#f0f9fd; padding:10px 12px; border:1px solid #d3e9f4; border-radius:8px; margin-bottom:16px; }
+.ops-draft-status > span { font-size:11px; color:#52748a; line-height:1.6; }
+.ops-draft-status button { white-space:nowrap; }
+.ready-gallery-controls { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; margin:18px 0; }
+.ready-gallery-controls > div { display:flex; gap:4px; flex-wrap:wrap; padding:4px; background:#e9f1f6; border-radius:9px; }
+.ready-gallery-controls button { background:transparent; border:0; color:#4d697d; font-size:12px; font-weight:600; padding:10px 12px; border-radius:6px; cursor:pointer; transition:background 150ms ease,color 150ms ease; }
+.ready-gallery-controls button[aria-pressed=true] { background:#fff; color:#003c65; box-shadow:0 2px 6px #002b590b; }
+.ready-gallery-controls input { width:285px; max-width:100%; border:1px solid #ccdde9; padding:12px 14px; border-radius:8px; background:#fff; font:inherit; font-size:12px; color:#153f5c; }
+.ready-team-gallery .office-job-card small i { width:5px; height:5px; background:#8ba5b6; border-radius:50%; margin:4px 7px 0 0; }
+.ready-team-gallery .office-job-card small i.is-active { background:#19a077; }
+.office-team-list button:focus-visible,.teammate-starters button:focus-visible { outline:3px solid #00b8ed; outline-offset:3px; }
+@media (max-width:680px) {
+ .ready-gallery-controls { gap:10px; }
+ .ready-gallery-controls > div { width:100%; }
+ .ready-gallery-controls button { flex:1; padding:10px 7px; font-size:11px; min-height:40px; }
+ .ready-gallery-controls input { width:100%; font-size:14px; min-height:44px; }
+ .teammate-compose { padding:18px 15px; margin:20px -2px; }
+ .teammate-compose-head h3 { font-size:19px; }
+ .teammate-starters { flex-direction:column; }
+ .teammate-starters button { justify-content:flex-start; min-height:44px; }
+ .teammate-compose .office-actions > button { width:100%; justify-content:center; min-height:44px; }
+ .teammate-task-label { flex-wrap:wrap; }
+ .office-team-result .office-card-head { flex-wrap:wrap; }
+ .office-team-results .office-team-result { padding:16px; }
+ .ops-draft-status { align-items:flex-start; }
+}
 .office-team-detail { animation:deskCardIn 240ms ease both; }
 .ops-progress { position:relative; overflow:hidden; display:flex; align-items:center; gap:12px; border:1px solid #b9e4f4; border-radius:10px; background:#edfaff; padding:16px 20px 20px; font-size:13px; color:#003c69; }
 .ops-progress i { position:absolute; bottom:0; left:0; height:3px; width:32%; background:#00baf2; animation:opsWorking 1.5s ease-in-out infinite alternate; }

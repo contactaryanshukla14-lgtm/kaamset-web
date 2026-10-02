@@ -26,10 +26,8 @@ import {
   Play,
   Plus,
   RefreshCw,
-  Send,
   Settings,
   ShieldCheck,
-  Sparkles,
   Upload,
   Users,
   X,
@@ -46,7 +44,7 @@ const WebsiteStudio = lazy(() => import("./WebsiteStudio"));
 const WhatsAppSalesDesk = lazy(() => import("./WhatsAppSalesDesk"));
 import DeskLoading from "./DeskLoading";
 import { memberCharacter, teamName, websiteStageName } from "./team-identity";
-import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
+import { BusinessMemory, ContentStudio } from "./OwnerTools";
 import {
   Catalogue,
   MilanScheduler,
@@ -56,6 +54,7 @@ import {
 import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,type ReadyTeamId} from "./ReadyTeams";
 import MerchantOps,{type OpsPage} from "./MerchantOps";
 import UpiSettings from "./UpiSettings";
+const TeammateTask = lazy(() => import("./TeammateTask"));
 import "./office.css";
 
 const storageKey = "kaamset_merchant_workspace_token";
@@ -878,7 +877,7 @@ export default function MerchantOffice() {
     [busy, setBusy] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [task, setTask] = useState(""),
+    [task, setTask] = useState<{blueprintId:string;text:string;version?:number}|null>(null),
     [selected, setSelected] = useState(()=>sessionStorage.getItem("kaamset_selected_teammate")||""),
     [accountOpen, setAccountOpen] = useState(
       window.location.pathname === "/reset-password",
@@ -899,7 +898,6 @@ export default function MerchantOffice() {
   const workspaceRef=useRef(workspace);workspaceRef.current=workspace;
   const tokenRef = useRef(token),
     inFlight = useRef(false),
-    taskAttempt = useRef<{ blueprintId: string; text: string; key: string } | null>(null),
     menuButton = useRef<HTMLButtonElement>(null),
     sidebar = useRef<HTMLElement>(null),
     pageContent = useRef<HTMLElement>(null);
@@ -913,9 +911,8 @@ export default function MerchantOffice() {
     setNotice("");
     setPage("work");
     setSelected("");
-    setTask("");
+    setTask(null);
     setChoosingTeam(null);
-    taskAttempt.current = null;
     sessionStorage.removeItem(connectionAttemptKey);
     setMenu(false);
   }
@@ -1085,7 +1082,7 @@ export default function MerchantOffice() {
   }
   const deskFor:Partial<Record<ReadyTeamId,Page>>={arjun:'counter',dukaan:'shop',naina:'khata',nazar:'money',kabir:'requests',ira:'requests',sahaj:'assistant',rang:'marketing',udaan:'website',raabta:'customers',saathi:'whatsapp'};
   function openReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);sessionStorage.setItem("kaamset_selected_teammate",b.id);navigate(deskFor[id]||'team')}else setChoosingTeam(id)}
-  function askReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);setTask(readyTeams.find(t=>t.code===id)!.example);navigate('team')}else setChoosingTeam(id)}
+  function askReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);setTask({blueprintId:b.id,text:readyTeams.find(t=>t.code===id)!.example});navigate('team')}else setChoosingTeam(id)}
   const current =
     workspace?.blueprints.find((b) => b.id === selected) ||
     workspace?.blueprints.at(-1);
@@ -1481,6 +1478,8 @@ export default function MerchantOffice() {
                               )}
                             {t.result ? (
                               <>
+                                <p className="office-work-preview">{t.result.output.replace(/[#*]/g, "").slice(0,200)}{t.result.output.length>200?"…":""}</p>
+                                <details className="office-work-artifact"><summary>Read full result</summary>
                                 <ResultText text={t.result.output} />
                                 <button
                                   className="office-text"
@@ -1502,6 +1501,7 @@ export default function MerchantOffice() {
                                   <strong>Next step</strong>
                                   <p>{t.result.nextStep}</p>
                                 </div>
+                                </details>
                                 {t.result.sources.length > 0 && (
                                   <details>
                                     <summary>View business sources</summary>
@@ -1566,7 +1566,7 @@ export default function MerchantOffice() {
                             key={b.id}
                             onClick={() => setSelected(b.id)}
                           >
-                            <PixelTeammate id={b.character} />
+                            <PixelTeammate id={b.character} name={b.teamIdentity?.lead||b.plan.name} />
                             <div>
                               <strong>{teamName(b)}</strong>
                               <small>{label(b.state)}</small>
@@ -1585,12 +1585,14 @@ export default function MerchantOffice() {
                         <h2>{teamName(current)}</h2>
                         {teamName(current) !== current.plan.name && <p className="office-team-job">{current.plan.name}</p>}
                         <p className="office-team-outcome">
-                          {current.plan.outcome}
+                          {readyTeams.find(t=>t.code===current.presetId)?.tag||current.plan.outcome}
                         </p>
+                        {current.state==='active'&&<TeammateTask key={current.id} token={token!} team={current} workspace={workspace} initialRequest={task?.blueprintId===current.id?task.text:undefined} requestToEdit={task?.blueprintId===current.id&&task.version?{text:task.text,version:task.version}:undefined} onChange={()=>refresh()} onError={setError} onDesk={selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]?()=>navigate(deskFor[current.presetId as ReadyTeamId]!):undefined}/>}
+                        <details className="teammate-job-details" open={current.state!=='active'}><summary>Team, rules & approved job</summary><p>{current.plan.outcome}</p>
                         <div className="office-team-members">
                           {(current.team || []).map((m) => (
                             <article key={m.id}>
-                              <PixelTeammate id={memberCharacter(m)} />
+                              <PixelTeammate id={memberCharacter(m)} name={m.name} />
                               <div>
                                 <strong>{m.name}</strong>
                                 <span>{m.role}</span>
@@ -1606,6 +1608,7 @@ export default function MerchantOffice() {
                             <li key={r}>{r}</li>
                           ))}
                         </ul>
+                        </details>
                         {current.feasibility.blockers.length > 0 && (
                           <div className="office-setup-needed">
                             <h3>Before your team can go live</h3>
@@ -1673,109 +1676,13 @@ export default function MerchantOffice() {
                           {selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]&&current.state==='active'&&<button className="office-secondary" onClick={()=>navigate(deskFor[current.presetId as ReadyTeamId]!)}>Open teammate’s desk <ArrowRight size={15}/></button>}
                           {selectedReadyTeam(current.presetId)&&<><button className="office-secondary" disabled={!!busy} onClick={()=>setChoosingTeam(current.presetId as ReadyTeamId)}>Configure teammate</button><button className="office-text" disabled={!!busy} onClick={()=>{const url=new URL("/",location.origin);url.searchParams.set("team",current.presetId!);setRecipeCopied(false);setSharing({name:teamName(current),url:url.toString()})}}><Copy size={15}/> Share teammate</button></>}
                         </div>
-                        {current.state === "active" && (
-                          <div className="office-team-task">
-                            <label>
-                              Give your team a task
-                              <textarea
-                                rows={3}
-                                maxLength={2000}
-                                value={task}
-                                onChange={(e) => setTask(e.target.value)}
-                                placeholder="Prepare customer replies for today’s offer. Explain what needs my attention…"
-                              />
-                            </label>
-                            {selectedReadyTeam(current.presetId)&&<button className="office-text" onClick={()=>setTask(readyTeams.find(t=>t.code===current.presetId)!.example)}>Try a useful first task <Sparkles size={15}/></button>}
-                            <div className="office-actions">
-                              <VoiceInput token={token} enabled={!!workspace.providers?.sarvam} onText={setTask} onError={setError}/>
-                              <button
-                                className="office-primary"
-                                disabled={
-                                  !!busy || !!pending || task.trim().length < 3
-                                }
-                                onClick={() =>
-                                  act(
-                                    "Sending work to your cloud team",
-                                    async () => {
-                                      await api.runTeammate(
-                                        token!,
-                                        current.id,
-                                        task,
-                                        (() => {
-                                          if (taskAttempt.current?.blueprintId !== current.id || taskAttempt.current.text !== task)
-                                            taskAttempt.current = {blueprintId: current.id, text: task, key: crypto.randomUUID()};
-                                          return taskAttempt.current.key;
-                                        })(),
-                                      );
-                                      taskAttempt.current = null;
-                                      await refresh();
-                                      navigate("work");
-                                    },
-                                  )
-                                }
-                              >
-                                Prepare & review <Send size={15} />
-                              </button>
-                              {current.plan.skills.includes(
-                                "website_publish",
-                              ) && (
-                                <button
-                                  className="office-secondary"
-                                  onClick={() => navigate("website")}
-                                >
-                                  Build a live website
-                                </button>
-                              )}
-                              {current.plan.skills.some((s) =>
-                                [
-                                  "instagram_dm",
-                                  "gmail_sales",
-                                  "whatsapp_enquiries",
-                                ].includes(s),
-                              ) && (
-                                <button
-                                  className="office-secondary"
-                                  onClick={() => navigate(current.plan.skills.includes("whatsapp_enquiries") ? "whatsapp" : "customers")}
-                                >
-                                  {current.plan.skills.includes("whatsapp_enquiries") ? "Open WhatsApp desk" : "Enable customer desk"}
-                                </button>
-                              )}
-                              {current.plan.skills.includes(
-                                "instagram_publish",
-                              ) && (
-                                <button
-                                  className="office-secondary"
-                                  onClick={() => navigate("marketing")}
-                                >
-                                  Publish approved content
-                                </button>
-                              )}
-                              {current.plan.skills.includes(
-                                "whatsapp_schedule",
-                              ) && (
-                                <button
-                                  className="office-secondary"
-                                  onClick={() => navigate("assistant")}
-                                >
-                                  Schedule a reminder
-                                </button>
-                              )}
-                            </div>
-                            <p className="office-footnote">
-                              Prepare & review creates an internal artifact.
-                              Connected customer replies, publishing, bookings
-                              and reminders run from their dedicated desks with
-                              your approved rules.
-                            </p>
-                          </div>
-                        )}
                         <section className="office-team-results" aria-label="This teammate’s work">
                           <div className="office-card-head"><h3>This teammate’s work</h3><button className="office-text" onClick={()=>navigate('work')}>All workspace results <ArrowRight size={15}/></button></div>
                           {workspace.tasks.filter(t=>t.blueprintId===current.id).slice(-3).reverse().map((t,index)=><article className="office-team-result" key={t.id}>
                             <div className="office-card-head"><Status value={t.state}/><small>{new Date(t.createdAt).toLocaleString('en-IN')}</small></div>
-                            <h4>{t.result?.title||t.text}</h4>
+                            <h4>{t.result?.title||t.text}</h4>{['failed','waiting_owner'].includes(t.state)&&<button className="office-secondary" disabled={!!busy} onClick={()=>setTask({blueprintId:current.id,text:t.text,version:Date.now()})}>Edit this task <RefreshCw size={14}/></button>}
                             {!!t.checkpoint?.stages.length&&<div className="office-stage-trail">{t.checkpoint.stages.map(s=><span key={s.role}><Check size={13}/>{s.specialistName} · {s.role==='specialist'?'Prepared':'Reviewed'}</span>)}</div>}
-                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||'Your cloud team is working. You can close this browser and return to the result.'}</p>}
+                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/><button className="office-text" onClick={()=>void act("Copying result",async()=>{await navigator.clipboard.writeText(t.result!.output);setNotice("Result copied. Review before sending or publishing.")})}><Copy size={14}/> Copy result</button><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||(['queued','working'].includes(t.state)?'Your cloud team is working. You can close this browser and return to the result.':'Open the approved job and recheck its setup to continue.')}</p>}
                           </article>)}
                           {!workspace.tasks.some(t=>t.blueprintId===current.id)&&<p className="office-footnote">Saved results and progress will appear here after your first task.</p>}
                         </section>
