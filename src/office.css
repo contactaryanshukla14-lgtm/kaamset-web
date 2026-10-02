@@ -34,6 +34,22 @@
     "Segoe UI",
     sans-serif;
 }
+.office-view-enter { animation: officeViewEnter 210ms ease-out both; }
+@keyframes officeViewEnter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.office-team-job { font-size: 12px !important; color: #64899f !important; margin-top: -5px; }
+.office-specialist-type { color: #06899c !important; }
+.office-day-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.office-root .office-day-options label { display: flex; flex-direction: row; align-items: center; gap: 7px; margin: 0; padding: 9px 11px; border: 1px solid #dfe9f0; border-radius: 7px; font-size: 11px; }
+.office-root .office-day-options input { width: 14px; height: 14px; margin: 0; }
+.office-root .website-team-roster { margin: 15px 0 24px; padding: 15px 0; }
+.office-payment-guide { margin: 18px 0 12px; }
+.office-payment-guide > summary { font-size: 11px; color: #347d9e; cursor: pointer; }
+.office-payment-guide p { font-size: 11px; }
+.office-payment-guide ol { padding-left: 20px; }
+.office-sidebar { overflow-y: auto; }
 .office-root * {
   box-sizing: border-box;
 }
