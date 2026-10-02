@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import {
   Activity,
   ArrowRight,
@@ -49,7 +49,8 @@ import {
 } from "./MerchantTools";
 import "./office.css";
 
-const storageKey = "kaamset_workspace_token";
+const storageKey = "kaamset_merchant_workspace_token";
+const legacyStorageKey = "kaamset_workspace_token";
 
 function ResultText({ text }: { text: string }) {
   const inline = (value: string) =>
@@ -62,24 +63,39 @@ function ResultText({ text }: { text: string }) {
           part
         ),
       );
-  return (
-    <div className="office-result">
-      {text.split(/\n\s*\n/).map((block, index) => {
-        if (/^\s*---\s*$/.test(block)) return <hr key={index} />;
-        if (/^#{1,4}\s/.test(block))
-          return <h4 key={index}>{inline(block.replace(/^#{1,4}\s+/, ""))}</h4>;
-        if (/^[-*]\s/.test(block))
-          return (
-            <ul key={index}>
-              {block.split("\n").map((line, i) => (
-                <li key={i}>{inline(line.replace(/^[-*]\s+/, ""))}</li>
-              ))}
-            </ul>
-          );
-        return <p key={index}>{inline(block)}</p>;
-      })}
-    </div>
-  );
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const blocks: ReactNode[] = [];
+  const heading = /^\s*#{1,6}\s+/;
+  const bullet = /^\s*[-*]\s+/;
+  const numbered = /^\s*\d+\.\s+/;
+  const rule = /^\s*---\s*$/;
+  for (let index = 0; index < lines.length;) {
+    const key = index, line = lines[index];
+    if (!line.trim()) { index++; continue; }
+    if (heading.test(line)) {
+      blocks.push(<h4 key={key}>{inline(line.replace(heading, ""))}</h4>);
+      index++; continue;
+    }
+    if (rule.test(line)) { blocks.push(<hr key={key} />); index++; continue; }
+    if (bullet.test(line) || numbered.test(line)) {
+      const marker = bullet.test(line) ? bullet : numbered;
+      const items: ReactNode[] = [];
+      while (index < lines.length && marker.test(lines[index])) {
+        items.push(<li key={index}>{inline(lines[index].replace(marker, ""))}</li>);
+        index++;
+      }
+      blocks.push(marker === bullet ? <ul key={key}>{items}</ul> : <ol key={key}>{items}</ol>);
+      continue;
+    }
+    const paragraph: string[] = [];
+    while (index < lines.length && lines[index].trim() &&
+      !heading.test(lines[index]) && !bullet.test(lines[index]) &&
+      !numbered.test(lines[index]) && !rule.test(lines[index])) {
+      paragraph.push(lines[index++]);
+    }
+    blocks.push(<p key={key}>{inline(paragraph.join("\n"))}</p>);
+  }
+  return <div className="office-result">{blocks}</div>;
 }
 type Page =
   | "work"
@@ -870,7 +886,7 @@ function PaymentSettings({
 }
 export default function MerchantOffice() {
   const [token, setToken] = useState<string | null>(() =>
-      localStorage.getItem(storageKey),
+      localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey),
     ),
     [workspace, setWorkspace] = useState<WorkspaceState | null>(null),
     [page, setPage] = useState<Page>("work"),
@@ -897,11 +913,13 @@ export default function MerchantOffice() {
       rules: string[];
       format: string;
     } | null>(null);
+  const legacyRestore = useRef(!localStorage.getItem(storageKey) && !!localStorage.getItem(legacyStorageKey));
   const tokenRef = useRef(token),
     inFlight = useRef(false),
     importFile = useRef<HTMLInputElement>(null);
   function acceptToken(next: string) {
     localStorage.setItem(storageKey, next);
+    legacyRestore.current = false;
     tokenRef.current = next;
     setToken(next);
     setWorkspace(null);
@@ -938,10 +956,32 @@ export default function MerchantOffice() {
       try {
         const w = await api.workspace(token);
         if (!cancelled) {
+          if (!w.business) {
+            if (localStorage.getItem(storageKey) === token) localStorage.removeItem(storageKey);
+            legacyRestore.current = false;
+            tokenRef.current = null;
+            setToken(null);
+            setWorkspace(null);
+            setError("");
+            return;
+          }
+          // Recover existing merchant offices without importing sample demo data.
+          if (localStorage.getItem(legacyStorageKey) === token) {
+            localStorage.setItem(storageKey, token);
+            localStorage.removeItem(legacyStorageKey);
+            legacyRestore.current = false;
+          }
           setWorkspace(w);
         }
       } catch (e) {
-        if (!cancelled) setError((e as Error).message);
+        if (!cancelled) {
+          if (legacyRestore.current) {
+            legacyRestore.current = false;
+            tokenRef.current = null;
+            setToken(null);
+            setWorkspace(null);
+          } else setError((e as Error).message);
+        }
       } finally {
         polling = false;
       }
@@ -980,7 +1020,7 @@ export default function MerchantOffice() {
   }, []);
   async function finishSetup(setup: BusinessSetup) {
     await act("Setting up your office", async () => {
-      const r = await api.onboard(setup, tokenRef.current || undefined);
+      const r = await api.onboard(setup);
       acceptToken(r.token);
       setWorkspace(r.workspace);
       sessionStorage.removeItem("kaamset_setup_draft");
