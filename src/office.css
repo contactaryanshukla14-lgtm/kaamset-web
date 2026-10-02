@@ -1614,3 +1614,24 @@
     height: 62px;
   }
 }
+.office-root .office-content:focus { outline: none; }
+.office-root :is(button,a,input,select,textarea,summary):focus-visible { outline: 3px solid #00a7d8; outline-offset: 3px; }
+.office-sidebar nav button.selected:hover { background: #e7f7fd; color: #002b59; }
+.office-root .office-icon-button, .office-root .office-mobile-menu, .office-root .office-close { min-width: 40px; min-height: 40px; }
+.office-root :is(.office-error,.office-notice) { overflow-wrap: anywhere; }
+.office-root :is(.office-error,.office-notice) > button { flex: 0 0 36px; min-height: 36px; }
+.office-root :is(.office-card,.office-team-detail,.office-team-members article,.office-actions,.office-job-card) { min-width: 0; }
+.office-root :is(.office-team-outcome,.office-result,.office-card p,.office-card a) { overflow-wrap: anywhere; }
+.office-root .office-modal { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.wa-rules-fields, .studio-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.pixel-avatar .pixel-still { width: 100%; height: 100%; }
+.pixel-avatar .pixel-rive { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.pixel-avatar .pixel-rive.is-playing { opacity: 1; }
+.pixel-avatar .pixel-still.is-hidden { opacity: 0; }
+@media (max-width: 980px) {
+  .office-sidebar { transition: transform 220ms ease, visibility 0s linear 220ms; }
+  .office-sidebar.mobile-open { transition: transform 220ms ease, visibility 0s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-root *, .office-root *::before, .office-root *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
