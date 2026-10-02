@@ -44,6 +44,8 @@ Desktop and 390px phone screens were inspected with keyboard/modal and reduced-m
 
 ## Verification
 
+Brand fonts are served from `public/fonts` with swap rendering and a heading-font preload. The blocking Google Fonts stylesheet import is removed. Original SIL notices are included with the font assets; Indian-script text retains the device's appropriate fallback font.
+
 Production TypeScript/Vite builds pass. Real-provider browser checks completed three-step onboarding, team creation/activation, specialist/reviewer work after leaving the page, and three-stage website generation/publication. Desktop and phone layouts/navigation were inspected; screenshots are in `docs/screenshots`.
 
 The Saathi release adds actual configured-model builder and UI rule-save checks with fictional bakery data, and desktop/phone checks at 1280/375 widths. Its backend passes 2,530 unit tests and nine isolated database journeys. Automated WhatsApp/Paytm journey responses are controlled fixtures; a merchant-owned WhatsApp pairing and Paytm test payment remain required for genuine provider proof. See [sales implementation and limits](https://github.com/contactaryanshukla14-lgtm/brainforge-backend/blob/master/docs/KAAMSET-WHATSAPP-SALES.md).
