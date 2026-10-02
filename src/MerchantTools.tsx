@@ -6,7 +6,7 @@ import PixelTeammate from './PixelTeammate';
 
 const money=(n:number|null)=>n===null?'Needs confirmation':`₹${(n/100).toLocaleString('en-IN',{maximumFractionDigits:2})}`;
 const when=(s:string)=>new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'}).format(new Date(s));
-const starter:Offer={id:'snack-case',name:'Snack assortment case',kind:'product',unitPricePaise:120000,minimumQuantity:2,availableQuantity:null,reorderAt:2,deliveryPaise:null,durationMinutes:60,terms:'Fictional trial offer. Stock and delivery must be approved by the owner. No discount or delivery guarantee.'};
+const starter:Offer={id:'first-offer',name:'',kind:'product',unitPricePaise:0,minimumQuantity:1,availableQuantity:null,reorderAt:2,deliveryPaise:null,durationMinutes:60,terms:'Stock, delivery and commercial exceptions need owner approval.'};
 function useAction(onChange:()=>Promise<unknown>){const [busy,setBusy]=useState(false),[error,setError]=useState('');
   async function run(fn:()=>Promise<unknown>){if(busy)return;setBusy(true);setError('');try{await fn();await onChange()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   return {busy,error,run};

@@ -21,7 +21,7 @@ export function VoiceInput({token,enabled,onText,onError}:{token:string|null;ena
 }
 
 export function ContentStudio({token,teammates,posts,onChange}:{token:string|null;teammates:Teammate[];posts:ContentPost[];onChange:()=>Promise<unknown>}){
-  const [id,setId]=useState(''),[headline,setHeadline]=useState('Kirana ke liye snack assortment'),[caption,setCaption]=useState('Fictional merchant demo: Sahyog FMCG snack assortment. 20 packs per case, ₹1,200 per case. Minimum 2 cases. DM your requirements. Stock and delivery charges need owner confirmation.'),[photo,setPhoto]=useState(''),[rights,setRights]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[schedule,setSchedule]=useState('');
+  const [id,setId]=useState(''),[headline,setHeadline]=useState(''),[caption,setCaption]=useState(''),[photo,setPhoto]=useState(''),[rights,setRights]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[schedule,setSchedule]=useState('');
   const [previews,setPreviews]=useState<Record<string,string>>({});const uploader=useRef<HTMLInputElement>(null);
   const available=teammates.filter(b=>b.state==='active'&&b.plan.skills.some(s=>['content_draft','instagram_publish'].includes(s)));
   async function act(fn:()=>Promise<void>){if(busy)return;setBusy(true);setError('');try{await fn();await onChange()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
