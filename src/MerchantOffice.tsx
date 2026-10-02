@@ -924,6 +924,12 @@ export default function MerchantOffice() {
     setToken(next);
     setWorkspace(null);
     setError("");
+    setNotice("");
+    setPage("work");
+    setSelected("");
+    setTask("");
+    setJob("");
+    setMenu(false);
   }
   async function refresh(t = tokenRef.current) {
     if (!t) return;
@@ -1076,13 +1082,19 @@ export default function MerchantOffice() {
     setMenu(false);
   }
   const pending =
-      workspace?.tasks.filter((t) => ["queued", "working"].includes(t.state))
-        .length || 0,
+      (workspace?.tasks.filter((t) => ["queued", "working"].includes(t.state)).length || 0) +
+      (workspace?.sites?.filter((s) => ["queued", "working"].includes(s.state)).length || 0),
     needsAttention =
       (workspace?.brain?.snapshot.awaitingOwner || 0) +
       (workspace?.blueprints.filter((b) => b.state === "proposed").length || 0),
     completed =
-      workspace?.tasks.filter((t) => t.state === "completed").length || 0;
+      (workspace?.tasks.filter((t) => t.state === "completed").length || 0) +
+      (workspace?.sites?.filter((s) => s.state === "published").length || 0);
+  const recentWork = [
+    ...(workspace?.tasks || []).map((value) => ({kind: "task" as const, value, time: value.createdAt})),
+    ...(workspace?.sites || []).map((value) => ({kind: "site" as const, value,
+      time: value.publishedAt || value.studioCheckpoint?.stages.at(-1)?.completedAt || value.approvedAt || ""})),
+  ].sort((a, b) => b.time.localeCompare(a.time)).slice(0, 8);
   const onboarding = !token || (workspace && !workspace.business);
   return (
     <div className="office-root">
@@ -1302,7 +1314,7 @@ export default function MerchantOffice() {
                       </strong>
                     </div>
                     <div>
-                      <span>Completed tasks</span>
+                      <span>Completed jobs</span>
                       <strong>{completed.toString().padStart(2, "0")}</strong>
                     </div>
                     <div>
@@ -1376,7 +1388,7 @@ export default function MerchantOffice() {
                       Open my team <ChevronRight size={16} />
                     </button>
                   </div>
-                  {!workspace.tasks.length ? (
+                  {!recentWork.length ? (
                     <section className="office-empty">
                       <Cloud size={28} />
                       <div>
@@ -1389,11 +1401,39 @@ export default function MerchantOffice() {
                     </section>
                   ) : (
                     <div className="office-work-list">
-                      {workspace.tasks
-                        .slice()
-                        .reverse()
-                        .slice(0, 8)
-                        .map((t) => (
+                      {recentWork.map((entry) => {
+                        if (entry.kind === "site") {
+                          const s = entry.value;
+                          return (
+                            <article className="office-card" key={`site-${s.id}`}>
+                              <div className="office-card-head">
+                                <Status value={s.state} />
+                                {entry.time && <small>{new Date(entry.time).toLocaleString("en-IN")}</small>}
+                              </div>
+                              <h3>{s.businessName} · Business website</h3>
+                              {!!s.studioCheckpoint?.stages.length && (
+                                <div className="office-stage-trail">
+                                  {s.studioCheckpoint.stages.map((stage) => (
+                                    <span key={stage.stage}><Check size={13} />{label(stage.stage)}</span>
+                                  ))}
+                                </div>
+                              )}
+                              <p>{s.state === "published"
+                                ? "Your website team published a usable link from your approved business facts."
+                                : s.reason || (["queued", "working"].includes(s.state)
+                                  ? "Your website team is working in the cloud. Return here for the published link."
+                                  : "Open your website team to review this job.")}</p>
+                              {s.state === "published" && s.url && (
+                                <a className="office-secondary" href={s.url} target="_blank" rel="noreferrer">
+                                  Open live website <ArrowUpRight size={15} />
+                                </a>
+                              )}
+                              <button className="office-text" onClick={() => navigate("website")}>Open website team <ChevronRight size={15} /></button>
+                            </article>
+                          );
+                        }
+                        const t = entry.value;
+                        return (
                           <article className="office-card" key={t.id}>
                             <div className="office-card-head">
                               <Status value={t.state} />
@@ -1488,7 +1528,8 @@ export default function MerchantOffice() {
                               </p>
                             )}
                           </article>
-                        ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>

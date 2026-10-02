@@ -521,6 +521,7 @@ export type PublishedSite = {
   state: string;
   url: string;
   expiresAt: string;
+  approvedAt?: string;
   publishedAt?: string;
   reason?: string;
   studioCheckpoint?: {
