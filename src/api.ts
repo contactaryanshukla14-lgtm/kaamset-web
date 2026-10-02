@@ -59,7 +59,7 @@ export type Teammate={id:string;revision:number;character:string;request:string;
   feasibility:{state:string;blockers:string[];checkedAt:string};};
 export type WorkspaceState={version:number;brief:string;briefApproved:boolean;blueprints:Teammate[];
   controls?:{paused:boolean;humanTakeover:boolean};
-  tasks:{id:string;blueprintId:string;text:string;state:string;createdAt:string;updatedAt:string;result?:{title:string;output:string;sources:string[];nextStep:string}}[];
+  tasks:{id:string;blueprintId:string;text:string;state:string;reason?:string;createdAt:string;updatedAt:string;result?:{title:string;output:string;sources:string[];nextStep:string}}[];
   connections:{toolkit:string;status:string;identity?:{username:string;accountType:string}}[];readiness:Record<string,boolean>;
   limits:{modelsRemaining:number;toolsRemaining:number};
   providers?:{sarvam:boolean;cognee:boolean;paytm:boolean};posts?:ContentPost[];payments?:Payment[];
