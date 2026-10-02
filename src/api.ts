@@ -74,7 +74,7 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const controller = new AbortController();
-  const deadline = setTimeout(() => controller.abort(), path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
+  const deadline = setTimeout(() => controller.abort(), path === "/merchant-ops/intake" || path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
   try {
   const response = await fetch(`${root}${path}`, {
     method,
@@ -108,6 +108,21 @@ async function request<T>(
   }
 }
 export const api = {
+  billFulfilment:(token:string,id:string,input:{action:'handed_over'|'cancel';note:string;approved:true;stockReviewed:true})=>request(`/merchant-ops/bills/${id}/fulfilment`,'POST',token,input),
+  merchantOps:(token:string)=>request<MerchantOpsState>("/merchant-ops","GET",token),
+  upiSetup:(token:string)=>request<UpiDetails|null>("/merchant-ops/upi","GET",token),
+  billIntake:(token:string,input:BillIntakeInput)=>request<BillIntake>("/merchant-ops/intake","POST",token,input),
+  createBill:(token:string,input:BillInput)=>request<CounterBill>("/merchant-ops/bills","POST",token,input),
+  configureUpi:(token:string,input:UpiDetails & {ownerConfirmed:true})=>request("/merchant-ops/upi","PUT",token,input),
+  confirmUpi:(token:string,id:string,input:{requestKey:string;note:string;receivedInAccount:true;approved:true})=>request(`/merchant-ops/bills/${id}/confirm-upi`,"POST",token,input),
+  recordRepayment:(token:string,input:{requestKey:string;customerId:string;amountPaise:number;note:string;receivedOffline:true;approved:true})=>request("/merchant-ops/repayments","POST",token,input),
+  recordExpense:(token:string,input:{requestKey:string;amountPaise:number;note:string;approved:true})=>request("/merchant-ops/expenses","POST",token,input),
+  publishShop:(token:string,input:{enabled:boolean;pickupNote:string;approved:true})=>request<{url:string|null}>("/merchant-ops/storefront","PUT",token,input),
+  recordDemand:(token:string,input:{requestKey:string;description:string;quantity:number;budgetPaise?:number|null;approved:true})=>request("/merchant-ops/demands","POST",token,input),
+  reviewDemand:(token:string,id:string,state:'needs_review'|'unmet')=>request(`/merchant-ops/demands/${id}`,"POST",token,{state,approved:true}),
+  publicShop:(cap:string)=>request<PublicShop>(`/shops/${encodeURIComponent(cap)}`),
+  shopOrder:(cap:string,input:Omit<BillInput,'method'|'stockReviewed'|'approved'> & {accepted:true})=>request<CounterBill>(`/shops/${encodeURIComponent(cap)}/orders`,"POST",undefined,input),
+  publicReceipt:(cap:string)=>request<PublicReceipt>(`/receipts/${encodeURIComponent(cap)}`),
   signOut: (token: string) => request("/accounts/logout", "POST", token),
   onboard: (input: BusinessSetup, token?: string) =>
     request<{ token: string; workspace: WorkspaceState }>(
@@ -298,6 +313,8 @@ export const api = {
       request: task,
       requestKey,
     }),
+  readyTeam: (token:string, id:string, options:Record<string,boolean>={}, revision?:number) =>
+    request<Teammate>(`/ready-teams/${id}`,"POST",token,{options,...(revision?{revision}:{})}),
   recheckTeammate: (token: string, b: Teammate) =>
     request<Teammate>(`/teammates/${b.id}/recheck`, "POST", token, {
       revision: b.revision,
@@ -313,10 +330,10 @@ export const api = {
       token,
       { revision: b.revision, action },
     ),
-  runTeammate: (token: string, id: string, text: string) =>
+  runTeammate: (token: string, id: string, text: string, requestKey: string = crypto.randomUUID()) =>
     request<{ id: string }>(`/teammates/${id}/run`, "POST", token, {
       text,
-      requestKey: crypto.randomUUID(),
+      requestKey,
     }),
   connect: (token: string, toolkit: string) =>
     request<{ url: string }>(`/connections/${toolkit}`, "POST", token),
@@ -387,6 +404,8 @@ export type TeamMember = {
   execution?: "model" | "cloud" | "verified_code";
 };
 export type Teammate = {
+  presetId?:string;
+  presetOptions?:Record<string,boolean>;
   id: string;
   revision: number;
   character: string;
@@ -409,6 +428,7 @@ export type Teammate = {
 };
 export type WorkspaceState = {
   version: number;
+  merchantOps?: {summary:MerchantOpsState['summary']};
   brief: string;
   briefApproved: boolean;
   blueprints: Teammate[];
@@ -436,6 +456,7 @@ export type WorkspaceState = {
       output: string;
       sources: string[];
       nextStep: string;
+      copyItems?: {label:string;text:string}[];
     };
   }[];
   connections: {
@@ -453,6 +474,7 @@ export type WorkspaceState = {
   providers?: { sarvam: boolean; cognee: boolean; paytm: boolean };
   posts?: ContentPost[];
   payments?: Payment[];
+  whatsappLinked?: boolean;
   channels?: Record<
     string,
     { ready: boolean; enabled: boolean; error?: string }
@@ -508,6 +530,7 @@ export type WorkspaceState = {
   };
 };
 export type Offer = {
+  barcode?:string;
   id: string;
   name: string;
   kind: "product" | "appointment";
@@ -586,6 +609,7 @@ export type PublicSite = {
   assets?: { id: string; alt: string; src: string }[];
 };
 export type Order = {
+  origin?:"counter"|"shop";paymentMethod?:"cash"|"credit"|"paytm"|"upi";
   id: string;
   offerId: string;
   name: string;
@@ -710,3 +734,12 @@ export type Payment = {
   txnId?: string;
   verifiedAt?: string;
 };
+
+export type UpiDetails={enabled:boolean;accountType:'personal'|'merchant';payeeName:string;upiId?:string;qr?:string;configuredAt?:string};
+export type CounterBill={id:string;number:string;customerName:string;items:{offerId:string;name:string;quantity:number;unitPricePaise:number;amountPaise:number}[];amountPaise:number;method:'cash'|'credit'|'paytm'|'upi';createdAt:string;orderId:string;status:string;evidence:string;paymentUrl?:string;receiptUrl:string;fulfilment?:'pending'|'handed_over'|'cancelled';upi?:UpiDetails};
+export type MerchantOpsState={bills:CounterBill[];customers:{id:string;name:string;contact:string;balancePaise:number}[];ledger:{id:string;customerId:string;kind:string;amountPaise:number;note:string;createdAt:string}[];expenses:{id:string;amountPaise:number;note:string;createdAt:string}[];demands:{id:string;description:string;quantity:number;budgetPaise:number|null;state:string;matches:string[];createdAt:string}[];upi?:UpiDetails;storefront?:{enabled:boolean;pickupNote:string};summary:{coverage:string;bills:number;cashRecordedPaise:number;offlineRepaymentPaise:number;upiRecordedPaise:number;verifiedOnlinePaise:number;outstandingCreditPaise:number;expensesRecordedPaise:number;unmetRequests:number};snapshotHash:string;shopUrl:string|null;paytmConnected:boolean};
+export type BillIntakeInput={text:string;source:'text'|'voice'|'barcode'|'photo'|'parchi';image?:{mimeType:'image/png'|'image/jpeg'|'image/webp';data:string}};
+export type BillIntake={items:{offerId:string|null;quantity:number|null;originalText:string;confidence:'clear'|'needs_review'}[];questions:string[];note:string;snapshotHash:string;quality:Record<string,unknown>};
+export type BillInput={requestKey:string;items:{offerId:string;quantity:number}[];customer?:{id?:string;name:string;contact:string};method:CounterBill['method'];approved:true;stockReviewed:true;expectedSnapshotHash:string};
+export type PublicShop={business:{name:string;city?:string;category?:string;contact?:string};pickupNote:string;hours?:CommerceHours;products:Pick<Offer,'id'|'name'|'unitPricePaise'|'minimumQuantity'|'availableQuantity'|'terms'>[];snapshotHash:string;paytmConnected:boolean};
+export type PublicReceipt={business:{name:string;city?:string;contact?:string};bill:Pick<CounterBill,'number'|'items'|'amountPaise'|'createdAt'|'status'|'evidence'|'paymentUrl'|'upi'>;fulfilment:string};
