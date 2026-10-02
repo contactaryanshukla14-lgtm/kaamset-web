@@ -28,4 +28,18 @@ A new persisted stock task returned a completed model response rejected by stric
 
 The fresh persisted stock task then completed, but its narrative suggested subtracting the accepted order twice. PR #265 clarifies current available balance and atomic reservation semantics in the shared brain and model prompt. Its actual in-memory stock probe retained eight cases and explicitly rejected a second deduction. The impossible-demand blueprint correctly returned needs_scope_change and blocked activation with HTTP 409. The merchant UI rechecked and activated Vijay; a third website failed factual verification. New website diagnostics identify source/price/claim rejection without exposing discarded copy. Deployment and fresh persisted checks remain required. No unverified failed task or flawed narrative is counted as successful work.
 
+PR #265 is merged and approved as fe4d1388; both Railway services are SUCCESS. All 2,392 unit tests, 75 PostgreSQL journeys, 19 database gates and zero-production-vulnerability checks passed. The clearer stock UI is deployed READY on Vercel as dpl_Dqju8Z8ctW6aDFYjnJFp8qCjCTYu (frontend 0f28bbe8). Reloading the browser restored one accepted order and eight available units with the new reservation explanation. A fresh persisted stock answer retained eight available cases, refused another deduction at payment/dispatch and ignored the injected stock/profit instruction, with three exact source quotes.
+
+The merchant UI published a new live site at /business/sahyog-fmcg-demo-e3e9dc45. It returned public HTTP 200 with approved offer cards, Hinglish sections, FAQs and no horizontal phone overflow. Its server timestamp was before the first test tab closed, so that run is not counted as completion while away.
+
+The second approved away-demo job passed: the merchant tab closed at **10:04:32.451 UTC**, and the cloud worker published at **10:04:54.179 UTC**, about 22 seconds later. Reopening restored the same guest workspace and this published link:
+
+https://kaamset-web.vercel.app/business/sahyog-wholesale-away-demo-97f65e2c
+
+Public HTTP 200 and phone/desktop layout checks passed with approved ₹1,200/minimum-two offer cards, Hinglish sections and FAQs. The site expires **3 October 2026 at 2:24:26 pm IST**. The UI copy control displayed Copied, but the background browser clipboard read was empty; native paste is not claimed. The visible URL and Open live website link were verified.
+
+![Website completed while the merchant tab was closed](screenshots/vijay-away-desktop.png)
+
+![Restored published websites](screenshots/vijay-published-workspace.png)
+
 Actual Instagram/Gmail/WhatsApp/Calendar account actions and Paytm, Sarvam and Cognee credentials still require merchant setup. Fixtures are not external live proof. See the backend docs/KAAMSET-FINALE-SETUP.md for the configuration walkthrough. Presentation work remains paused.
