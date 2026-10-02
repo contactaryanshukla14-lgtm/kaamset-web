@@ -12,6 +12,8 @@ Vijay coordinates asset review, design and Pro HIGH writing before publishing a 
 
 Paytm setup is available under Connections and Orders & payments after saving the business account. Merchant credentials are encrypted on the API, never bundled here. Test and production modes are separate. A payment is collected only after signed server verification; Paytm merchant credentials/activation are still needed for a real provider payment.
 
+**WhatsApp · Saathi** combines paired-account setup, inline Paytm connection and approved reply/follow-up rules. Tara is the customer voice; Milo prepares quotes, Chotu checks payment evidence, Milan follows approved reminder timing and Nisha reviews internal drafts. The desk shows conversation stages, orders, delivery receipts, payment evidence, takeover and daily in-app summaries. Catalogue editing preserves unsaved changes and requires fresh review after stock changes.
+
 The older fictional booking workflow is retained at `/demo`. Existing pitch and hackathon notes refer to that workflow; they do not define the default merchant product.
 
 ## Development
@@ -31,3 +33,5 @@ Guest workspaces expire after 24 hours. Saved early-access workspaces have bound
 ## Verification
 
 Production TypeScript/Vite builds pass. Real-provider browser checks completed three-step onboarding, team creation/activation, specialist/reviewer work after leaving the page, and three-stage website generation/publication. Desktop and phone layouts/navigation were inspected; screenshots are in `docs/screenshots`.
+
+The Saathi release adds actual configured-model builder and UI rule-save checks with fictional bakery data, and desktop/phone checks at 1280/375 widths. Its backend passes 2,530 unit tests and nine isolated database journeys. Automated WhatsApp/Paytm journey responses are controlled fixtures; a merchant-owned WhatsApp pairing and Paytm test payment remain required for genuine provider proof. See [sales implementation and limits](https://github.com/contactaryanshukla14-lgtm/brainforge-backend/blob/master/docs/KAAMSET-WHATSAPP-SALES.md).

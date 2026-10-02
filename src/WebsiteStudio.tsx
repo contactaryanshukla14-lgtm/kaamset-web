@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { api, type WorkspaceState } from "./api";
 import PixelTeammate from "./PixelTeammate";
+import { memberCharacter, websiteStageName } from "./team-identity";
 export default function WebsiteStudio({
   token,
   workspace,
@@ -127,12 +128,13 @@ export default function WebsiteStudio({
         <div>
           <strong>Your website, built by a team</strong>
           <p>
-            Vijay coordinates an asset curator, a designer and a copywriter.
+            Vijay coordinates Aditi’s approved assets, Dev’s design and Kavya’s copy.
             Each specialist uses your approved business facts; the site is
-            checked before publishing.
+            checked before publishing. Nisha runs trusted factual checks.
           </p>
         </div>
       </div>
+      {!!vijay?.team?.length && <div className="office-team-members website-team-roster">{vijay.team.map((member) => <article key={member.id}><PixelTeammate id={memberCharacter(member)} /><div><strong>{member.name}</strong><span>{member.role}</span><small>{member.execution === "verified_code" ? "Trusted code checks · no extra model stage" : member.responsibility}</small></div></article>)}</div>}
       <label>
         Business photos{" "}
         <small>
@@ -286,11 +288,7 @@ export default function WebsiteStudio({
                 <p role="status">
                   {site.studioCheckpoint?.stages
                     .map((s) =>
-                      s.stage === "asset_curator"
-                        ? "Photos reviewed"
-                        : s.stage === "designer"
-                          ? "Design ready"
-                          : s.stage,
+                      websiteStageName(s.stage, s.specialistName),
                     )
                     .join(" · ")}
                   {site.studioCheckpoint?.stages.length ? " · " : ""}Vijay is

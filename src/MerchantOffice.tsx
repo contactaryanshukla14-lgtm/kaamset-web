@@ -40,6 +40,8 @@ import {
 import PixelTeammate from "./PixelTeammate";
 import InboxPanel from "./InboxPanel";
 import WebsiteStudio from "./WebsiteStudio";
+import WhatsAppSalesDesk from "./WhatsAppSalesDesk";
+import { memberCharacter, teamName, websiteStageName } from "./team-identity";
 import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
 import {
   Catalogue,
@@ -101,6 +103,7 @@ type Page =
   | "work"
   | "team"
   | "customers"
+  | "whatsapp"
   | "marketing"
   | "website"
   | "assistant"
@@ -111,6 +114,7 @@ const pages = [
   { id: "work", label: "My work", Icon: LayoutDashboard },
   { id: "team", label: "My AI team", Icon: Users },
   { id: "customers", label: "Customer desk", Icon: MessageCircle },
+  { id: "whatsapp", label: "WhatsApp · Saathi", Icon: MessageCircle },
   { id: "marketing", label: "Instagram studio", Icon: Instagram },
   { id: "website", label: "Website team", Icon: Globe },
   { id: "assistant", label: "Milan · Assistant", Icon: Activity },
@@ -120,28 +124,34 @@ const pages = [
 ] as const;
 const jobs = [
   {
-    name: "A sales team",
+    name: "Milo · Sales team",
     id: "milo",
     tag: "Enquiries → bookings → payments",
     text: "Create my sales team to answer enquiries from my connected Gmail and WhatsApp, qualify customers, quote approved products or services, capture orders and book appointments on my approved calendar. Send Paytm payment requests only after the customer accepts the exact quote. Follow up within my approved rules; escalate discounts, complaints and missing stock.",
   },
   {
-    name: "My Instagram team",
+    name: "Rang · Instagram team",
     id: "riya",
     tag: "Content, comments & customer DMs",
     text: "Manage my business Instagram: plan captions and owner-approved photo posts, publish on my approved schedule, answer routine comments and eligible inbound DMs, qualify interest and coordinate approved bookings or orders. Ask me for content approval and commercial exceptions. Check each required account permission.",
   },
   {
-    name: "Build my business website",
+    name: "Udaan · Website team",
     id: "vijay",
     tag: "Assets → design → copy → live link",
     text: "Create and publish a polished mobile business website from my approved facts and photos. Use a team to curate assets, design the customer journey, write grounded copy and verify the site. Give me a usable KaamSet website link.",
   },
   {
-    name: "A personal assistant",
+    name: "Milan · Personal assistant",
     id: "milan",
     tag: "Remember commitments. Follow through.",
     text: "Act as Milan, my personal assistant. Draft personalised WhatsApp reminders and schedule exact messages I approve to opted-in contacts. Help me remember appointments and ask customers to share agreed payment details. Stop collection reminders once payment is verified.",
+  },
+  {
+    name: "Saathi · WhatsApp Sales & Payments",
+    id: "tara",
+    tag: "Enquiry → approved quote → verified payment",
+    text: "Build Saathi, my WhatsApp Sales & Payments team. Tara is the only speaking teammate in each customer conversation. Understand English, Hindi and Hinglish; answer from approved business facts, gather order requirements, quote approved products or services within my discount rules and capture customer acceptance. Milo checks the quote and order. Chotu creates the merchant Paytm payment request only after the customer accepts the exact quote and verifies payment with the provider. Milan follows up only within my approved unpaid reminder schedule and stops after verified payment. Escalate missing stock, delivery promises, complaints and exceptions to me. Tell me what job-specific facts and account connections are still needed.",
   },
 ];
 const languageOptions = [
@@ -755,12 +765,14 @@ function PaymentSettings({
 }) {
   const [mid, setMid] = useState(""),
     [merchantKey, setKey] = useState(""),
-    [mode, setMode] = useState<"staging" | "production">("staging"),
+    [mode, setMode] = useState<"staging" | "production">(workspace.paymentSetup?.mode || "staging"),
     [approved, setApproved] = useState(false),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [changing, setChanging] = useState(!workspace.paymentSetup?.configured);
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (busy || !approved) return;
     setBusy(true);
     setError("");
     try {
@@ -774,6 +786,7 @@ function PaymentSettings({
       setKey("");
       setMid("");
       setApproved(false);
+      setChanging(false);
       await onChange();
     } catch (e) {
       setError((e as Error).message);
@@ -793,7 +806,7 @@ function PaymentSettings({
           }
         />
       </div>
-      <h3>Take the next step from a sale to a payment.</h3>
+      <h3>{workspace.paymentSetup?.configured ? "Paytm is connected to this business." : "Connect Paytm once. Your team handles the requests."}</h3>
       <p>
         Send an accepted order’s payment request, let the customer pay, then
         verify the transaction with Paytm before marking it collected.
@@ -808,10 +821,10 @@ function PaymentSettings({
         </p>
       )}
       {!workspace.account?.saved ? (
-        <button className="office-secondary" onClick={onSaveAccount}>
+        <div><p className="office-footnote">Save your business with a verified email first, so only you can recover its payment connection.</p><button className="office-secondary" onClick={onSaveAccount}>
           Save your business account to connect Paytm <ChevronRight size={16} />
-        </button>
-      ) : (
+        </button></div>
+      ) : (!workspace.paymentSetup?.configured || changing) ? (
         <form onSubmit={submit}>
           <div className="office-form-row">
             <label>
@@ -834,7 +847,8 @@ function PaymentSettings({
                 required
                 maxLength={40}
                 autoComplete="off"
-                onChange={(e) => setMid(e.target.value)}
+                placeholder="MID from your Paytm dashboard"
+                onChange={(e) => { setMid(e.target.value); setApproved(false); }}
               />
             </label>
           </div>
@@ -847,7 +861,8 @@ function PaymentSettings({
               minLength={16}
               maxLength={16}
               autoComplete="new-password"
-              onChange={(e) => setKey(e.target.value)}
+              placeholder="16-character merchant key"
+              onChange={(e) => { setKey(e.target.value); setApproved(false); }}
             />
           </label>
           <label className="office-check">
@@ -868,7 +883,7 @@ function PaymentSettings({
             <ShieldCheck size={16} />
           </button>
         </form>
-      )}
+      ) : <button className="office-secondary" onClick={() => setChanging(true)}>Change Paytm connection <Settings size={14} /></button>}
       <a
         href="https://dashboard.paytmpayments.com/login/"
         target="_blank"
@@ -877,6 +892,7 @@ function PaymentSettings({
       >
         Find your merchant credentials in Paytm <ArrowUpRight size={14} />
       </a>
+      <details className="office-payment-guide"><summary>Where do I find these two details?</summary><ol><li>Open your Paytm Payments merchant dashboard and choose Developer settings / API keys.</li><li>For a trial, choose Test mode and copy its Merchant ID and Merchant key here. Use the matching Test payments mode above.</li><li>Choose Live payments only after Paytm activates your merchant account. Copy the live MID and key, then approve the connection.</li></ol><p>Saving credentials connects this merchant’s checkout settings. A transaction is marked paid only after KaamSet verifies it with Paytm.</p></details>
       <small className="office-footnote">
         Keys are encrypted on the server. Customer screens and teammates never
         receive them.
@@ -916,6 +932,7 @@ export default function MerchantOffice() {
   const legacyRestore = useRef(!localStorage.getItem(storageKey) && !!localStorage.getItem(legacyStorageKey));
   const tokenRef = useRef(token),
     inFlight = useRef(false),
+    buildAttempt = useRef<{ request: string; key: string } | null>(null),
     importFile = useRef<HTMLInputElement>(null);
   function acceptToken(next: string) {
     localStorage.setItem(storageKey, next);
@@ -929,6 +946,7 @@ export default function MerchantOffice() {
     setSelected("");
     setTask("");
     setJob("");
+    buildAttempt.current = null;
     setMenu(false);
   }
   async function refresh(t = tokenRef.current) {
@@ -1053,7 +1071,9 @@ export default function MerchantOffice() {
   async function build(request = job) {
     await act("Designing your team", async () => {
       if (!token) return;
-      const b = await api.build(token, request);
+      if (buildAttempt.current?.request !== request) buildAttempt.current = { request, key: crypto.randomUUID() };
+      const b = await api.build(token, request, buildAttempt.current.key);
+      buildAttempt.current = null;
       setSelected(b.id);
       await refresh();
       setPage("team");
@@ -1250,7 +1270,7 @@ export default function MerchantOffice() {
                 </button>
               </div>
             </header>
-            <main className="office-content">
+            <main className="office-content office-view-enter" key={page}>
               {error && (
                 <div className="office-error" role="alert">
                   {error}
@@ -1414,7 +1434,7 @@ export default function MerchantOffice() {
                               {!!s.studioCheckpoint?.stages.length && (
                                 <div className="office-stage-trail">
                                   {s.studioCheckpoint.stages.map((stage) => (
-                                    <span key={stage.stage}><Check size={13} />{label(stage.stage)}</span>
+                                    <span key={stage.stage}><Check size={13} />{websiteStageName(stage.stage, stage.specialistName)}</span>
                                   ))}
                                 </div>
                               )}
@@ -1448,8 +1468,8 @@ export default function MerchantOffice() {
                                   <span key={s.role}>
                                     <Check size={13} />
                                     {s.role === "specialist"
-                                      ? "Prepared"
-                                      : "Reviewed"}
+                                      ? `${s.specialistName ? `${s.specialistName} · ` : ""}Prepared`
+                                      : `${s.specialistName ? `${s.specialistName} · ` : ""}Reviewed`}
                                   </span>
                                 ))}
                                 {t.state === "working" && (
@@ -1622,7 +1642,7 @@ export default function MerchantOffice() {
                           >
                             <PixelTeammate id={b.character} />
                             <div>
-                              <strong>{b.plan.name}</strong>
+                              <strong>{teamName(b)}</strong>
                               <small>{label(b.state)}</small>
                             </div>
                             <ChevronRight size={15} />
@@ -1636,18 +1656,20 @@ export default function MerchantOffice() {
                           </span>
                           <Status value={current.state} />
                         </div>
-                        <h2>{current.plan.name}</h2>
+                        <h2>{teamName(current)}</h2>
+                        {teamName(current) !== current.plan.name && <p className="office-team-job">{current.plan.name}</p>}
                         <p className="office-team-outcome">
                           {current.plan.outcome}
                         </p>
                         <div className="office-team-members">
                           {(current.team || []).map((m) => (
                             <article key={m.id}>
-                              <PixelTeammate id={m.id} />
+                              <PixelTeammate id={memberCharacter(m)} />
                               <div>
                                 <strong>{m.name}</strong>
                                 <span>{m.role}</span>
                                 <small>{m.responsibility}</small>
+                                {m.execution === "verified_code" && <small className="office-specialist-type">Verified code checks</small>}
                               </div>
                             </article>
                           ))}
@@ -1805,9 +1827,9 @@ export default function MerchantOffice() {
                               ) && (
                                 <button
                                   className="office-secondary"
-                                  onClick={() => navigate("customers")}
+                                  onClick={() => navigate(current.plan.skills.includes("whatsapp_enquiries") ? "whatsapp" : "customers")}
                                 >
-                                  Enable customer desk
+                                  {current.plan.skills.includes("whatsapp_enquiries") ? "Open WhatsApp desk" : "Enable customer desk"}
                                 </button>
                               )}
                               {current.plan.skills.includes(
@@ -1851,6 +1873,17 @@ export default function MerchantOffice() {
                   onChange={() => refresh()}
                 />
               )}
+              {page === "whatsapp" && (
+                <WhatsAppSalesDesk
+                  token={token}
+                  workspace={workspace}
+                  onChange={() => refresh()}
+                  onBuild={() => { setJob(jobs[4].text); navigate("work"); }}
+                  onBusiness={() => navigate("business")}
+                  onTeam={(id) => { setSelected(id); navigate("team"); }}
+                  paymentSettings={<PaymentSettings token={token!} workspace={workspace} onChange={() => refresh()} onSaveAccount={() => setAccountOpen(true)} />}
+                />
+              )}
               {page === "marketing" && (
                 <ContentStudio
                   token={token}
@@ -1875,7 +1908,7 @@ export default function MerchantOffice() {
                   token={token}
                   workspace={workspace}
                   onChange={() => refresh()}
-                  onPair={() => navigate("customers")}
+                  onPair={() => navigate("whatsapp")}
                   onBuild={() => {
                     setJob(jobs[3].text);
                     navigate("work");
@@ -2057,7 +2090,7 @@ export default function MerchantOffice() {
                       </p>
                       <button
                         className="office-secondary"
-                        onClick={() => navigate("customers")}
+                        onClick={() => navigate("whatsapp")}
                       >
                         Set up WhatsApp <ChevronRight size={14} />
                       </button>

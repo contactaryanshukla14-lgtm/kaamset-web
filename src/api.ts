@@ -73,6 +73,9 @@ async function request<T>(
   token?: string,
   body?: unknown,
 ): Promise<T> {
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
+  try {
   const response = await fetch(`${root}${path}`, {
     method,
     headers: {
@@ -81,8 +84,12 @@ async function request<T>(
     },
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
+    signal: controller.signal,
   });
-  const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch((error) => {
+    if (controller.signal.aborted) throw error;
+    return {};
+  });
   if (!response.ok)
     throw new Error(
       data.detail ||
@@ -91,6 +98,14 @@ async function request<T>(
         `Request failed (${response.status})`,
     );
   return data as T;
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error(method === "GET"
+      ? "This check timed out. Refresh to check the current cloud state."
+      : "The request timed out before its result was confirmed. Cloud work may still continue. Refresh the workspace before retrying; do not repeat an uncertain payment or message.");
+    throw error;
+  } finally {
+    clearTimeout(deadline);
+  }
 }
 export const api = {
   signOut: (token: string) => request("/accounts/logout", "POST", token),
@@ -173,11 +188,12 @@ export const api = {
     }),
   cancelReminder: (token: string, id: string) =>
     request(`/reminders/${id}/cancel`, "POST", token),
-  commerceSetup: (token: string, offers: Offer[]) =>
-    request("/commerce", "PUT", token, {
+  commerceSetup: (token: string, offers: Offer[], hours?: CommerceHours, expectedSnapshotHash?: string) =>
+    request<{revision: number; offers: Offer[]}>("/commerce", "PUT", token, {
       approved: true,
+      ...(expectedSnapshotHash ? { expectedSnapshotHash } : {}),
       offers,
-      hours: {
+      hours: hours || {
         days: [1, 2, 3, 4, 5, 6],
         opens: 10,
         closes: 19,
@@ -219,6 +235,16 @@ export const api = {
     request(`/channels/${channel}`, "POST", token, { enabled }),
   whatsapp: (token: string) =>
     request<WhatsAppState>("/whatsapp", "GET", token),
+  whatsappSales: (token: string) =>
+    request<WhatsAppSalesState>("/whatsapp/sales", "GET", token),
+  configureWhatsAppSales: (token: string, input: WhatsAppSalesSetup) =>
+    request<NonNullable<WhatsAppSalesState["settings"]>>("/whatsapp/sales", "PUT", token, input),
+  whatsappConversationControl: (token: string, id: string, action: "takeover" | "resume") =>
+    request(`/whatsapp/sales/conversations/${encodeURIComponent(id)}/control`, "POST", token, { action }),
+  whatsappOwnerReply: (token: string, id: string, text: string, requestKey: string = crypto.randomUUID()) =>
+    request(`/whatsapp/sales/conversations/${encodeURIComponent(id)}/reply`, "POST", token, {
+      text, approved: true, requestKey,
+    }),
   whatsappAction: (token: string, action: string) =>
     request(`/whatsapp/${action}`, "POST", token),
   speech: (token: string, audio: string, mime: string) =>
@@ -267,10 +293,10 @@ export const api = {
     request<WorkspaceState>("/workspace", "GET", token),
   saveBrief: (token: string, brief: string, approved: boolean) =>
     request("/workspace/brief", "PUT", token, { brief, approved }),
-  build: (token: string, task: string) =>
+  build: (token: string, task: string, requestKey: string = crypto.randomUUID()) =>
     request<Teammate>("/teammates", "POST", token, {
       request: task,
-      requestKey: crypto.randomUUID(),
+      requestKey,
     }),
   recheckTeammate: (token: string, b: Teammate) =>
     request<Teammate>(`/teammates/${b.id}/recheck`, "POST", token, {
@@ -357,6 +383,8 @@ export type TeamMember = {
   role: string;
   responsibility: string;
   skills: string[];
+  character?: string;
+  execution?: "model" | "cloud" | "verified_code";
 };
 export type Teammate = {
   id: string;
@@ -366,6 +394,7 @@ export type Teammate = {
   brief: string;
   state: "proposed" | "active" | "paused";
   team?: TeamMember[];
+  teamIdentity?: { id: string; name: string; lead: string; character: string };
   plan: {
     name: string;
     outcome: string;
@@ -400,7 +429,7 @@ export type WorkspaceState = {
     createdAt: string;
     updatedAt: string;
     checkpoint?: {
-      stages: { role: string; completedAt: string; model: string }[];
+      stages: { role: string; completedAt: string; model: string; specialistName?: string }[];
     };
     result?: {
       title: string;
@@ -440,8 +469,11 @@ export type WorkspaceState = {
     logRef?: string;
   }[];
   commerce?: {
+    revision?: number;
+    snapshotHash?: string;
     offers: Offer[];
     orders: Order[];
+    hours?: CommerceHours;
     calendar?: { label: string; verifiedAt: string };
   };
   reminders?: {
@@ -454,6 +486,7 @@ export type WorkspaceState = {
     providerMessageId?: string;
   }[];
   sites?: PublishedSite[];
+  whatsappSales?: WhatsAppSalesState;
   brain?: {
     shared: boolean;
     cogneeState: string;
@@ -485,6 +518,12 @@ export type Offer = {
   deliveryPaise: number | null;
   durationMinutes: number;
   terms: string;
+};
+export type CommerceHours = {
+  days: number[];
+  opens: number;
+  closes: number;
+  noticeHours: number;
 };
 export type Slot = {
   id: string;
@@ -525,7 +564,7 @@ export type PublishedSite = {
   publishedAt?: string;
   reason?: string;
   studioCheckpoint?: {
-    stages: { stage: string; completedAt: string; model: string }[];
+    stages: { stage: string; completedAt: string; model: string; specialistName?: string; character?: string }[];
   };
   studioPlan?: WebsiteDesign;
 };
@@ -576,6 +615,74 @@ export type WhatsAppState = {
   phone?: string;
   error?: string;
   salesAutoReplyEnabled: boolean;
+};
+export type WhatsAppSalesSetup = {
+  approved: true;
+  blueprintId: string;
+  language: "auto" | "en" | "hi" | "hinglish";
+  tone: "friendly" | "professional";
+  deliveryArea: string | null;
+  discountLimitPercent: number;
+  ownerHelp: string[];
+  followup: {
+    enabled: boolean;
+    afterMinutes: number[];
+    quietStart: number;
+    quietEnd: number;
+  };
+  summary: { enabled: boolean; at: string };
+};
+export type WhatsAppConversation = {
+  id: string;
+  conversationId: string;
+  recipient: string;
+  customerName: string;
+  speakerBlueprintId: string;
+  speakerRevision: number;
+  language: string;
+  mode: "teammate" | "owner";
+  optedOut: boolean;
+  stage: "enquiry" | "quote" | "awaiting_payment" | "paid" | "owner_needed";
+  orderIds: string[];
+  activeOrderId?: string;
+  updatedAt: string;
+  reason?: string;
+  history: {
+    providerId?: string;
+    text: string;
+    at: string;
+    kind: "customer" | "teammate" | "owner";
+    providerMessageId?: string;
+    outboxId?: string;
+  }[];
+};
+export type WhatsAppSalesState = {
+  settings?: WhatsAppSalesSetup & { revision: number; approvedAt: string };
+  conversations: WhatsAppConversation[];
+  outbox: {
+    id: string;
+    conversationId: string;
+    key: string;
+    kind: "reply" | "quote" | "payment_request" | "payment_confirmation" | "payment_followup" | "owner_reply";
+    state: "pending" | "sending" | "sent" | "cancelled" | "uncertain" | "owner_needed";
+    message: string;
+    notBefore: string;
+    orderId?: string;
+    inboxId?: string;
+    providerMessageId?: string;
+    sentAt?: string;
+    reason?: string;
+  }[];
+  digests: {
+    id: string;
+    date: string;
+    preparedAt: string;
+    verifiedPaymentCount: number;
+    verifiedAmountPaise: number;
+    paidOrderIds: string[];
+    pendingPaymentOrderIds: string[];
+    ownerNeededConversationIds: string[];
+  }[];
 };
 export type ContentPost = {
   id: string;
