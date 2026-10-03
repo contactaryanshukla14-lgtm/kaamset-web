@@ -5666,5 +5666,85 @@
   "Actual AI and cloud workers. Simulated payments and customer channels. No Paytm credentials needed.": {
     "Hindi": "असली AI और क्लाउड पर काम। भुगतान और ग्राहक चैनल काल्पनिक हैं। Paytm की कुंजी ज़रूरी नहीं है।",
     "Hinglish": "Actual AI aur cloud par kaam. Payments aur customer channels simulated hain. Paytm keys ki zaroorat nahi hai."
+  },
+  "YOUR NEXT STEP": {
+    "Hindi": "आपका अगला कदम",
+    "Hinglish": "Aapka agla kadam"
+  },
+  "is working": {
+    "Hindi": "काम कर रहे हैं",
+    "Hinglish": "kaam kar rahe hain"
+  },
+  "is queued in the cloud": {
+    "Hindi": "का काम क्लाउड में कतार में है",
+    "Hinglish": "ka kaam cloud mein queue mein hai"
+  },
+  "Your team has created a payment request": {
+    "Hindi": "आपकी टीम ने भुगतान का अनुरोध बनाया है",
+    "Hinglish": "Aapki team ne payment request bana di hai"
+  },
+  "Your team’s work is ready to review": {
+    "Hindi": "आपकी टीम का काम देखने के लिए तैयार है",
+    "Hinglish": "Aapki team ka kaam dekhne ke liye taiyaar hai"
+  },
+  "Start with one useful job": {
+    "Hindi": "एक उपयोगी काम से शुरू करें",
+    "Hinglish": "Ek zaroori kaam se shuru karein"
+  },
+  "Work runs on the cloud. Open its evidence to follow the stored result.": {
+    "Hindi": "काम क्लाउड पर चलता है। सहेजे गए नतीजे और प्रमाण देखें।",
+    "Hinglish": "Kaam cloud par chalta hai. Save kiye nateeje aur proof dekhein."
+  },
+  "Complete the simulated customer payment and watch both views update.": {
+    "Hindi": "डेमो ग्राहक का भुगतान पूरा करें और दोनों स्क्रीन पर बदलाव देखें।",
+    "Hinglish": "Demo customer ka payment poora karein aur dono screens par update dekhein."
+  },
+  "Read completed actions, source records and any decisions that need you.": {
+    "Hindi": "पूरा हुआ काम, मूल रिकॉर्ड और आपके निर्णय के इंतज़ार में काम देखें।",
+    "Hinglish": "Poora hua kaam, source records aur aapke faisle ka intezaar karte kaam dekhein."
+  },
+  "Milan will read the accepted cafe invoice, prepare a reminder and create a demo payment request.": {
+    "Hindi": "मिलन कैफ़े का स्वीकृत बिल पढ़ेंगे, याद दिलाने का संदेश और डेमो भुगतान अनुरोध बनाएंगे।",
+    "Hinglish": "Milan cafe ka approved bill padhenge, reminder aur demo payment request banayenge."
+  },
+  "Follow this job": {
+    "Hindi": "इस काम का नतीजा देखें",
+    "Hinglish": "Is kaam ka nateeja dekhein"
+  },
+  "Start Milan’s collection": {
+    "Hindi": "मिलन से वसूली का काम शुरू कराएं",
+    "Hinglish": "Milan se collection shuru karayein"
+  },
+  "Review completed work": {
+    "Hindi": "पूरा हुआ काम देखें",
+    "Hinglish": "Poora hua kaam dekhein"
+  },
+  "Runs in the cloud": {
+    "Hindi": "क्लाउड पर चलता है",
+    "Hinglish": "Cloud par chalta hai"
+  },
+  "Business prepared": {
+    "Hindi": "कारोबार की जानकारी तैयार",
+    "Hinglish": "Business ki jaankari taiyaar"
+  },
+  "approved products": {
+    "Hindi": "स्वीकृत उत्पाद",
+    "Hinglish": "approved products"
+  },
+  "Demo merchant authorized": {
+    "Hindi": "डेमो व्यापारी को अनुमति मिली",
+    "Hinglish": "Demo merchant ko permission mili"
+  },
+  "Scoped connection recorded": {
+    "Hindi": "इस कारोबार का कनेक्शन सहेजा गया",
+    "Hinglish": "Is business ka connection save hua"
+  },
+  "Completed work": {
+    "Hindi": "पूरा हुआ काम",
+    "Hinglish": "Poora hua kaam"
+  },
+  "stored job results": {
+    "Hindi": "सहेजे गए नतीजे",
+    "Hinglish": "save kiye nateeje"
   }
 }
