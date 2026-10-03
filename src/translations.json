@@ -1,4 +1,36 @@
 {
+  "Access was declined. Start fresh and complete the account permission screen.": {
+    "Hindi": "अनुमति नहीं मिली। नए सिरे से कनेक्ट करें और खाते की अनुमति वाली स्क्रीन पूरी करें।",
+    "Hinglish": "Access allow nahi hua. Naye sire se connect karein aur account ki permission screen poori karein."
+  },
+  "This sign-in link expired. Start fresh to get a new connection link.": {
+    "Hindi": "इस साइन-इन लिंक का समय समाप्त हो गया। नया कनेक्शन लिंक पाने के लिए नए सिरे से शुरू करें।",
+    "Hinglish": "Is sign-in link ka samay khatam ho gaya. Naya connection link paane ke liye naye sire se shuru karein."
+  },
+  "The account connection did not finish. Start fresh, or check the connection if you already completed sign-in.": {
+    "Hindi": "खाता कनेक्ट नहीं हो पाया। नए सिरे से शुरू करें, या साइन-इन पूरा कर चुके हैं तो कनेक्शन जाँचें।",
+    "Hinglish": "Account connect nahi ho paaya. Naye sire se shuru karein, ya sign-in poora kar liya hai toh connection check karein."
+  },
+  "This account connection is disabled or revoked. Reconnect your account to use it.": {
+    "Hindi": "इस खाते का कनेक्शन बंद है या अनुमति हटा दी गई है। इस्तेमाल करने के लिए खाता दोबारा कनेक्ट करें।",
+    "Hinglish": "Is account ka connection band hai ya permission hata di gayi hai. Istemaal karne ke liye dobara connect karein."
+  },
+  "Account authorization is not finished. Complete the permission screen, then check the connection.": {
+    "Hindi": "खाते की अनुमति अभी पूरी नहीं हुई है। अनुमति वाली स्क्रीन पूरी करें, फिर कनेक्शन जाँचें।",
+    "Hinglish": "Account ki permission abhi poori nahi hui. Permission screen poori karein, phir connection check karein."
+  },
+  "Trouble connecting Google Sheets?": {
+    "Hindi": "Google Sheets कनेक्ट करने में परेशानी है?",
+    "Hinglish": "Google Sheets connect karne mein dikkat hai?"
+  },
+  "Use the Google account that can access your spreadsheet. Complete the permission screen and return here to check the connection. If you declined access or the link expired, start fresh.": {
+    "Hindi": "वही Google खाता चुनें जिसे आपकी स्प्रेडशीट का ऐक्सेस है। अनुमति वाली स्क्रीन पूरी करके यहाँ कनेक्शन जाँचें। अनुमति नहीं दी थी या लिंक का समय समाप्त हो गया है तो नए सिरे से शुरू करें।",
+    "Hinglish": "Wahi Google account chunein jise aapki spreadsheet ka access hai. Permission screen poori karke yahan connection check karein. Permission nahi di thi ya link expire ho gaya hai toh naye sire se shuru karein."
+  },
+  "If Google or your company blocks the app, follow the displayed guidance or ask your Google Workspace administrator to allow it.": {
+    "Hindi": "अगर Google या आपकी कंपनी ऐप को रोकती है तो स्क्रीन पर दिए निर्देश देखें या अपने Google Workspace एडमिन से अनुमति माँगें।",
+    "Hinglish": "Agar Google ya aapki company app ko block karti hai toh screen ke nirdesh dekhein ya apne Google Workspace admin se permission maangein."
+  },
   "My work": {
     "Hindi": "मेरा काम",
     "Hinglish": "Mera kaam"

@@ -14,3 +14,5 @@ Sia updates quiet hints and opens only from her launcher. Connected accounts and
 - Actual read-only connected Instagram calls, public-source research and configured-model lead qualification were checked separately. These checks did not send real posts, messages or payments.
 
 Matching API/worker deployment and public cloud/browser verification are required before announcing this release as live.
+
+Integrated the independently reviewed Google consent recovery: declined/expired permissions offer actionable fresh sign-in, current attempts are verified before replacement, and callback metadata is cleaned only after server verification. Instagram identity retries retain their separate guidance; Sia remains user-opened.
