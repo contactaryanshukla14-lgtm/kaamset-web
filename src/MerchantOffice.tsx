@@ -49,7 +49,6 @@ import {
   Catalogue,
   MilanScheduler,
   OrderDesk,
-  SharedBrain,
 } from "./MerchantTools";
 import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,type ReadyTeamId} from "./ReadyTeams";
 import MerchantOps,{type OpsPage} from "./MerchantOps";
@@ -1066,7 +1065,7 @@ export default function MerchantOffice() {
       const b=await api.readyTeam(r.token,id);
       setSelected(b.id);
       await refresh(r.token);
-      setPage("business");sessionStorage.setItem(pageKey,"business");
+      navigate("business");
       setNotice("Your description is saved. Get Sia’s simple setup guide, try a sample record, or review your chosen teammate.");
       if (r.workspace.providers?.cognee)
         void api
@@ -2008,8 +2007,7 @@ export default function MerchantOffice() {
                     onChange={() => refresh()}
                   />
                   </details>
-                  <section className="office-card"><h3>Search shared business memory</h3><p>Your approved description and reviewed record files are available to your team. Save the latest version to Cognee for source retrieval.</p><BusinessMemory token={token} enabled={!!workspace.providers?.cognee}/></section>
-                  <SharedBrain workspace={workspace} />
+                  <section className="office-card"><BusinessMemory token={token} enabled={!!workspace.providers?.cognee}/></section>
                   <section className="office-card">
                     <h3>Workspace & account</h3>
                     <p>
