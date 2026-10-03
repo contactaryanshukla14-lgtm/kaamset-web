@@ -31,6 +31,7 @@ export default function MerchantLab(props:MerchantLabProps&{embedded?:boolean}){
  useEffect(()=>{setPage(0)},[search,from,to,status]);
  useEffect(()=>{if(store?.connection.state==='connected')setConnectOpen(false)},[store?.connection.state]);
  useEffect(()=>{if(store&&!activeConversation)setActiveConversation(store.conversations[0]?.id||'')},[store,activeConversation]);
+ useEffect(()=>{if(section==='memory'&&store)void props.onRefresh()},[section,store?.generation]);
  const searchText=search.trim().toLowerCase(),customer=(id:string|null|undefined)=>store?.customers.find(c=>c.id===id),order=(id:string|null|undefined)=>store?.orders.find(o=>o.id===id),within=(at:string)=>(!from||day(at)>=from)&&(!to||day(at)<=to);
  const payments=useMemo(()=>store?.payments.filter(p=>within(p.updatedAt)&&(status==='all'||(status==='refunded'?p.refundedPaise>0:p.state===status))&&(!searchText||`${p.id} ${order(p.orderId)?.invoiceId||''} ${customer(p.customerId)?.name||'Unmatched'} ${p.mode}`.toLowerCase().includes(searchText))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))||[],[store,searchText,status,from,to]);
  const selectedConversation=store?.conversations.find(c=>c.id===activeConversation);
