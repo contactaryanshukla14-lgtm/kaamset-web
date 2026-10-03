@@ -109,7 +109,7 @@ async function request<T>(
 }
 export const api = {
   understandBusiness:(token:string)=>request<BusinessGuide>('/onboarding/understand','POST',token,{}),
-  recordSample:async()=>{const r=await fetch(`${root}/records/sample`,{cache:'no-store'});if(!r.ok)throw new Error('Sample download is unavailable. Try again.');return r.text();},
+  recordSample:async()=>{const r=await fetch(`${root}/records/sample`,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error('Sample download is unavailable. Try again.');return r.text();},
   previewRecords:(token:string,csv:string)=>request<RecordPreview>('/records/preview','POST',token,{csv}),
   saveRecords:(token:string,input:{csv:string;fileName:string;previewHash:string;practice:boolean;approved:true})=>request<{id:string;kind:string;reused:boolean}>('/records','POST',token,input),
   removeRecords:(token:string,id:string)=>request(`/records/${id}`,'DELETE',token),
