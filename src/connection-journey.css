@@ -1,0 +1,11 @@
+.connection-journey{list-style:none;display:grid;gap:10px;padding:0;margin:20px 0;color:#536477;font-size:13px}
+.connection-journey li{display:flex;align-items:center;gap:9px;min-height:24px}
+.connection-journey li>span{flex:0 0 23px;width:23px;height:23px;border:1px solid #ccdce6;border-radius:7px;display:grid;place-items:center;background:#f6f9fc;font-size:11px;font-weight:700}
+.connection-journey .is-complete{color:#16634d}.connection-journey .is-complete>span{background:#e0f6ef;border-color:#a9dbc9}
+.connection-recovery{background:#fff4df;color:#654b21;padding:12px;border-radius:10px;font-size:13px!important;line-height:1.6}
+.connection-running{display:block;line-height:1.65;margin-top:15px;color:#536477}
+.office-connection-grid .office-actions{align-items:stretch;gap:9px}
+.office-connection-grid .office-actions button{white-space:normal;text-align:left}
+@media(prefers-reduced-motion:no-preference){.connection-journey .is-complete>span{transition:background .2s,border-color .2s}}
+
+.lab-live-desks{display:grid;gap:8px;padding:18px 12px;border-top:1px solid #e1e9f0;margin-top:10px}.lab-live-desks>strong{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#5f7288}.lab-live-desks>a{display:flex;gap:8px;align-items:center;min-height:37px;padding:7px;border-radius:8px;font-size:12px;text-decoration:none;color:#103b63}.lab-live-desks>a:hover{background:#eaf6fc}.lab-live-desks>small{line-height:1.6;color:#627689;font-size:11px}

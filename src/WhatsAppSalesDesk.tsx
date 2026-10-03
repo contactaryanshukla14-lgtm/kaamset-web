@@ -22,7 +22,7 @@ const money = (paise: number | null | undefined) => paise == null ? "Owner confi
 const when = (value?: string) => value && Number.isFinite(Date.parse(value)) ?
   new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "Not scheduled";
 const stageLabels: Record<WhatsAppConversation["stage"], string> = {
-  enquiry: "Enquiry", quote: "Quote", awaiting_payment: "Awaiting payment", paid: "Paid", owner_needed: "Owner needed",
+  enquiry: "Enquiry", quote: "Quote", accepted: "Order accepted", awaiting_payment: "Awaiting payment", paid: "Paid", owner_needed: "Owner needed",
 };
 const stateLabel = (value: string) => value.replaceAll("_", " ");
 const contactLabel = (value: string) => value.endsWith("@lid") ? "WhatsApp customer" : value.replace(/@(c\.us|s\.whatsapp\.net)$/, "");
@@ -128,6 +128,7 @@ const {t:localize}=useLanguage();
   const [busy, setBusy] = useState(""), [error, setError] = useState(""), [readError, setReadError] = useState(""), [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState(""), [search, setSearch] = useState(""), [filter, setFilter] = useState("all"), [reply, setReply] = useState("");
   const [editing, setEditing] = useState(false), [liveConsent, setLiveConsent] = useState(false),[enquiryConsent,setEnquiryConsent]=useState(false),[enquiryAlwaysOn,setEnquiryAlwaysOn]=useState(true);
+  const [starterOrders,setStarterOrders]=useState(false);
   const actionInFlight = useRef(false), chat = useRef<HTMLDivElement>(null);
   const readSequence = useRef(0), tokenRef = useRef(token);
   tokenRef.current = token;
@@ -158,6 +159,14 @@ const {t:localize}=useLanguage();
     ? "The pairing code expired. Choose Show pairing QR for a fresh code, then scan it in WhatsApp."
     : wa?.error;
   const latestDigest = sales.digests.at(-1);
+  const savedStarter=workspace.blueprints.find(b=>b.presetId==='saathi');
+  const starterHasOrders=starterOrders||!!savedStarter?.presetOptions?.orders;
+  const starterModules=Object.entries(savedStarter?.presetOptions||{}).filter(([key,on])=>on&&key!=='whatsapp'&&key!=='orders').map(([key])=>key);
+  const setupBlockers=[!connected?'Pair your WhatsApp account first.':null,!workspace.briefApproved?'Approve your business facts first.':null,
+    needsOffers&&!hasOffers?'Add approved products, prices, available stock and delivery terms to take orders.':null,
+    needsPaytm&&!hasPaytm?'Connect merchant Paytm for the payment module, or disable payment requests in the team’s job.':null,
+    assigned?.feasibility?.blockers?.length?assigned.feasibility.blockers.join(' '):null,
+    workspace.channels?.whatsapp?.error||null].filter(Boolean);
 
   async function read() {
     if (!token) return;
@@ -220,8 +229,8 @@ const {t:localize}=useLanguage();
   }
   async function startEnquiries(){await act('Starting Aarav’s enquiry replies',async()=>{
     if(!token||!enquiryConsent)return;
-    const old=workspace.blueprints.find(b=>b.presetId==='saathi'),team=await api.readyTeam(token,'saathi',{whatsapp:true},old?.revision),previous=sales.settings;
-    await api.configureWhatsAppSales(token,{approved:true,blueprintId:team.id,language:previous?.language||'auto',tone:previous?.tone||'friendly',replyOutsideQuietHours:enquiryAlwaysOn,deliveryArea:previous?.deliveryArea||null,discountLimitPercent:0,ownerHelp:previous?.ownerHelp||['Complaints, refunds and cancellations','Missing stock, delivery facts or booking availability','Discounts and commercial exceptions'],followup:{enabled:false,afterMinutes:[],quietStart:previous?.followup.quietStart??22,quietEnd:previous?.followup.quietEnd??7},summary:{enabled:false,at:'19:00'}});
+    const old=workspace.blueprints.find(b=>b.presetId==='saathi'),team=await api.readyTeam(token,'saathi',{...old?.presetOptions,whatsapp:true,orders:starterHasOrders},old?.revision),previous=sales.settings;
+    await api.configureWhatsAppSales(token,{approved:true,blueprintId:team.id,language:previous?.language||'auto',tone:previous?.tone||'friendly',replyOutsideQuietHours:enquiryAlwaysOn,deliveryArea:previous?.deliveryArea||null,discountLimitPercent:previous?.discountLimitPercent??0,ownerHelp:previous?.ownerHelp||['Complaints, refunds and cancellations','Missing stock, delivery facts or booking availability','Discounts and commercial exceptions'],followup:previous?.followup||{enabled:false,afterMinutes:[],quietStart:22,quietEnd:7},summary:previous?.summary||{enabled:true,at:'19:00'}});
     await api.whatsappAction(token,'enable',{blueprintId:team.id,revision:team.revision});setEnquiryConsent(false);
   })}
 
@@ -233,9 +242,15 @@ const {t:localize}=useLanguage();
       <div><span className={`wa-connection-icon ${connected ? "is-connected" : ""}`}>{connected ? <Wifi size={20} /> : <WifiOff size={20} />}</span><div><strong><UiText text={connected ? "WhatsApp connected" : pairing ? "Pair your account" : wa?.canReconnect ? "Reconnect required" : "Connect WhatsApp"}/></strong><small>{wa?.phone || (loaded ? "Your own isolated linked-device session" : "Checking your cloud session…")}</small></div></div>
       <div><Status value={running ? "active" : "paused"}><UiText text={running ? "Teammate is live" : "Automatic replies paused"}/></Status><button className="office-icon-button" aria-label={localize("Refresh WhatsApp desk")} disabled={!!busy} onClick={() => act("Refreshing your desk", read)}><RefreshCw size={16} /></button></div>
     </div>
-    <div className="wa-journey" aria-label={localize("Customer journey")}>{["Enquiry", "Approved quote", "Customer accepts", "Paytm checkout", "Verified payment"].map((step,i) => <div key={step}><span>{String(i+1).padStart(2,"0")}</span>{step}{i < 4 && <ChevronRight size={15} />}</div>)}</div>
+    <div className="wa-journey" aria-label={localize("Customer journey")}>{(speaker?.plan.skills.includes("paytm_request")?["Enquiry", "Approved quote", "Customer accepts", "Paytm checkout", "Verified payment"]:["Enquiry", "Approved quote", "Customer accepts", "Order recorded", "Owner fulfilment"]).map((step,i) => <div key={step}><span>{String(i+1).padStart(2,"0")}</span>{step}{i < 4 && <ChevronRight size={15} />}</div>)}</div>
 
-    {!running&&<section className="office-card wa-enquiry-launch"><span className="office-eyebrow"><UiText text={"START WITH THE JOB YOU NEED"}/></span><h2><UiText text={"Let Aarav answer your customer enquiries."}/></h2><p><UiText text={"Use your paired WhatsApp and approved business facts. No Paytm credentials, catalogue or calendar are needed for routine replies. Orders, payments and follow-ups stay off in this starter job."}/></p><label className="office-check"><input type="checkbox" checked={enquiryAlwaysOn} onChange={e=>{setEnquiryAlwaysOn(e.target.checked);setEnquiryConsent(false)}}/><span><UiText text={"Answer incoming customer enquiries 24×7. Scheduled reminders still respect quiet hours."}/></span></label><label className="office-check"><input type="checkbox" checked={enquiryConsent} onChange={e=>setEnquiryConsent(e.target.checked)}/><span><UiText text={"I approve Aarav’s enquiry-only job. Use my approved facts; ask me about discounts, complaints, uncertain stock or bookings."}/></span></label><button className="office-primary" disabled={!!busy||!connected||controlled||!workspace.briefApproved||!enquiryConsent||!!readError} onClick={()=>void startEnquiries()}><Play size={16}/><UiText text={"Start enquiry replies"}/></button>{!connected&&<small><UiText text={"Pair your WhatsApp below first. No payment account is required."}/></small>}</section>}
+    {!running&&!sales.settings&&<section className="office-card wa-enquiry-launch"><span className="office-eyebrow"><UiText text={"START WITH THE JOB YOU NEED"}/></span><h2><UiText text={"Let Aarav answer enquiries and take orders."}/></h2><p><UiText text={"Choose routine replies, or add quotes and order acceptance from your approved catalogue. Payment requests are optional."}/></p>
+      <label className="office-check"><input type="checkbox" checked={starterHasOrders} disabled={!!savedStarter?.presetOptions?.orders} onChange={e=>{setStarterOrders(e.target.checked);setEnquiryConsent(false)}}/><span><UiText text={"Quote approved products and take customer-accepted orders"}/></span></label>
+      {starterHasOrders&&!hasOffers&&<div className="wa-approval-summary"><div><p><UiText text={"Add your products, prices, stock and delivery terms before enabling orders."}/></p><button className="office-text" onClick={onBusiness}><UiText text={"Add my catalogue"}/><ArrowRight size={14}/></button></div></div>}
+      {!!starterModules.length&&<p className="wa-help"><UiText text={"Your existing job modules stay enabled: "}/>{starterModules.join(', ')}. <UiText text={"Their connection checks still apply."}/></p>}
+      <label className="office-check"><input type="checkbox" checked={enquiryAlwaysOn} onChange={e=>{setEnquiryAlwaysOn(e.target.checked);setEnquiryConsent(false)}}/><span><UiText text={"Answer incoming customer enquiries 24×7. Scheduled reminders still respect quiet hours."}/></span></label>
+      <label className="office-check"><input type="checkbox" checked={enquiryConsent} onChange={e=>setEnquiryConsent(e.target.checked)}/><span><UiText text={starterHasOrders?"I approve enquiries, approved quotes and explicit customer order acceptance. Ask me about uncertain stock, discounts and complaints.":"I approve routine enquiries from my approved facts. Orders stay off. Ask me about uncertain answers and commercial exceptions."}/></span></label>
+      <button className="office-primary" disabled={!!busy||!connected||controlled||!workspace.briefApproved||!enquiryConsent||!!readError||starterHasOrders&&!hasOffers} onClick={()=>void startEnquiries()}><Play size={16}/><UiText text={starterHasOrders?"Start enquiries & orders":"Start enquiry replies"}/></button>{!connected&&<small><UiText text={"Pair your WhatsApp below first. No payment account is required."}/></small>}</section>}
     <details className="office-card wa-setup" open={!connected || editing} onToggle={(e) => { if (!e.currentTarget.open) setEditing(false); }}>
       <summary><div><Settings2 size={19} /><strong><UiText text={sales.settings && connected && hasPaytm && hasOffers ? "Your setup & approved rules" : "Let’s get your sales team ready"}/></strong></div><span><UiText text={"3 simple steps "}/><ChevronRight size={16} /></span></summary>
       <div className="wa-setup-body">
@@ -261,6 +276,7 @@ const {t:localize}=useLanguage();
       <div><strong>{assigned ? teamName(assigned) : "Select a WhatsApp team"}</strong><p><UiText text={running ? "Routine replies follow your approved business facts and rules." : "Your rules are saved. Complete the setup, then start your team."}/></p>{controlled && <p className="wa-form-error"><UiText text={"Your whole office is paused or in owner takeover. Resume it from the top bar first."}/></p>}{!!missingSkills.length && <div className="wa-form-error"><p><UiText text={"This team still needs these jobs before it can handle the full sale:"}/></p><ul>{missingSkills.map((s) => <li key={s}>{s}</li>)}</ul><button className="office-text" onClick={onBuild}><UiText text={"Configure Aarav’s live modules "}/><ArrowRight size={14} /></button></div>}</div>
       {running ? <button className="office-secondary" disabled={!!busy} onClick={() => act("Pausing WhatsApp automation", () => api.whatsappAction(token!,"disable"))}><Pause size={16} /> <UiText text={"Pause WhatsApp"}/></button> : <div><label className="office-check"><input type="checkbox" checked={liveConsent} onChange={(e) => setLiveConsent(e.target.checked)} /><span><UiText text={"Let this team handle new eligible customer messages using my approved rules."}/></span></label><button className="office-primary" disabled={!!busy || !assigned || !connected || needsPaytm&&!hasPaytm || needsOffers&&!hasOffers || !liveConsent || controlled || !!readError || !!missingSkills.length} onClick={goLive}><Play size={16} /> <UiText text={"Check setup & go live"}/></button></div>}
     </section>}
+    {!running&&!!sales.settings&&!!setupBlockers.length&&<section className="office-card wa-setup-blockers" role="status"><h3><UiText text={"Complete these steps to start your team"}/></h3><ul>{[...new Set(setupBlockers)].map(reason=><li key={reason}>{reason}</li>)}</ul><div className="office-actions"><button className="office-secondary" onClick={onBusiness}><UiText text={"Review business & catalogue"}/></button>{assigned&&<button className="office-secondary" onClick={()=>onTeam(assigned.id)}><UiText text={"Review Aarav’s job"}/></button>}</div></section>}
     {assigned?.team?.length ? <div className="wa-roster" aria-label={localize("Saathi specialists")}>{assigned.team.map((m) => <article key={m.id}><PixelTeammate id={memberCharacter(m)} /><div><strong>{m.name}</strong><small>{m.role}</small></div></article>)}</div> : null}
     <div className="wa-cloud-note"><Cloud size={16} /><span><UiText text={"Authorised work continues in the cloud while your browser is closed. Connection loss or an owner decision pauses the relevant work."}/></span></div>
 

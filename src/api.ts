@@ -74,7 +74,7 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const controller = new AbortController();
-  const deadline = setTimeout(() => controller.abort(), path === "/onboarding/understand" || path === "/merchant-ops/intake" || path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
+  const deadline = setTimeout(() => controller.abort(), /^\/records\/[^/]+\/propose$/.test(path) || path === "/onboarding/understand" || path === "/merchant-ops/intake" || path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
   try {
   const response = await fetch(`${root}${path}`, {
     method,
@@ -117,6 +117,15 @@ export const api = {
   previewRecords:(token:string,csv:string)=>request<RecordPreview>('/records/preview','POST',token,{csv}),
   saveRecords:(token:string,input:{csv:string;fileName:string;previewHash:string;practice:boolean;approved:true})=>request<{id:string;kind:string;reused:boolean}>('/records','POST',token,input),
   removeRecords:(token:string,id:string)=>request(`/records/${id}`,'DELETE',token),
+  sendLeadBatch:(token:string,input:LeadBatchInput)=>request<{id:string;outreachIds:string[];state:'approved';queuePending:boolean}>('/leads/outreach/batch','POST',token,input),
+  leads:(token:string)=>request<LeadDeskState>('/leads','GET',token),
+  searchLeads:(token:string,input:{requestKey:string;blueprintId:string;query:string;maxResults:number})=>request('/leads/search','POST',token,input),
+  sendLeadOutreach:(token:string,input:{requestKey:string;blueprintId:string;leadId:string;recipientEmail:string;subject:string;body:string;approved:true;businessContactConfirmed:true})=>request('/leads/outreach','POST',token,input),
+  leadContactPreference:(token:string,id:string,suppressed:boolean)=>request(`/leads/${id}/contact`,'PUT',token,{suppressed}),
+  recordTemplate:async(type:RecordDocumentType,sample=false)=>{const r=await fetch(`${root}/records/templates/${type}?sample=${sample?'1':'0'}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error('Record template download did not finish. Try again.');return r.text();},
+  exportRecord:(token:string,id:string)=>request<{fileName:string;csv:string;hash:string}>(`/records/${id}/export`,'GET',token),
+  proposeRecordUpdate:(token:string,id:string,input:{instruction:string;expectedHash:string})=>request<RecordWriteProposal>(`/records/${id}/propose`,'POST',token,input),
+  approveRecordUpdate:(token:string,id:string,input:{proposalId:string;proposalHash:string;expectedHash:string;approved:true})=>request<{id:string;hash:string;reused:boolean}>(`/records/${id}/approve`,'POST',token,input),
   billFulfilment:(token:string,id:string,input:{action:'handed_over'|'cancel';note:string;approved:true;stockReviewed:true})=>request(`/merchant-ops/bills/${id}/fulfilment`,'POST',token,input),
   merchantOps:(token:string)=>request<MerchantOpsState>("/merchant-ops","GET",token),
   upiSetup:(token:string)=>request<UpiDetails|null>("/merchant-ops/upi","GET",token),
@@ -441,13 +450,19 @@ export type Teammate = {
   feasibility: { state: string; blockers: string[]; checkedAt: string };
 };
 export type BusinessGuide={summary:string;sourceQuotes:string[];recommendedTeams:{id:string;reason:string}[];questions:string[];briefHash:string;createdAt:string;model:string};
+export type LeadBatchInput={requestKey:string;blueprintId:string;items:{leadId:string;recipientEmail:string;subject:string;body:string}[];approved:true;businessContactConfirmed:true};
+export type LeadDeskState={configured:boolean;searches:{id:string;query:string;state:string;reason?:string;createdAt:string;receipt?:{callId:string;endpointId:string;costMicroUsd:number|null;accounting:string};model?:string}[];records:{id:string;searchId:string;sourceKey:string;sourceUrl:string;sourceTitle:string;excerpt:string;emails:string[];fit:'possible_fit'|'needs_review'|'not_a_fit';reason:string;subject:string;body:string;createdAt:string;suppressed:boolean}[];batches?:{id:string;outreachIds:string[];approvedAt:string}[];outreach:{batchId?:string;notBefore?:number;id:string;leadId:string;recipientEmail:string;subject:string;body:string;state:string;reason?:string;receipt?:{logRef:string;providerMessageId:string;providerThreadId:string};sentAt?:string}[]};
+export type RecordDocumentType='payments'|'credit'|'orders';
+export type RecordRow={id:string;date:string;description:string;amountPaise:number;method:string;status:string;cells?:Record<string,string>};
+export type RecordWriteProposal={id:string;hash:string;baseHash:string;instruction:string;explanation:string;model:string;createdAt:string;state:'proposed'|'applied';changes:{recordId:string;field:string;before:string;after:string}[];rows?:RecordRow[];appliedAt?:string};
 export type RecordSummary={practice:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};reportedBusiness:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};providerVerified:false;policy:string};
-export type RecordPreview={hash:string;kind:'practice'|'owner_import';alreadyImported:boolean;rows:{id:string;date:string;description:string;amountPaise:number;method:string;status:string}[];summary:RecordSummary};
+export type RecordPreview={hash:string;kind:'practice'|'owner_import';alreadyImported:boolean;documentType?:RecordDocumentType;columns?:readonly string[];rows:RecordRow[];summary:RecordSummary};
 export type WorkspaceState = {
+  leadSummary?:{records:number;searching:number;sent:number};
   labSummary?:{generation:string;version:number;name:string;connection:string;transactions:number;openJobs:number};
   businessGuide?:BusinessGuide;
   businessGuideRun?:{id:string;briefHash:string;state:'queued'|'working'|'completed'|'failed'|'waiting_owner';requestedAt:string;reason?:string};
-  recordImports?:{id:string;hash:string;fileName:string;kind:'practice'|'owner_import';createdAt:string;rowCount:number}[];
+  recordImports?:{id:string;hash:string;fileName:string;kind:'practice'|'owner_import';createdAt:string;rowCount:number;documentType?:RecordDocumentType;updatedAt?:string;writeProposal?:RecordWriteProposal;writeAttempt?:{id:string;baseHash:string;startedAt:string}}[];
   recordSummary?:RecordSummary;
   version: number;
   merchantOps?: {summary:MerchantOpsState['summary']};
@@ -487,6 +502,7 @@ export type WorkspaceState = {
     status: string;
     authorizationCreatedAt?:string;
     authorizationOpenedAt?:string;
+    issue?:{code:string;message:string;retryable:boolean};
     identity?: { username: string; accountType: string };
   }[];
   readiness: Record<string, boolean>;
@@ -502,7 +518,7 @@ export type WorkspaceState = {
   whatsappLinked?: boolean;
   channels?: Record<
     string,
-    { ready: boolean; enabled: boolean; error?: string;speakerBlueprintId?:string;lastScanAt?:string;lastMessageAt?:string }
+    { ready: boolean; enabled: boolean; error?: string;speakerBlueprintId?:string;lastScanLogRef?:string;lastScanAt?:string;lastMessageAt?:string }
   >;
   inbox?: {
     id: string;
@@ -692,7 +708,7 @@ export type WhatsAppConversation = {
   language: string;
   mode: "teammate" | "owner";
   optedOut: boolean;
-  stage: "enquiry" | "quote" | "awaiting_payment" | "paid" | "owner_needed";
+  stage: "enquiry" | "quote" | "accepted" | "awaiting_payment" | "paid" | "owner_needed";
   orderIds: string[];
   activeOrderId?: string;
   updatedAt: string;
@@ -713,7 +729,7 @@ export type WhatsAppSalesState = {
     id: string;
     conversationId: string;
     key: string;
-    kind: "reply" | "quote" | "payment_request" | "payment_confirmation" | "payment_followup" | "owner_reply";
+    kind: "reply" | "quote" | "order_confirmation" | "payment_request" | "payment_confirmation" | "payment_followup" | "owner_reply";
     state: "pending" | "sending" | "sent" | "cancelled" | "uncertain" | "owner_needed";
     message: string;
     notBefore: string;
@@ -735,6 +751,7 @@ export type WhatsAppSalesState = {
   }[];
 };
 export type ContentPost = {
+  reason?: string;
   id: string;
   blueprintId: string;
   caption: string;

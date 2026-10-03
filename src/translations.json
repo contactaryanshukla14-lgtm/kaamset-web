@@ -5746,5 +5746,189 @@
   "stored job results": {
     "Hindi": "सहेजे गए नतीजे",
     "Hinglish": "save kiye nateeje"
+  },
+  "YOUR RECORDS · YOUR APPROVAL": {
+    "Hindi": "आपके रिकॉर्ड · आपकी मंज़ूरी",
+    "Hinglish": "Aapke records · Aapki manzoori"
+  },
+  "Give your teammate the right document": {
+    "Hindi": "अपने साथी को सही रिकॉर्ड दें",
+    "Hinglish": "Apne teammate ko sahi document dein"
+  },
+  "Download an exact template, upload your records, then read or review changes in the same saved file.": {
+    "Hindi": "सही नमूना डाउनलोड करें, अपने रिकॉर्ड अपलोड करें और उसी सहेजी गई फ़ाइल में समीक्षा या बदलाव करें।",
+    "Hinglish": "Exact template download karein, apne records upload karein, phir usi saved file ko padhein ya changes review karein."
+  },
+  "Payments report": {
+    "Hindi": "भुगतान रिपोर्ट",
+    "Hinglish": "Payments report"
+  },
+  "Udhaar / credit register": {
+    "Hindi": "उधार रजिस्टर",
+    "Hinglish": "Udhaar register"
+  },
+  "Customer order register": {
+    "Hindi": "ग्राहक ऑर्डर रजिस्टर",
+    "Hinglish": "Customer order register"
+  },
+  "Record template type": {
+    "Hindi": "रिकॉर्ड का प्रकार",
+    "Hinglish": "Record ka type"
+  },
+  "Owner-reported sales and payments. Review received, pending and refunded entries.": {
+    "Hindi": "आपके बताए हुए बिक्री और भुगतान रिकॉर्ड। मिले, बाकी और वापस किए गए भुगतान देखें।",
+    "Hinglish": "Aapke bataye sales aur payments. Mile, pending aur refunded entries dekhein."
+  },
+  "One row per outstanding invoice. Keep customer, due date and follow-up notes together.": {
+    "Hindi": "हर उधार बिल की एक पंक्ति रखें। ग्राहक, आखिरी तारीख और नोट साथ सहेजें।",
+    "Hinglish": "Har outstanding bill ki ek row rakhein. Customer, due date aur notes ek saath rakhein."
+  },
+  "Track customer requests, quantities, reported payment and fulfilment separately.": {
+    "Hindi": "ग्राहक की मांग, मात्रा, बताए हुए भुगतान और डिलीवरी अलग-अलग दर्ज करें।",
+    "Hinglish": "Customer requests, quantity, reported payment aur fulfilment alag track karein."
+  },
+  "Blank template": {
+    "Hindi": "खाली नमूना फ़ाइल",
+    "Hinglish": "Khali template"
+  },
+  "Fictional example": {
+    "Hindi": "अभ्यास का काल्पनिक उदाहरण",
+    "Hinglish": "Fictional practice example"
+  },
+  "Exact columns and status values": {
+    "Hindi": "सही कॉलम और स्थिति के विकल्प",
+    "Hinglish": "Exact columns aur status options"
+  },
+  "Use YYYY-MM-DD dates, a unique record_id, and a positive rupee amount with up to two decimals. No passwords, OTPs or API keys.": {
+    "Hindi": "तारीख YYYY-MM-DD में, हर रिकॉर्ड की अलग ID और रुपये की सही राशि लिखें। पासवर्ड, OTP या API कुंजियां न डालें।",
+    "Hinglish": "Date YYYY-MM-DD mein, unique record_id aur rupees mein sahi amount likhein. Password, OTP ya API keys na dalein."
+  },
+  "outstanding invoice amount while pending; original amount when closed": {
+    "Hindi": "बाकी होने पर बकाया राशि; पूरा होने पर मूल बिल की राशि",
+    "Hinglish": "Pending par outstanding amount; closed par original bill amount"
+  },
+  "Use one row per invoice, not both a sale and its repayment. Partial repayments require the owner to provide the new outstanding amount.": {
+    "Hindi": "एक बिल की एक पंक्ति रखें। आंशिक भुगतान के बाद मालिक नई बकाया राशि बताए।",
+    "Hinglish": "Ek invoice ki ek row rakhein. Partial repayment ke baad owner naya outstanding amount bataye."
+  },
+  "All three are private owner-reported documents. They do not update stock, the bill ledger or Paytm-verified payments.": {
+    "Hindi": "तीनों निजी रिकॉर्ड हैं जो मालिक ने बताए हैं। ये स्टॉक, बिल खाते या Paytm से सत्यापित भुगतान नहीं बदलते।",
+    "Hinglish": "Teeno private owner-reported documents hain. Ye stock, bill ledger ya Paytm-verified payments nahi badalte."
+  },
+  "Review before saving": {
+    "Hindi": "सहेजने से पहले जांचें",
+    "Hinglish": "Save karne se pehle review karein"
+  },
+  "checked rows": {
+    "Hindi": "जांची गई पंक्तियां",
+    "Hinglish": "Checked rows"
+  },
+  "fictional practice": {
+    "Hindi": "काल्पनिक अभ्यास",
+    "Hinglish": "Fictional practice"
+  },
+  "owner-reported history": {
+    "Hindi": "मालिक का बताया इतिहास",
+    "Hinglish": "Owner-reported history"
+  },
+  "Keep this file as fictional practice data.": {
+    "Hindi": "इस फ़ाइल को काल्पनिक अभ्यास के लिए रखें।",
+    "Hinglish": "Is file ko fictional practice data rakhein."
+  },
+  "I checked these rows and approve saving them in private team memory.": {
+    "Hindi": "मैंने ये पंक्तियां जांचीं और इन्हें टीम की निजी याददाश्त में सहेजने की मंज़ूरी देता हूं।",
+    "Hinglish": "Maine ye rows check ki hain aur private team memory mein save karne ki manzoori deta hoon."
+  },
+  "Save checked document": {
+    "Hindi": "जांची हुई फ़ाइल सहेजें",
+    "Hinglish": "Checked document save karein"
+  },
+  "Discard upload": {
+    "Hindi": "अपलोड हटाएं",
+    "Hinglish": "Upload hata dein"
+  },
+  "Saved document": {
+    "Hindi": "सहेजी गई फ़ाइल",
+    "Hinglish": "Saved document"
+  },
+  "rows": {
+    "Hindi": "पंक्तियां",
+    "Hinglish": "Rows"
+  },
+  "practice": {
+    "Hindi": "अभ्यास",
+    "Hinglish": "Practice"
+  },
+  "reported": {
+    "Hindi": "आपके बताए रिकॉर्ड",
+    "Hinglish": "Reported"
+  },
+  "Download current file": {
+    "Hindi": "अभी की फ़ाइल डाउनलोड करें",
+    "Hinglish": "Current file download karein"
+  },
+  "Ask": {
+    "Hindi": "पूछें",
+    "Hinglish": "Poochein"
+  },
+  "to read it": {
+    "Hindi": "से रिकॉर्ड पढ़वाएं",
+    "Hinglish": "se record padhwayein"
+  },
+  "Set up": {
+    "Hindi": "सेटअप करें",
+    "Hinglish": "Set up karein"
+  },
+  "Saved document rows": {
+    "Hindi": "सहेजी गई फ़ाइल की पंक्तियां",
+    "Hinglish": "Saved document ki rows"
+  },
+  "Checked upload preview": {
+    "Hindi": "जांचा हुआ अपलोड",
+    "Hinglish": "Checked upload preview"
+  },
+  "Current saved document": {
+    "Hindi": "अभी की सहेजी गई फ़ाइल",
+    "Hinglish": "Current saved document"
+  },
+  "Ask your teammate to update this document": {
+    "Hindi": "अपने साथी से इस फ़ाइल में बदलाव करवाएं",
+    "Hinglish": "Apne teammate se is document ko update karwayein"
+  },
+  "State the record ID, field and exact new value. Your teammate prepares a change list; you approve it before anything is written.": {
+    "Hindi": "रिकॉर्ड ID, कॉलम और नई सही जानकारी बताएं। साथी बदलावों की सूची बनाएगा; लिखने से पहले आप मंज़ूरी देंगे।",
+    "Hinglish": "Record ID, field aur exact nayi value batayein. Teammate changes ki list banayega; likhne se pehle aap approve karein."
+  },
+  "Your instruction": {
+    "Hindi": "आपका निर्देश",
+    "Hinglish": "Aapka instruction"
+  },
+  "Your teammate is preparing a proposal. Refresh to check its result.": {
+    "Hindi": "आपका साथी बदलाव तैयार कर रहा है। नतीजा देखने के लिए रिफ्रेश करें।",
+    "Hinglish": "Teammate proposal bana raha hai. Result dekhne ke liye refresh karein."
+  },
+  "Prepare update for review": {
+    "Hindi": "समीक्षा के लिए बदलाव तैयार करें",
+    "Hinglish": "Review ke liye update banayein"
+  },
+  "Approved update saved": {
+    "Hindi": "मंज़ूर बदलाव सहेज दिए गए",
+    "Hinglish": "Approved update saved"
+  },
+  "Proposed changes · not saved yet": {
+    "Hindi": "प्रस्तावित बदलाव · अभी सहेजे नहीं गए",
+    "Hinglish": "Proposed changes · abhi saved nahi"
+  },
+  "I approve these exact changes to this private reported document. This does not verify a payment or send a message.": {
+    "Hindi": "मैं इस निजी फ़ाइल में इन्हीं बदलावों की मंज़ूरी देता हूं। इससे कोई भुगतान सत्यापित या संदेश भेजा नहीं जाता।",
+    "Hinglish": "Main is private document mein ye exact changes approve karta hoon. Isse payment verify ya message send nahi hota."
+  },
+  "Approve and write these changes": {
+    "Hindi": "मंज़ूरी देकर बदलाव सहेजें",
+    "Hinglish": "Approve karke changes save karein"
+  },
+  "Up to three private CSV files and 200 rows per file. Record versions prevent overwriting a newer edit. Reading and proposing use your workspace AI allowance. No payment or message is sent here.": {
+    "Hindi": "तीन निजी CSV फ़ाइलें, हर फ़ाइल में 200 पंक्तियां। नए बदलाव सुरक्षित रहते हैं। पढ़ने और बदलाव तैयार करने में AI सीमा इस्तेमाल होती है। यहां भुगतान या संदेश नहीं भेजा जाता।",
+    "Hinglish": "Teen private CSV files, har file mein 200 rows. Naye edits safe rehte hain. Reading aur proposal AI allowance use karte hain. Yahan payment ya message send nahi hota."
   }
 }

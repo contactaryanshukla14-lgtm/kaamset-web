@@ -5,12 +5,13 @@ import {api} from './api';
 import {useLanguage} from './Language';
 import PixelTeammate from './PixelTeammate';
 type HelpIssue='field'|'instagram_limit'|'memory'|'microphone'|'assets'|'general';
+// Passive guidance never interrupts work. The launcher opens the explanation on demand.
 export function showSia(issue:HelpIssue,message:string){window.dispatchEvent(new CustomEvent('kaamset-sia',{detail:{issue,message}}));}
 export default function SiaAssistant({getToken}:{getToken:()=>Promise<string>}){
   const {language,t}=useLanguage(),[open,setOpen]=useState(false),[issue,setIssue]=useState<HelpIssue>('general'),[hint,setHint]=useState('Tell me where you are stuck. I can explain setup in your language.'),[fieldLabel,setFieldLabel]=useState(''),[question,setQuestion]=useState(''),[answer,setAnswer]=useState(''),[busy,setBusy]=useState(false);
   const inFlight=useRef(false),seen=useRef(''),mounted=useRef(true),languageRef=useRef(language),editedFields=useRef(new WeakSet<Element>());languageRef.current=language;
   const [dialogHost,setDialogHost]=useState<HTMLElement|null>(null),dialogRef=useRef<HTMLElement|null>(null);
-  useEffect(()=>{mounted.current=true;const help=(event:Event)=>{const {issue,message,fieldLabel}=(event as CustomEvent).detail;setIssue(issue);setHint(message);setFieldLabel(fieldLabel||'');setAnswer('');setOpen(true);};
+  useEffect(()=>{mounted.current=true;const help=(event:Event)=>{const {issue,message,fieldLabel}=(event as CustomEvent).detail;if(!message||message===seen.current)return;seen.current=message;setIssue(issue);setHint(message);setFieldLabel(fieldLabel||'');setAnswer('');};
     const fieldError=(event:Event)=>{const target=event.target;if(!(target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement)||target.type==='password'||target.closest('.sia-widget'))return;
       const activeDialog=document.querySelector('[role="dialog"][aria-modal="true"]');if(activeDialog&&!activeDialog.contains(target))return;
       if(event.type==='focusout'&&!target.value&&!editedFields.current.has(target))return;
@@ -24,7 +25,7 @@ export default function SiaAssistant({getToken}:{getToken:()=>Promise<string>}){
       target.setAttribute('aria-invalid','true');window.dispatchEvent(new CustomEvent('kaamset-sia',{detail:{issue:'field',message,fieldLabel:target.labels?.[0]?.textContent?.trim().slice(0,80)||''}}));
     };
     const edited=(event:Event)=>{const target=event.target;if(target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement){editedFields.current.add(target);if(target.validity.valid)target.removeAttribute('aria-invalid');}};
-    const observe=()=>{const dialog=[...document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')].at(-1)||null;if(dialog!==dialogRef.current){dialogRef.current=dialog;setDialogHost(dialog)}const errors=[...document.querySelectorAll<HTMLElement>('[role="alert"],.office-error,.workspace-error,.office-setup-error')].filter(el=>!el.closest('.sia-widget'));const last=errors.at(-1),message=last?.textContent?.trim();if(!message){seen.current='';return}if(message!==seen.current){seen.current=message;showSia(/Cognee|memory/i.test(message)?'memory':/microphone|voice|Sarvam/i.test(message)?'microphone':/photo|image|asset/i.test(message)?'assets':'general',message.slice(0,600));}};
+    const observe=()=>{const dialog=[...document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')].at(-1)||null;if(dialog!==dialogRef.current){dialogRef.current=dialog;setDialogHost(dialog)}const errors=[...document.querySelectorAll<HTMLElement>('[role="alert"],.office-error,.workspace-error,.office-setup-error')].filter(el=>!el.closest('.sia-widget'));const last=errors.at(-1),message=last?.textContent?.trim();if(message&&message!==seen.current){showSia(/Cognee|memory/i.test(message)?'memory':/microphone|voice|Sarvam/i.test(message)?'microphone':/photo|image|asset/i.test(message)?'assets':'general',message.slice(0,600));}};
     const observer=new MutationObserver(observe);observe();
     observer.observe(document.body,{subtree:true,childList:true,characterData:true});window.addEventListener('kaamset-sia',help);document.addEventListener('invalid',fieldError,true);document.addEventListener('focusout',fieldError);document.addEventListener('input',edited);
     return()=>{mounted.current=false;observer.disconnect();window.removeEventListener('kaamset-sia',help);document.removeEventListener('invalid',fieldError,true);document.removeEventListener('focusout',fieldError);document.removeEventListener('input',edited)};
