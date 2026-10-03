@@ -16,3 +16,5 @@ Sia updates quiet hints and opens only from her launcher. Connected accounts and
 Matching API/worker deployment and public cloud/browser verification are required before announcing this release as live.
 
 Integrated the independently reviewed Google consent recovery: declined/expired permissions offer actionable fresh sign-in, current attempts are verified before replacement, and callback metadata is cleaned only after server verification. Instagram identity retries retain their separate guidance; Sia remains user-opened.
+
+Final recovery verification: 8 controlled bulk/reapproval UI checks pass with no JavaScript errors. A known pre-write hold displays the saved exact content and permits one fresh owner reapproval through the resume endpoint. Sent, sending and uncertain work cannot be repeated. Lead contact emails stay visible in the same bounded source excerpt.
