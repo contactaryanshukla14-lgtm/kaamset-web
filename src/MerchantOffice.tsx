@@ -43,11 +43,13 @@ import PixelTeammate from "./PixelTeammate";
 const InboxPanel = lazy(() => import("./InboxPanel"));
 const WebsiteStudio = lazy(() => import("./WebsiteStudio"));
 const WhatsAppSalesDesk = lazy(() => import("./WhatsAppSalesDesk"));
+const LeadDesk=lazy(()=>import("./LeadDesk"));
 import DeskLoading from "./DeskLoading";
 import { memberCharacter, teamName, websiteStageName } from "./team-identity";
 import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
 import {LanguagePicker,useLanguage} from './Language';
 import SiaAssistant,{showSia} from './SiaAssistant';
+import {connectionProblemMessage,needsFreshConnection} from './connection-help';
 import {AssetPicker,SavedBusinessAssets} from './BusinessAssets';
 import type {BusinessAssetInput} from './api';
 import {
@@ -65,6 +67,7 @@ const BusinessStart = lazy(() => import("./BusinessStart"));
 const CopyItems = lazy(() => import("./CopyItems"));
 import "./office.css";
 import "./office-system.css";
+import "./connection-journey.css";
 import './merchant-lab.css';
 const MerchantLab = lazy(() => import('./MerchantLabContainer'));
 const labMode=new URLSearchParams(location.search).get('merchantLab')==='1'||!!new URLSearchParams(location.search).get('connected')&&sessionStorage.getItem('kaamset_lab_connection_pending')==='1';
@@ -75,7 +78,7 @@ const pageKey = labMode?'kaamset_lab_page':"kaamset_merchant_page";
 const connectionAttemptKey = "kaamset_connection_attempt";
 
 function restoredPage(): Page {
-  if(labMode&&['website','connections','business'].includes(new URLSearchParams(location.search).get('desk')||''))return new URLSearchParams(location.search).get('desk') as Page;
+  if(labMode&&['website','connections','business','leads','marketing','whatsapp','khata','shop','money','team'].includes(new URLSearchParams(location.search).get('desk')||''))return new URLSearchParams(location.search).get('desk') as Page;
   if (["instagram", "gmail", "googlecalendar", "googlesheets"].includes(new URLSearchParams(location.search).get("connected") || "")) return "connections";
   const value = sessionStorage.getItem(pageKey);
   return pages.some((p) => p.id === value) ? value as Page : "work";
@@ -132,6 +135,7 @@ type Page =
   | "counter" | "shop" | "khata" | "money" | "requests"
   | "customers"
   | "whatsapp"
+  | "leads"
   | "marketing"
   | "website"
   | "assistant"
@@ -148,6 +152,7 @@ const pages = [
   {id:"requests",label:"Customer requests",Icon:TrendingUp},
   { id: "customers", label: "Customer desk", Icon: MessageCircle },
   { id: "whatsapp", label: "Aarav · WhatsApp", Icon: MessageCircle },
+  { id: "leads", label: "Lakshya · Leads", Icon: TrendingUp },
   { id: "marketing", label: "Instagram studio", Icon: Instagram },
   { id: "website", label: "Website team", Icon: Globe },
   { id: "assistant", label: "Milan · Assistant", Icon: Activity },
@@ -1082,13 +1087,13 @@ const {t:localize}=useLanguage();
     const attempt = callback || sessionStorage.getItem(connectionAttemptKey);
     if (!attempt || !["instagram", "gmail", "googlecalendar", "googlesheets"].includes(attempt)) return;
     sessionStorage.removeItem(connectionAttemptKey);
-    if (callback) { params.delete("connected"); history.replaceState({}, "", `${location.pathname}${params.size ? `?${params}` : ""}`); }
+    if (callback) { for(const key of ['connected','status','connected_account_id','connectedAccountId','appName'])params.delete(key); history.replaceState({}, "", `${location.pathname}${params.size ? `?${params}` : ""}`); }
     void act("Checking your returned connection", async () => {
       const result = await api.refreshConnection(token!, attempt);
       await refresh();
       setNotice((result as {status?: string}).status === "connected"
         ? "Account connected. Review its permissions in the relevant desk before enabling actions."
-        : "Account authorization is not finished. Choose Continue connection to start a fresh authorization, or check again after completing it.");
+        : result.issue?.message||connectionProblemMessage(result.problem)||"Account authorization is not finished. Complete the permission screen, then check the connection.");
     });
   }, [!!workspace, page]);
   useEffect(() => {
@@ -1142,7 +1147,7 @@ const {t:localize}=useLanguage();
   async function configureReadyTeam(id:ReadyTeamId,options:Record<string,boolean>,revision?:number){
     await act("Saving teammate setup",async()=>{if(!token)return;const b=await api.readyTeam(token,id,options,revision);setSelected(b.id);await refresh();setChoosingTeam(null);navigate("team");setNotice("Review the saved job, then activate your teammate. Live actions wait for their required connections.");});
   }
-  const deskFor:Partial<Record<ReadyTeamId,Page>>={arjun:'counter',dukaan:'shop',naina:'khata',nazar:'money',kabir:'requests',ira:'requests',sahaj:'assistant',rang:'marketing',udaan:'website',raabta:'customers',saathi:'whatsapp'};
+  const deskFor:Partial<Record<ReadyTeamId,Page>>={arjun:'counter',dukaan:'shop',naina:'khata',nazar:'money',kabir:'requests',ira:'requests',sahaj:'assistant',lakshya:'leads',rang:'marketing',udaan:'website',raabta:'customers',saathi:'whatsapp'};
   function openReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);sessionStorage.setItem("kaamset_selected_teammate",b.id);navigate(deskFor[id]||'team')}else setChoosingTeam(id)}
   function askReadyTeam(id:ReadyTeamId){const b=workspace?.blueprints.find(b=>b.presetId===id);if(b?.state==='active'){setSelected(b.id);setTask({blueprintId:b.id,text:readyTeams.find(t=>t.code===id)!.example});navigate('team')}else setChoosingTeam(id)}
   const current =
@@ -1168,7 +1173,15 @@ const {t:localize}=useLanguage();
     const limit=Number(sessionStorage.getItem(`kaamset_connection_wait_${id}`)||'0');
     if(Date.now()<limit){showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.');return;}
     await act(`Opening ${title} connection`, async () => {
-      if (restart) await api.disconnect(token!, id);
+      if (restart) {
+        // Consent can finish in another tab while this view still looks pending.
+        // Verify before revoking an old attempt so a completed account is preserved.
+        const checked=await api.refreshConnection(token!,id);
+        if(checked.status==='connected'){
+          await refresh();setNotice('Account connected. Review its permissions in the relevant desk before enabling actions.');return;
+        }
+        await api.disconnect(token!, id);
+      }
       const r = await api.connect(token!, id);
       sessionStorage.setItem(pageKey, "connections");
       sessionStorage.setItem(connectionAttemptKey, id);
@@ -1253,7 +1266,7 @@ const {t:localize}=useLanguage();
               <Settings size={15} />
             </button>
             <nav aria-label={localize("Business workspace")}>
-              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading"><UiText text={group==='daily'?'Your dukaan':group==='channels'?'Customer channels':'Your setup'}/></span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
+              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading"><UiText text={group==='daily'?'Your dukaan':group==='channels'?'Customer channels':'Your setup'}/></span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','leads','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   className={page === id ? "selected" : ""}
@@ -1364,7 +1377,7 @@ const {t:localize}=useLanguage();
               )}
               {notice && (
                 <div className="office-notice" role="status">
-                  {notice}
+                  {t(notice)}
                   <button
                     aria-label={localize("Dismiss notice")}
                     onClick={() => setNotice("")}
@@ -1809,14 +1822,15 @@ const {t:localize}=useLanguage();
                   )}
                 </>
               )}
+              {page==='leads'&&<LeadDesk token={token!} workspace={workspace} onRefresh={()=>refresh()} onSetup={()=>setChoosingTeam('lakshya')} onConnections={()=>navigate('connections')}/>}
               {page === "connections" && (
                 <>
-                  <aside className="lab-office-banner"><div><strong>Connect Sharma Daily Mart demo merchant</strong><p>{labMode?'Authorize demo capabilities and view the stored connection receipt in Merchant Lab.':'Open a separate prepared Lab without changing this business’s data or connections.'}</p></div><a href="/merchant-lab">Open demo connection <ArrowUpRight size={15}/></a></aside>
+                  {labMode&&<aside className="lab-office-banner"><div><strong>Connect Sharma Daily Mart demo merchant</strong><p>Authorize demo capabilities and view the stored connection receipt in Merchant Lab.</p></div><a href="/merchant-lab">Open demo connection <ArrowUpRight size={15}/></a></aside>}
                   <div className="office-heading">
                     <div>
                       <h1><UiText text={"Connections"}/></h1>
                       <p>
-                        <UiText text={"Connect only the accounts a team needs. A connected account does nothing until you turn on its actions in that team’s desk."}/></p>
+                        <UiText text={"Connect an account, review your teammate’s job, then start its approved actions. Each desk shows what is running and what still needs setup."}/></p>
                     </div>
                   </div>
                   <div className="office-connection-grid">
@@ -1847,12 +1861,16 @@ const {t:localize}=useLanguage();
                         title: "Google Sheets",
                         Icon: FileText,
                         description:
-                          "Business records · scoped file permissions.",
+                          "Google account authorization. Use reviewed CSV documents for current record workflows.",
                       },
                     ].map(({ id, title, Icon, description }) => {
                       const connected = workspace.connections.find(
                         (c) => c.toolkit === id,
                       );
+                      const channelRunning=(name:string,skill:string)=>{const channel=workspace.channels?.[name];return !!channel?.enabled&&!!channel.ready&&workspace.blueprints.some(b=>b.state==='active'&&b.plan.skills.includes(skill)&&(!channel.speakerBlueprintId||b.id===channel.speakerBlueprintId))&&!workspace.controls?.paused&&!workspace.controls?.humanTakeover;};
+                      const dmRunning=channelRunning('instagram_dm','instagram_dm'),commentsRunning=channelRunning('instagram_comments','instagram_comments');
+                      const restart=needsFreshConnection(connected);
+                      const problem=connectionProblemMessage(connected?.problem);
                       return (
                         <article key={id} className="office-card">
                           <span className={`office-app-icon app-${id}`}>
@@ -1863,19 +1881,29 @@ const {t:localize}=useLanguage();
                           <Status
                             value={connected?.status || "not_connected"}
                           />
+                          <ol className="connection-journey" aria-label={`${title} setup progress`}>
+                            <li className={connected?.status==='connected'?'is-complete':''}><span>{connected?.status==='connected'?<Check size={13}/>:1}</span><UiText text="Connect account"/></li>
+                            <li className={workspace.blueprints.some(b=>b.state==='active'&&b.plan.skills.some(skill=>id==='instagram'?skill.startsWith('instagram_'):id==='gmail'?['gmail_sales','gmail_outreach'].includes(skill):id==='googlecalendar'?skill==='calendar_booking':false))?'is-complete':''}><span>2</span><UiText text="Review teammate job"/></li>
+                            <li className={(id==='instagram'?(dmRunning||commentsRunning):id==='gmail'?channelRunning('gmail','gmail_sales'):id==='googlecalendar'?workspace.readiness.calendar:false)?'is-complete':''}><span>3</span><UiText text={id==='instagram'?'Approve posts / start replies':id==='gmail'?'Start approved replies':id==='googlecalendar'?'Approve booking calendar':'Upload a record document'}/></li>
+                          </ol>
+                          {connected?.issue&&<p className="connection-recovery" role="status"><UiText text={connected.issue.message}/></p>}
+                          {problem&&<p className="office-error" role="alert">{t(problem)}</p>}
                           <div className="office-actions">
                             {connected?.status !== "connected" ? (
                               <button
                                 className="office-secondary"
                                 disabled={!!busy}
                                 onClick={() =>
-                                  connectApp(id, title, connected?.status==='needs_attention')
+                                  connected?.issue?.retryable ? act("Checking app connection",async()=>{await api.refreshConnection(token!,id);await refresh()}) : connectApp(id, title, restart)
                                 }
                               >
-                                <UiText text={connected ? "Continue connection" : "Connect"}/> <ArrowUpRight size={14} />
+                                <UiText text={connected?.issue?.retryable?"Check again":restart?"Reconnect":connected ? "Continue connection" : "Connect"}/> <ArrowUpRight size={14} />
                               </button>
                             ) : (
                               <>
+                                {id==='instagram'&&<button className="office-primary" onClick={()=>navigate('marketing')}><UiText text="Open Riya’s publishing studio"/><ChevronRight size={14}/></button>}
+                                {id==='googlecalendar'&&<button className="office-secondary" onClick={()=>navigate('business')}><UiText text="Set up bookings"/><ChevronRight size={14}/></button>}
+                                {id==='googlesheets'&&<button className="office-secondary" onClick={()=>navigate('business')}><UiText text="Open record documents"/><ChevronRight size={14}/></button>}
                                 {(id === "instagram" || id === "gmail") && <button className="office-secondary" onClick={() => navigate("customers")}><UiText text={"Start "}/><UiText text={id === "instagram" ? "Riya" : "Meera"}/> <UiText text={"replies "}/><ChevronRight size={14}/></button>}
                                 <button
                                   className="office-text"
@@ -1891,15 +1919,17 @@ const {t:localize}=useLanguage();
                               </>
                             )}
                             {connected && <button className="office-secondary" disabled={!!busy} onClick={() => act("Checking app connection", async () => {
-                              const result = await api.refreshConnection(token!, id) as {status?: string};
+                              const result = await api.refreshConnection(token!, id);
                               await refresh();
-                              setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : `${title} still needs authorization. Choose Continue connection to try again.`);
+                              setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : connectionProblemMessage(result.problem)||"Account authorization is not finished. Complete the permission screen, then check the connection.");
                             })}><UiText text={"Check connection"}/></button>}
+                            {id!=='instagram'&&connected?.status==='pending'&&!restart&&<button className="office-text" disabled={!!busy} onClick={()=>connectApp(id,title,true)}><UiText text="Start fresh"/></button>}
                           </div>
+                          {id==='googlesheets'&&connected?.status!=='connected'&&<details className="instagram-recovery"><summary>{t('Trouble connecting Google Sheets?')}</summary><p>{t('Use the Google account that can access your spreadsheet. Complete the permission screen and return here to check the connection. If you declined access or the link expired, start fresh.')}</p><p>{t('If Google or your company blocks the app, follow the displayed guidance or ask your Google Workspace administrator to allow it.')}</p></details>}
                           {id==='instagram'&&connected?.status!=='connected'&&<details className="instagram-recovery"><summary>{t('Trouble connecting Instagram?')}</summary><p>{t('Instagram Business or Creator accounts are supported. A 429 comes from Instagram limiting sign-in attempts. Repeated retries can prolong the problem.')}</p><a href="https://www.instagram.com/" target="_blank" rel="noreferrer">{t('Open Instagram to check your account')}</a><button type="button" className="office-text" onClick={()=>{sessionStorage.setItem('kaamset_connection_wait_instagram',String(Date.now()+15*60000));showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.')}}>{t('Instagram showed “Too many requests”')}</button>{connected&&<button type="button" className="office-text" disabled={!!busy} onClick={()=>{if(window.confirm(t('Start a new Instagram connection? Use this only after the old link expires or Instagram allows sign-in again.')))void connectApp(id,title,true)}}>{t('Start fresh')}</button>}<small>{t('KaamSet pauses retries for 15 minutes when you report this error. Instagram may require longer. Check connection first if consent already finished.')}</small></details>}
-                          {connected?.identity && (
-                            <small>@{connected.identity.username}</small>
-                          )}
+                          {connected?.identity && <small>@{connected.identity.username}</small>}
+                          {id==='instagram'&&connected?.status==='connected'&&<small className="connection-running">{dmRunning?'DM replies running':'DM replies need review/start'} · {commentsRunning?'Comment replies running':'Comment replies need review/start'} · Posts require exact approval in Riya’s studio.</small>}
+                          {id==='googlesheets'&&<small className="connection-running">Current teams read and update reviewed uploaded CSV documents. Google authorization alone does not enable automatic Sheet edits.</small>}
                         </article>
                       );
                     })}
@@ -1928,7 +1958,7 @@ const {t:localize}=useLanguage();
                         <UiText text={"Voice"}/>{" "}
                         <UiText text={workspace.providers?.sarvam ? "ready" : "needs setup"}/>{" "}
                         <UiText text={"· Memory"}/>{" "}
-                        <UiText text={workspace.providers?.cognee ? "ready" : "needs setup"}/>
+                        <UiText text={workspace.brain?.cogneeState==='ready'?"ready":workspace.brain?.cogneeState==='processing'?"processing approved facts":workspace.providers?.cognee?"save sources to memory":"needs setup"}/>
                       </span>
                       <button
                         className="office-text"

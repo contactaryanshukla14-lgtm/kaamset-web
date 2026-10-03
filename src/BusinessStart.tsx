@@ -1,34 +1,24 @@
 import {useLanguage} from './Language';
 import {UiText} from './Language';
 import {useRef,useState} from 'react';
-import {ArrowRight,Brain,Check,Download,FileText,Link2,LoaderCircle,ShieldCheck,Sparkles,Trash2,Upload,Users} from 'lucide-react';
-import {api,type RecordPreview,type WorkspaceState} from './api';
+import {ArrowRight,Brain,Check,FileText,Link2,LoaderCircle,ShieldCheck,Sparkles,Users} from 'lucide-react';
+import {api,type WorkspaceState} from './api';
+import RecordDocuments from './RecordDocuments';
 import {readyTeams,teamLead,teamRole,type ReadyTeamId} from './ReadyTeams';
 import PixelTeammate from './PixelTeammate';
 import './business-start.css';
-const money=(n:number)=>`₹${(n/100).toLocaleString('en-IN',{maximumFractionDigits:2})}`;
 const runNames={queued:'Queued',working:'Working',completed:'Ready',failed:'Didn’t finish',waiting_owner:'Needs you'} as const;
 export default function BusinessStart({token,workspace,onChange,onChoose,onOpenTask}:{token:string;workspace:WorkspaceState;onChange:()=>Promise<unknown>;onChoose:(id:ReadyTeamId)=>void;onOpenTask:(id:string)=>void}){
 const {t:localize}=useLanguage();
 
- const [busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[preview,setPreview]=useState<RecordPreview|null>(null),[file,setFile]=useState<{name:string;csv:string}|null>(null),[approved,setApproved]=useState(false),[practice,setPractice]=useState(false),[node,setNode]=useState('brain');
- const input=useRef<HTMLInputElement>(null),locked=useRef(false),attempt=useRef<{key:string;kind:string}|null>(null),guide=workspace.businessGuide;
+ const [busy,setBusy]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[node,setNode]=useState('brain');
+ const locked=useRef(false),guide=workspace.businessGuide;
  const run=workspace.businessGuideRun,guideWorking=!!run&&['queued','working'].includes(run.state);
  const [answers,setAnswers]=useState<Record<string,string>>({}),[answersApproved,setAnswersApproved]=useState(false);
  const ownerHold=!!workspace.controls?.paused||!!workspace.controls?.humanTakeover;
  async function act(label:string,fn:()=>Promise<void>){if(locked.current)return;locked.current=true;setBusy(label);setError('');setNotice('');try{await fn();await onChange()}catch(e){setError((e as Error).message)}finally{setBusy('');locked.current=false}}
- async function download(){await act('Preparing your sample file',async()=>{const csv=await api.recordSample(),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='kaamset-practice-sales.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setNotice('Sample downloaded. Upload that CSV below to review the eight fictional records.');});}
- async function upload(f:File){setApproved(false);setPreview(null);setFile(null);if(f.size>60000){setError('Choose a CSV under 60 KB with up to 200 records.');return}await act('Reading and checking your records',async()=>{const csv=await f.text(),result=await api.previewRecords(token,csv);setFile({name:f.name,csv});setPreview(result);setPractice(result.kind==='practice');});}
- async function save(){if(!preview||!file||!approved)return;await act('Saving reviewed record memory',async()=>{const r=await api.saveRecords(token,{csv:file.csv,fileName:file.name,previewHash:preview.hash,practice,approved:true});setPreview(null);setFile(null);setApproved(false);setNotice(r.reused?'This file was already saved. It was not counted twice.':r.kind==='practice'?'Practice records saved separately. Ask Sia to show what they mean.':'Reported records saved to private business memory. They are not provider-verified payments.');});}
  async function saveAnswers(){if(!guide||!answersApproved)return;await act('Saving your approved answers',async()=>{const extra=guide.questions.filter(q=>answers[q]?.trim()).map(q=>`${q}\n${answers[q].trim()}`).join('\n\n');if(!extra)return;await api.saveBrief(token,workspace.brief+'\n\n[Owner-approved setup answers]\n'+extra,true);setAnswers({});setAnswersApproved(false);setNotice('Your answers are saved for every team. Teams using these facts are paused for your review: open My AI team to check and reactivate them. Then ask Sia for an updated guide.');});}
- async function demonstrate(kind:'practice'|'owner_import'){await act('Starting Sia’s record review in the cloud',async()=>{
-   const old=workspace.blueprints.find(b=>b.presetId==='sia');const team=await api.readyTeam(token,'sia',{},old?.revision);
-   if(team.state!=='active')await api.teammateControl(token,team,'activate');
-   const signature=kind+':'+(workspace.recordImports||[]).filter(i=>i.kind===kind).map(i=>i.hash).join(':');if(attempt.current?.kind!==signature)attempt.current={key:crypto.randomUUID(),kind:signature};
-   await api.runTeammate(token,team.id,kind==='practice'?'Show a simple demonstration using ONLY the fictional practice record files in importedRecordMemory. Explain the reported received, pending and refunded amounts, payment methods and three useful next actions. State that these are fictional practice records, not actual business or verified Paytm transactions. Do not combine them with business records or claim profit.':'Review ONLY owner-imported reported business record files in importedRecordMemory. Explain received, pending and refunded amounts and one useful next action in my language. State file dates and coverage, and that imported records are not payment-provider verification. Do not combine practice records or claim profit.',attempt.current.key);
-   onOpenTask(team.id);
- });}
- const imports=workspace.recordImports||[],summary=workspace.recordSummary;
+ const imports=workspace.recordImports||[];
  const practiceRows=imports.filter(i=>i.kind==='practice').reduce((n,x)=>n+x.rowCount,0),reportedRows=imports.filter(i=>i.kind!=='practice').reduce((n,x)=>n+x.rowCount,0);
  const activeTeams=workspace.blueprints.filter(b=>b.state==='active').length,connected=workspace.connections.filter(c=>c.status==='connected').length+(workspace.whatsappLinked?1:0);
  const nodes=[
@@ -57,20 +47,7 @@ const {t:localize}=useLanguage();
   <small className="business-guide-footnote"><UiText text={"Suggestions only prepare your setup. Live replies, posts and payment requests still need a connected account and your approval."}/></small>
  </section>
 
- <section className="office-card record-memory" aria-labelledby="records-title">
-  <h2 id="records-title"><UiText text={"Try your team on sales records"}/></h2>
-  <p><UiText text={"See how Sia explains a sales-and-payments file before you share your own history."}/></p>
-  <ol className="record-steps">
-   <li><span><UiText text={"Download the fictional sample, or prepare your own CSV in the same columns."}/></span><button type="button" className="office-secondary" disabled={!!busy} onClick={()=>void download()}><Download size={16}/><UiText text={"Download sample CSV"}/></button></li>
-   <li><span><UiText text={"Upload the CSV. Nothing is saved yet."}/></span><button type="button" className="office-primary" disabled={!!busy} onClick={()=>input.current?.click()}><Upload size={16}/><UiText text={"Upload CSV"}/></button><input ref={input} type="file" accept=".csv,text/csv" hidden onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void upload(f)}}/></li>
-   <li><span><UiText text={"Check the preview and approve it. Only then is it saved."}/></span></li>
-   <li><span><UiText text={"Ask Sia to explain the saved records."}/></span></li>
-  </ol>
-  <p className="record-example-note"><UiText text={"The sample is made-up tea-stall history in a merchant-report format. It is not a Paytm statement and contains no real payment."}/></p>
-  {preview&&file&&<div className="record-preview"><div className="record-preview-heading"><h3><UiText text={"Check "}/>{file.name}</h3><span className={`record-kind ${preview.kind==='practice'?'is-practice':'is-private'}`}>{preview.rows.length} <UiText text={"records, "}/><UiText text={preview.alreadyImported?'already saved':preview.kind==='practice'?'fictional sample':'your reported history'}/></span></div><div className="record-table-wrap" tabIndex={0} role="region" aria-label={localize("Record preview table")}><table><caption><UiText text={"First "}/>{Math.min(5,preview.rows.length)} <UiText text={"rows of the checked file"}/></caption><thead><tr><th><UiText text={"Date"}/></th><th><UiText text={"Description"}/></th><th><UiText text={"Amount"}/></th><th><UiText text={"Method"}/></th><th><UiText text={"Status"}/></th></tr></thead><tbody>{preview.rows.slice(0,5).map(r=><tr key={r.id}><td>{r.date}</td><td>{r.description}</td><td>{money(r.amountPaise)}</td><td>{r.method}</td><td>{r.status}</td></tr>)}</tbody></table></div><label className="office-check"><input type="checkbox" checked={practice} disabled={preview.kind==='practice'} onChange={e=>{setPractice(e.target.checked);setApproved(false)}}/><span><UiText text={"Keep this file as fictional practice data, separate from my business records."}/></span></label><label className="office-check"><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/><span><UiText text={"I checked these entries and approve using them in private team memory. Uploading does not verify any payment."}/></span></label><button type="button" className="office-primary" disabled={!!busy||!approved} onClick={()=>void save()}><Check size={16}/><UiText text={"Save checked records"}/></button></div>}
-  {!!imports.length&&<><h3 className="record-files-title"><UiText text={"Saved files"}/></h3><div className="record-file-list">{imports.map(f=><article key={f.id} className={f.kind==='practice'?'is-practice':'is-private'}><FileText size={18} aria-hidden="true"/><div><strong>{f.fileName}</strong><small>{f.rowCount} <UiText text={"records "}/><span className="record-kind"><UiText text={f.kind==='practice'?'Fictional practice':'Private, owner-reported'}/></span></small></div><button type="button" className="office-icon-button" aria-label={`Remove ${f.fileName}`} disabled={!!busy} onClick={()=>void act('Removing this record source',async()=>{await api.removeRecords(token,f.id)})}><Trash2 size={16}/></button></article>)}</div>{(['practice','owner_import'] as const).map(kind=>{const s=kind==='practice'?summary?.practice:summary?.reportedBusiness;return !!s?.records&&<div className={`record-review-action ${kind==='practice'?'is-practice':'is-private'}`} key={kind}><div><strong><UiText text={kind==='practice'?'Fictional practice records':'Your reported business history'}/></strong><dl><div><dt><UiText text={"Entries"}/></dt><dd>{s.records}</dd></div><div><dt><UiText text={"Reported received"}/></dt><dd>{money(s.receivedPaise)}</dd></div><div><dt><UiText text={"Pending"}/></dt><dd>{money(s.pendingPaise)}</dd></div><div><dt><UiText text={"Refunded"}/></dt><dd>{money(s.refundedPaise)}</dd></div></dl></div><button type="button" className="office-primary" disabled={!!busy||!workspace.briefApproved||ownerHold} onClick={()=>void demonstrate(kind)}><Sparkles size={16}/><UiText text={kind==='practice'?'Show Sia on sample records':'Ask Sia about my records'}/></button></div>})}</>}
-  <small className="record-example-note"><UiText text={"Imported records only help your team explain things. They never change your bills, stock, khata or Paytm-verified collections. Keep passwords, OTPs and payment keys out of files."}/></small>
- </section>
+ <RecordDocuments token={token} workspace={workspace} onChange={onChange} onChoose={onChoose} onOpenTask={onOpenTask}/>
 
  <section className="office-card business-memory-map" aria-labelledby="memory-title">
   <h2 id="memory-title"><UiText text={"What your team knows"}/></h2>
