@@ -108,7 +108,7 @@ async function request<T>(
   }
 }
 export const api = {
-  understandBusiness:(token:string)=>request<BusinessGuide>('/onboarding/understand','POST',token,{}),
+  understandBusiness:(token:string)=>request<{state:string;guide?:BusinessGuide}>('/onboarding/understand','POST',token,{}),
   recordSample:async()=>{const r=await fetch(`${root}/records/sample`,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error('Sample download is unavailable. Try again.');return r.text();},
   previewRecords:(token:string,csv:string)=>request<RecordPreview>('/records/preview','POST',token,{csv}),
   saveRecords:(token:string,input:{csv:string;fileName:string;previewHash:string;practice:boolean;approved:true})=>request<{id:string;kind:string;reused:boolean}>('/records','POST',token,input),
@@ -439,6 +439,7 @@ export type RecordSummary={practice:{files:number;records:number;receivedPaise:n
 export type RecordPreview={hash:string;kind:'practice'|'owner_import';alreadyImported:boolean;rows:{id:string;date:string;description:string;amountPaise:number;method:string;status:string}[];summary:RecordSummary};
 export type WorkspaceState = {
   businessGuide?:BusinessGuide;
+  businessGuideRun?:{id:string;briefHash:string;state:'queued'|'working'|'completed'|'failed'|'waiting_owner';requestedAt:string;reason?:string};
   recordImports?:{id:string;hash:string;fileName:string;kind:'practice'|'owner_import';createdAt:string;rowCount:number}[];
   recordSummary?:RecordSummary;
   version: number;

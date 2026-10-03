@@ -980,7 +980,7 @@ export default function MerchantOffice() {
     };
     void run();
     let timer:ReturnType<typeof setTimeout>;
-    const tick=async()=>{if(document.visibilityState==='visible')await run();if(!cancelled){const currentWork=workspaceRef.current;const pending=currentWork?.tasks.some(t=>['queued','working'].includes(t.state))||currentWork?.sites?.some(s=>['queued','designing','publishing'].includes(s.state));timer=setTimeout(tick,pending?4500:18000)}};
+    const tick=async()=>{if(document.visibilityState==='visible')await run();if(!cancelled){const currentWork=workspaceRef.current;const pending=currentWork?.tasks.some(t=>['queued','working'].includes(t.state))||currentWork?.sites?.some(s=>['queued','working'].includes(s.state))||!!currentWork?.businessGuideRun&&['queued','working'].includes(currentWork.businessGuideRun.state);timer=setTimeout(tick,pending?4500:18000)}};
     timer=setTimeout(tick,6000);
     const wake=()=>{if(document.visibilityState==='visible')void run()};document.addEventListener('visibilitychange',wake);window.addEventListener('focus',wake);
     return () => {
