@@ -257,7 +257,7 @@ export default function BusinessWebsite({ slug }: { slug: string }) {
             : ""}
           Enquiries do not confirm stock, payment or delivery.
         </small>
-        <a href="/">Build your own AI team ↗</a>
+        <a href="/">Meet your business teammates ↗</a>
       </footer>
     </div>
   );
