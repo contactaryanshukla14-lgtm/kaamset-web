@@ -56,6 +56,7 @@ import MerchantOps,{type OpsPage} from "./MerchantOps";
 import UpiSettings from "./UpiSettings";
 const TeammateTask = lazy(() => import("./TeammateTask"));
 const TeamIdentity = lazy(() => import("./TeamIdentity"));
+const BusinessStart = lazy(() => import("./BusinessStart"));
 const CopyItems = lazy(() => import("./CopyItems"));
 import "./office.css";
 
@@ -344,20 +345,19 @@ function Setup({
               </>
             ) : step === 1 ? (
               <>
-                <h2>What should your team know?</h2>
+                <h2>Tell us about your business.</h2>
                 <p>
-                  Tell us what you offer and what customers usually ask. Add
-                  prices only if you want the team to use them.
+                  Describe it as you would to a helpful person. What do you sell, who buys from you, and what takes your time? Hindi, Hinglish or your preferred language is fine.
                 </p>
                 <label>
-                  Products, services and useful facts
+                  Your business, in your own words
                   <textarea
                     autoFocus
                     value={setup.description}
                     rows={6}
                     maxLength={5000}
                     onChange={(e) => field("description", e.target.value)}
-                    placeholder="We’re a salon in Baner. Haircuts start at ₹500. We’re open Tuesday to Sunday, 10am–7pm. Appointments need confirmation…"
+                    placeholder="Main Pune mein chai aur snacks ka stall chalata hoon. Office customers WhatsApp par order poochte hain. Subah bahut busy hota hoon, payment aur udhaar ka record sambhalna mushkil hota hai…"
                     required
                   />
                 </label>
@@ -1066,8 +1066,8 @@ export default function MerchantOffice() {
       const b=await api.readyTeam(r.token,id);
       setSelected(b.id);
       await refresh(r.token);
-      setPage("team");
-      setNotice("Your teammate is ready for review. Activate it to prepare work; add live connections when you need them.");
+      setPage("business");sessionStorage.setItem(pageKey,"business");
+      setNotice("Your description is saved. Get Sia’s simple setup guide, try a sample record, or review your chosen teammate.");
       if (r.workspace.providers?.cognee)
         void api
           .remember(r.token)
@@ -1954,6 +1954,8 @@ export default function MerchantOffice() {
                       </p>
                     </div>
                   </div>
+                  <Suspense fallback={<DeskLoading/>}><BusinessStart token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={openReadyTeam} onOpenTask={id=>{setSelected(id);sessionStorage.setItem("kaamset_selected_teammate",id);setTask(null);navigate("team")}}/></Suspense>
+                  <details className="business-optional-setup"><summary>Edit your business description and approval</summary>
                   <section className="office-card">
                     <label>
                       Business playbook
@@ -1996,17 +1998,17 @@ export default function MerchantOffice() {
                     >
                       Save approved facts <Check size={16} />
                     </button>
-                    <BusinessMemory
-                      token={token}
-                      enabled={!!workspace.providers?.cognee}
-                    />
                   </section>
+                  </details>
+                  <details className="business-optional-setup"><summary>Add products, prices and stock for bills or quotes</summary>
                   <Catalogue
                     token={token}
                     workspace={workspace}
                     ensureToken={async () => token!}
                     onChange={() => refresh()}
                   />
+                  </details>
+                  <section className="office-card"><h3>Search shared business memory</h3><p>Your approved description and reviewed record files are available to your team. Save the latest version to Cognee for source retrieval.</p><BusinessMemory token={token} enabled={!!workspace.providers?.cognee}/></section>
                   <SharedBrain workspace={workspace} />
                   <section className="office-card">
                     <h3>Workspace & account</h3>

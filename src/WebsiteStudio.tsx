@@ -21,15 +21,18 @@ export default function WebsiteStudio({
   onBuild: () => void;
 }) {
   const [name, setName] = useState(workspace?.business?.name || ""),
-    [instructions, setInstructions] = useState(
-      "Create a polished, mobile-friendly business website in Hinglish. Explain our offer clearly and make it easy to enquire. Keep every business claim grounded.",
-    ),
+    [instructions, setInstructions] = useState(()=>{
+      const team=workspace?.blueprints.find(b=>b.state==='active'&&b.plan.skills.includes('website_publish'));
+      try { return team&&sessionStorage.getItem(`kaamset_website_brief_${team.id}`)||"Create a polished, mobile-friendly business website in Hinglish. Explain our offer clearly and make it easy to enquire. Keep every business claim grounded."; } catch { return "Create a polished, mobile-friendly business website from my approved facts."; }
+    }),
     [phone, setPhone] = useState(""),
     [approved, setApproved] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [copied, setCopied] = useState("");
   const [readingPhotos, setReadingPhotos] = useState(false);
+  const [withoutPhotos,setWithoutPhotos]=useState(false);
+  const requestAttempt=useRef<{signature:string;key:string}|null>(null);
   const uploadSequence = useRef(0);
   const inFlight = useRef(false);
   const vijay = workspace?.blueprints.find(
@@ -79,13 +82,13 @@ export default function WebsiteStudio({
       )}
       {!vijay && (
         <div className="setup-box">
-          <strong>Build and activate Vijay first.</strong>
+          <strong>Set up and activate your ready Vijay team.</strong>
           <p>
             Your approved playbook becomes his source. He checks the job before
             building.
           </p>
           <button className="button button-dark" onClick={onBuild}>
-            Give Vijay a website job <ArrowRight size={16} />
+            Set up Vijay’s website team <ArrowRight size={16} />
           </button>
         </div>
       )}
@@ -116,6 +119,7 @@ export default function WebsiteStudio({
           />
         </label>
       </div>
+      <p className="small-muted">How should customers reach you? Add a public WhatsApp number above, or include your approved contact details in your business description. Your personal account details stay private.</p>
       <label>
         What should the website feel like?
         <textarea
@@ -141,9 +145,9 @@ export default function WebsiteStudio({
       </div>
       {!!vijay?.team?.length && <div className="office-team-members website-team-roster">{vijay.team.map((member) => <article key={member.id}><PixelTeammate id={memberCharacter(member)} /><div><strong>{member.name}</strong><span>{member.role}</span><small>{member.execution === "verified_code" ? "Trusted code checks · no extra model stage" : member.responsibility}</small></div></article>)}</div>}
       <label>
-        Business photos{" "}
+        What photos should Aditi use for your website?{" "}
         <small>
-          Optional · up to three JPEG or PNG photos, under 1.5 MB each
+          Add your products, shop, work samples or logo · up to three JPEG or PNG photos, under 1.5 MB each
         </small>
         <input
           type="file"
@@ -152,7 +156,7 @@ export default function WebsiteStudio({
           disabled={busy || readingPhotos}
           onChange={async (e) => {
             const sequence = ++uploadSequence.current;
-            setApproved(false); setReadingPhotos(true); setError("");
+            setApproved(false); setWithoutPhotos(false); setReadingPhotos(true); setError("");
             const files = Array.from(e.target.files || []);
             try {
               if (files.length > 3 || files.some((f) => f.size > 1500000 || !["image/jpeg", "image/png"].includes(f.type)))
@@ -185,6 +189,7 @@ export default function WebsiteStudio({
           }}
         />
       </label>
+      {!photos.length&&<label className="approval-checkbox"><input type="checkbox" checked={withoutPhotos} disabled={busy||readingPhotos} onChange={e=>{setWithoutPhotos(e.target.checked);setApproved(false)}}/>I don’t have photos yet. Build a clean text-based site from my business facts.</label>}
       {readingPhotos && <p role="status">Preparing your photos for review…</p>}
       {!!photos.length && (
         <div className="website-photo-review">
@@ -207,6 +212,7 @@ export default function WebsiteStudio({
                   setApproved(false);
                 }}
               />
+              <button type="button" className="text-button" disabled={busy || readingPhotos} onClick={() => {setPhotos(photos.filter((_,n)=>n!==i));setApproved(false);setWithoutPhotos(false)}}>Remove photo {i+1}</button>
             </label>
           ))}
         </div>
@@ -231,6 +237,7 @@ export default function WebsiteStudio({
           !token ||
           !vijay ||
           !approved ||
+          (!photos.length&&!withoutPhotos) ||
           name.trim().length < 2 ||
           instructions.trim().length < 5 ||
           photos.some((p) => p.alt.trim().length < 2) ||
@@ -238,6 +245,8 @@ export default function WebsiteStudio({
         }
         onClick={() =>
           run(async () => {
+            const signature=JSON.stringify({name,instructions,phone,photos:photos.map(p=>({alt:p.alt,photo:p.photo}))});
+            if(requestAttempt.current?.signature!==signature)requestAttempt.current={signature,key:crypto.randomUUID()};
             await api.buildSite(token!, {
               blueprintId: vijay!.id,
               businessName: name,
@@ -245,7 +254,7 @@ export default function WebsiteStudio({
               ...(phone ? { phone } : {}),
               assets: photos,
               publishApproved: true,
-            });
+            },requestAttempt.current.key);
             setApproved(false);
           })
         }

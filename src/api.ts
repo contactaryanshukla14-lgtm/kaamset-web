@@ -74,7 +74,7 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const controller = new AbortController();
-  const deadline = setTimeout(() => controller.abort(), path === "/merchant-ops/intake" || path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
+  const deadline = setTimeout(() => controller.abort(), path === "/onboarding/understand" || path === "/merchant-ops/intake" || path === "/teammates" || /^\/teammates\/[^/]+\/recheck$/.test(path) ? 90000 : 30000);
   try {
   const response = await fetch(`${root}${path}`, {
     method,
@@ -108,6 +108,11 @@ async function request<T>(
   }
 }
 export const api = {
+  understandBusiness:(token:string)=>request<BusinessGuide>('/onboarding/understand','POST',token,{}),
+  recordSample:async()=>{const r=await fetch(`${root}/records/sample`,{cache:'no-store'});if(!r.ok)throw new Error('Sample download is unavailable. Try again.');return r.text();},
+  previewRecords:(token:string,csv:string)=>request<RecordPreview>('/records/preview','POST',token,{csv}),
+  saveRecords:(token:string,input:{csv:string;fileName:string;previewHash:string;practice:boolean;approved:true})=>request<{id:string;kind:string;reused:boolean}>('/records','POST',token,input),
+  removeRecords:(token:string,id:string)=>request(`/records/${id}`,'DELETE',token),
   billFulfilment:(token:string,id:string,input:{action:'handed_over'|'cancel';note:string;approved:true;stockReviewed:true})=>request(`/merchant-ops/bills/${id}/fulfilment`,'POST',token,input),
   merchantOps:(token:string)=>request<MerchantOpsState>("/merchant-ops","GET",token),
   upiSetup:(token:string)=>request<UpiDetails|null>("/merchant-ops/upi","GET",token),
@@ -169,10 +174,11 @@ export const api = {
       publishApproved: true;
       assets?: { alt: string; photo: string; rightsConfirmed: true }[];
     },
+    requestKey: string = crypto.randomUUID(),
   ) =>
     request<PublishedSite>("/sites", "POST", token, {
       ...input,
-      requestKey: crypto.randomUUID(),
+      requestKey,
     }),
   unpublishSite: (token: string, id: string) =>
     request(`/sites/${id}/unpublish`, "POST", token),
@@ -428,7 +434,13 @@ export type Teammate = {
   };
   feasibility: { state: string; blockers: string[]; checkedAt: string };
 };
+export type BusinessGuide={summary:string;sourceQuotes:string[];recommendedTeams:{id:string;reason:string}[];questions:string[];briefHash:string;createdAt:string;model:string};
+export type RecordSummary={practice:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};reportedBusiness:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};providerVerified:false;policy:string};
+export type RecordPreview={hash:string;kind:'practice'|'owner_import';alreadyImported:boolean;rows:{id:string;date:string;description:string;amountPaise:number;method:string;status:string}[];summary:RecordSummary};
 export type WorkspaceState = {
+  businessGuide?:BusinessGuide;
+  recordImports?:{id:string;hash:string;fileName:string;kind:'practice'|'owner_import';createdAt:string;rowCount:number}[];
+  recordSummary?:RecordSummary;
   version: number;
   merchantOps?: {summary:MerchantOpsState['summary']};
   brief: string;
