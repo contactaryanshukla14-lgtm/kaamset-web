@@ -65,13 +65,17 @@ const BusinessStart = lazy(() => import("./BusinessStart"));
 const CopyItems = lazy(() => import("./CopyItems"));
 import "./office.css";
 import "./office-system.css";
+import './merchant-lab.css';
+const MerchantLab = lazy(() => import('./MerchantLabContainer'));
+const labMode=new URLSearchParams(location.search).get('merchantLab')==='1'||!!new URLSearchParams(location.search).get('connected')&&sessionStorage.getItem('kaamset_lab_connection_pending')==='1';
 
-const storageKey = "kaamset_merchant_workspace_token";
-const legacyStorageKey = "kaamset_workspace_token";
-const pageKey = "kaamset_merchant_page";
+const storageKey = labMode?'kaamset_lab_token':"kaamset_merchant_workspace_token";
+const legacyStorageKey = labMode?'kaamset_lab_token':"kaamset_workspace_token";
+const pageKey = labMode?'kaamset_lab_page':"kaamset_merchant_page";
 const connectionAttemptKey = "kaamset_connection_attempt";
 
 function restoredPage(): Page {
+  if(labMode&&['website','connections','business'].includes(new URLSearchParams(location.search).get('desk')||''))return new URLSearchParams(location.search).get('desk') as Page;
   if (["instagram", "gmail", "googlecalendar", "googlesheets"].includes(new URLSearchParams(location.search).get("connected") || "")) return "connections";
   const value = sessionStorage.getItem(pageKey);
   return pages.some((p) => p.id === value) ? value as Page : "work";
@@ -1014,7 +1018,7 @@ const {t:localize}=useLanguage();
             return;
           }
           // Recover existing merchant offices without importing sample demo data.
-          if (localStorage.getItem(legacyStorageKey) === token) {
+          if (!labMode && localStorage.getItem(legacyStorageKey) === token) {
             localStorage.setItem(storageKey, token);
             localStorage.removeItem(legacyStorageKey);
             legacyRestore.current = false;
@@ -1160,6 +1164,7 @@ const {t:localize}=useLanguage();
     requestAnimationFrame(() => { pageContent.current?.focus({preventScroll: true}); window.scrollTo({top: 0, behavior: "instant"}); });
   }
   async function connectApp(id: string, title: string, restart = false) {
+    if(labMode)sessionStorage.setItem('kaamset_lab_connection_pending','1');else sessionStorage.removeItem('kaamset_lab_connection_pending');
     const limit=Number(sessionStorage.getItem(`kaamset_connection_wait_${id}`)||'0');
     if(Date.now()<limit){showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.');return;}
     await act(`Opening ${title} connection`, async () => {
@@ -1192,6 +1197,7 @@ const {t:localize}=useLanguage();
             onSignIn={() => setAccountOpen(true)}
             getSetupToken={getSetupToken}
           />
+          <aside className="lab-office-launch"><div><strong>Try a fully prepared dukaan</strong><small>Sharma Daily Mart · fictional store, actual AI and cloud jobs.</small></div><a href="/merchant-lab">Open Merchant Lab →</a></aside>
           {error && (
             <div className="office-setup-error" role="alert">
               {error}
@@ -1381,14 +1387,15 @@ const {t:localize}=useLanguage();
               {['counter','shop','khata','money','requests'].includes(page)&&<MerchantOps key={page} page={page as OpsPage} token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={setChoosingTeam} onCatalogue={()=>navigate('business')} onPayments={()=>navigate('connections')} onAsk={askReadyTeam}/>}
               {page === "work" && (
                 <>
-                  <WorkOverview
+                  {labMode&&<><div className="lab-office-banner"><div><strong>Sharma Daily Mart · Demo merchant</strong><p>Payment and customer channels are simulated. Live accounts and provider evidence stay separate.</p></div><a href="/merchant-lab" target="_blank" rel="noreferrer">Open shared payment view <ArrowUpRight size={15}/></a></div><MerchantLab embedded/></>}
+                  {!labMode&&<WorkOverview
                     workspace={workspace}
                     busy={!!busy}
                     onNavigate={navigate}
                     onOpenTeam={(id) => { setSelected(id); setTask(null); navigate("team"); }}
                     onShowTeams={() => { const heading = document.getElementById("ready-teams-title"); heading?.scrollIntoView({ behavior: "smooth", block: "start" }); heading?.focus({ preventScroll: true }); }}
-                  />
-                  <ReadyTeamGallery workspace={workspace} busy={!!busy} onChoose={openReadyTeam}/>
+                  />}
+                  {!labMode&&<ReadyTeamGallery workspace={workspace} busy={!!busy} onChoose={openReadyTeam}/>}
                   <div className="office-section-heading">
                     <h2><UiText text={"Recent work"}/></h2>
                     <button
@@ -1804,6 +1811,7 @@ const {t:localize}=useLanguage();
               )}
               {page === "connections" && (
                 <>
+                  <aside className="lab-office-banner"><div><strong>Connect Sharma Daily Mart demo merchant</strong><p>{labMode?'Authorize demo capabilities and view the stored connection receipt in Merchant Lab.':'Open a separate prepared Lab without changing this business’s data or connections.'}</p></div><a href="/merchant-lab">Open demo connection <ArrowUpRight size={15}/></a></aside>
                   <div className="office-heading">
                     <div>
                       <h1><UiText text={"Connections"}/></h1>

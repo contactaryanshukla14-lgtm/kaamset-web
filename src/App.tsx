@@ -4,6 +4,7 @@ const BusinessWebsite = lazy(() => import("./BusinessWebsite"));
 const CustomerOrder = lazy(() => import("./CustomerOrder"));
 const ShopFront = lazy(() => import("./ShopFront"));
 const Demo = lazy(() => import("./DemoApp"));
+const MerchantLab = lazy(() => import("./MerchantLabContainer"));
 export default function App() {
   const slug = /^\/business\/([a-z0-9-]{1,60})\/?$/.exec(
     window.location.pathname,
@@ -14,7 +15,7 @@ export default function App() {
     <Suspense
       fallback={<main className="office-loading">Opening KaamSet…</main>}
     >
-      {shop||receipt ? (<ShopFront cap={(shop||receipt)!} receipt={!!receipt}/>) : slug ? (
+      {window.location.pathname === '/merchant-lab' ? <MerchantLab/> : shop||receipt ? (<ShopFront cap={(shop||receipt)!} receipt={!!receipt}/>) : slug ? (
         <BusinessWebsite slug={slug} />
       ) : order ? (
         <CustomerOrder cap={order} />
