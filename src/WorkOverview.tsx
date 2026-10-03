@@ -1,3 +1,4 @@
+import {UiText} from './Language';
 import {ArrowRight,BookOpen,Check,Cloud,Globe,ShoppingBag} from 'lucide-react';
 import type {WorkspaceState} from './api';
 import PixelTeammate from './PixelTeammate';
@@ -53,13 +54,13 @@ export default function WorkOverview({workspace,busy,onNavigate,onOpenTeam,onSho
 
   const crew=(active.length?active:teams).slice(0,4);
   const ops=workspace.merchantOps?.summary;
-  const list=(items:Item[],empty:string)=>items.length?<ul className="work-list">{items.slice(0,6).map(item=><li key={item.key}><button type="button" onClick={item.go} disabled={busy}><span className="work-list-text"><strong>{item.title}</strong><small>{item.detail}</small></span><Status value={item.state}/><span className="work-list-action">{item.action}<ArrowRight size={14} aria-hidden="true"/></span></button></li>)}{items.length>6&&<li className="work-list-more">and {items.length-6} more</li>}</ul>:<p className="work-empty">{empty}</p>;
+  const list=(items:Item[],empty:string)=>items.length?<ul className="work-list">{items.slice(0,6).map(item=><li key={item.key}><button type="button" onClick={item.go} disabled={busy}><span className="work-list-text"><strong>{item.title}</strong><small>{item.detail}</small></span><Status value={item.state}/><span className="work-list-action">{item.action}<ArrowRight size={14} aria-hidden="true"/></span></button></li>)}{items.length>6&&<li className="work-list-more"><UiText text={"and "}/>{items.length-6} <UiText text={"more"}/></li>}</ul>:<p className="work-empty">{empty}</p>;
 
   return <>
     <header className="work-hero">
       <div className="work-hero-text">
         <p className="work-date">{new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</p>
-        <h1>Namaste, {workspace.business?.name}.</h1>
+        <h1><UiText text={"Namaste, "}/>{workspace.business?.name}.</h1>
         <p>{ownerHold?'Your office is paused for owner control. Resume when you are ready.':<>{active.length?`${active.length} team${active.length>1?'s are':' is'} active.`:'No team is active yet.'} {running.length?`${running.length} job${running.length>1?'s are':' is'} running in the cloud.`:'No jobs in progress.'} {liveChannels?`${liveChannels} approved live channel${liveChannels>1?'s are':' is'} enabled.`:''}</>} {attention.length?`${attention.length} thing${attention.length>1?'s need':' needs'} you.`:''}</p>
       </div>
       <div className="work-hero-crew" aria-hidden="true">
@@ -67,32 +68,32 @@ export default function WorkOverview({workspace,busy,onNavigate,onOpenTeam,onSho
       </div>
     </header>
 
-    {next&&<section className="work-next" aria-labelledby="work-next-title"><div><span className="work-next-label">Your next step</span><h2 id="work-next-title">{next.title}</h2><p>{next.detail}</p></div><button type="button" className="office-primary" disabled={busy} onClick={next.go}>{next.action}<ArrowRight size={16}/></button></section>}
+    {next&&<section className="work-next" aria-labelledby="work-next-title"><div><span className="work-next-label"><UiText text={"Your next step"}/></span><h2 id="work-next-title">{next.title}</h2><p>{next.detail}</p></div><button type="button" className="office-primary" disabled={busy} onClick={next.go}>{next.action}<ArrowRight size={16}/></button></section>}
 
     <div className="work-columns">
       <section className={`work-panel work-attention ${attention.length?'has-items':''}`} aria-labelledby="work-attention-title">
-        <div className="work-panel-head"><h2 id="work-attention-title">Needs you</h2><span>{attention.length}</span></div>
+        <div className="work-panel-head"><h2 id="work-attention-title"><UiText text={"Needs you"}/></h2><span>{attention.length}</span></div>
         {list(attention,'Nothing is waiting for you. New approvals and questions from your teams will appear here.')}
       </section>
       <section className={`work-panel work-running ${running.length?'has-items':''}`} aria-labelledby="work-running-title" aria-live="polite">
-        <div className="work-panel-head"><h2 id="work-running-title"><Cloud size={17} aria-hidden="true"/>Running in the cloud</h2><span>{running.length}</span></div>
+        <div className="work-panel-head"><h2 id="work-running-title"><Cloud size={17} aria-hidden="true"/><UiText text={"Running in the cloud"}/></h2><span>{running.length}</span></div>
         {list(running,'No jobs running. When you give a team a job, its progress shows here, even after you close this page.')}
         <p className="work-panel-foot"><Check size={13} aria-hidden="true"/>{completed?`${completed} finished result${completed>1?'s':''} saved in this workspace`:'No finished results yet'}</p>
       </section>
     </div>
 
     <section className="work-ledger" aria-labelledby="work-ledger-title">
-      <div className="work-ledger-head"><h2 id="work-ledger-title">Your shop records</h2><p>Totals from records saved in this workspace.</p></div>
+      <div className="work-ledger-head"><h2 id="work-ledger-title"><UiText text={"Your shop records"}/></h2><p><UiText text={"Totals from records saved in this workspace."}/></p></div>
       <dl>
-        <div><dt>Saved bills</dt><dd>{ops?.bills||0}</dd></div>
-        <div><dt>Outstanding udhaar</dt><dd>{money(ops?.outstandingCreditPaise||0)}</dd></div>
-        <div><dt>Unmet customer requests</dt><dd>{ops?.unmetRequests||0}</dd></div>
-        <div><dt>Verified collections</dt><dd>{money(workspace.brain?.snapshot.verifiedCollectionPaise||0)}</dd></div>
+        <div><dt><UiText text={"Saved bills"}/></dt><dd>{ops?.bills||0}</dd></div>
+        <div><dt><UiText text={"Outstanding udhaar"}/></dt><dd>{money(ops?.outstandingCreditPaise||0)}</dd></div>
+        <div><dt><UiText text={"Unmet customer requests"}/></dt><dd>{ops?.unmetRequests||0}</dd></div>
+        <div><dt><UiText text={"Verified collections"}/></dt><dd>{money(workspace.brain?.snapshot.verifiedCollectionPaise||0)}</dd></div>
       </dl>
       <div className="work-shortcuts">
-        <button type="button" onClick={()=>onNavigate('counter')}><ShoppingBag size={19} aria-hidden="true"/><span><strong>Make a bill</strong><small>Arjun’s counter</small></span><ArrowRight size={16} aria-hidden="true"/></button>
-        <button type="button" onClick={()=>onNavigate('khata')}><BookOpen size={19} aria-hidden="true"/><span><strong>Check udhaar</strong><small>Naina’s khata</small></span><ArrowRight size={16} aria-hidden="true"/></button>
-        <button type="button" onClick={()=>onNavigate('shop')}><Globe size={19} aria-hidden="true"/><span><strong>Share my shop</strong><small>Tara’s online dukaan</small></span><ArrowRight size={16} aria-hidden="true"/></button>
+        <button type="button" onClick={()=>onNavigate('counter')}><ShoppingBag size={19} aria-hidden="true"/><span><strong><UiText text={"Make a bill"}/></strong><small><UiText text={"Arjun’s counter"}/></small></span><ArrowRight size={16} aria-hidden="true"/></button>
+        <button type="button" onClick={()=>onNavigate('khata')}><BookOpen size={19} aria-hidden="true"/><span><strong><UiText text={"Check udhaar"}/></strong><small><UiText text={"Naina’s khata"}/></small></span><ArrowRight size={16} aria-hidden="true"/></button>
+        <button type="button" onClick={()=>onNavigate('shop')}><Globe size={19} aria-hidden="true"/><span><strong><UiText text={"Share my shop"}/></strong><small><UiText text={"Tara’s online dukaan"}/></small></span><ArrowRight size={16} aria-hidden="true"/></button>
       </div>
     </section>
   </>;

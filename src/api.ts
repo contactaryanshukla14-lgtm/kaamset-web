@@ -108,6 +108,10 @@ async function request<T>(
   }
 }
 export const api = {
+  onboardingSession:()=>request<{token:string}>('/onboarding/session','POST',undefined,{}),
+  help:(token:string,input:{language:string;issue:string;question:string})=>request<{answer:string;source:string}>('/help','POST',token,input),
+  businessAssets:(token:string)=>request<{assets:{id:string;alt:string;kind:'logo'|'photo';src:string}[]}>('/business/assets','GET',token),
+  saveBusinessAssets:(token:string,assets:BusinessAssetInput[])=>request('/business/assets','PUT',token,assets),
   understandBusiness:(token:string)=>request<{state:string;guide?:BusinessGuide}>('/onboarding/understand','POST',token,{}),
   recordSample:async()=>{const r=await fetch(`${root}/records/sample`,{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error('Sample download is unavailable. Try again.');return r.text();},
   previewRecords:(token:string,csv:string)=>request<RecordPreview>('/records/preview','POST',token,{csv}),
@@ -391,6 +395,7 @@ export const api = {
       actionsAvailable: false;
     }>("/personal/ask", "POST", token, { brief, question, history }),
 };
+export type BusinessAssetInput={kind:'logo'|'photo';alt:string;photo:string;rightsConfirmed:true};
 export type BusinessSetup = {
   name: string;
   category: string;
@@ -401,6 +406,7 @@ export type BusinessSetup = {
   contact?: string;
   rules: string;
   approved: true;
+  assets?:BusinessAssetInput[];
 };
 export type TeamMember = {
   id: string;
@@ -448,6 +454,7 @@ export type WorkspaceState = {
   briefApproved: boolean;
   blueprints: Teammate[];
   business?: BusinessSetup & { onboardedAt: string };
+  businessAssets?:{id:string;alt:string;kind:'logo'|'photo'}[];
   account?: { saved: boolean; expiresAt: string };
   paymentSetup?: {
     configured: boolean;
@@ -477,6 +484,8 @@ export type WorkspaceState = {
   connections: {
     toolkit: string;
     status: string;
+    authorizationCreatedAt?:string;
+    authorizationOpenedAt?:string;
     identity?: { username: string; accountType: string };
   }[];
   readiness: Record<string, boolean>;

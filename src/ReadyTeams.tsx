@@ -1,3 +1,5 @@
+import {useLanguage} from './Language';
+import {UiText} from './Language';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,Check,Cloud,Link2,X} from 'lucide-react';
 import PixelTeammate from './PixelTeammate';
@@ -24,6 +26,8 @@ export const teamLead=(team:typeof readyTeams[number])=>team.name.split(' · ')[
 export const teamRole=(team:typeof readyTeams[number])=>team.name.split(' · ')[1]||'';
 export const teamNeeds=(team:typeof readyTeams[number])=>team.options.length?`Drafts available · ${team.options.length} optional live action${team.options.length>1?'s':''}`:'No app connection needed';
 export function ReadyTeamGallery({workspace,busy,onChoose}:{workspace:WorkspaceState;busy:boolean;onChoose:(id:ReadyTeamId)=>void}){
+const {t:localize}=useLanguage();
+
   const [category,setCategory]=useState('all'),[query,setQuery]=useState('');
   const visible=readyTeams.filter(t=>query.trim()?`${t.name} ${t.tag} ${t.description} ${crewNames[t.code]}`.toLowerCase().includes(query.trim().toLowerCase()):category==='all'||(category==='everyday'?merchantCodes.includes(t.code):!merchantCodes.includes(t.code)));
   const categories=[{id:'all',label:'All teams',count:readyTeams.length},{id:'everyday',label:'Everyday shop work',count:merchantCodes.length},{id:'channels',label:'Customers & growth',count:readyTeams.length-merchantCodes.length}];
@@ -32,30 +36,32 @@ export function ReadyTeamGallery({workspace,busy,onChoose}:{workspace:WorkspaceS
       <span className="ready-card-portrait" aria-hidden="true"><PixelTeammate id={team.id} name={teamLead(team)}/></span>
       <span className="ready-card-body">
         <span className="ready-card-crew">{crewNames[team.code]}</span>
-        <strong className="ready-card-name">{teamLead(team)} <span>{teamRole(team)}</span></strong>
-        <span className="ready-card-tag">{team.tag}</span>
-        <span className="ready-card-meta"><span className={`ready-card-state is-${state}`}><i aria-hidden="true"/>{state==='active'?'Active':state==='paused'?'Paused':state==='setup'?'Not active yet':'Not added'}</span><span>{teamNeeds(team)}</span></span>
+        <strong className="ready-card-name">{teamLead(team)} <span>{<UiText text={teamRole(team)}/>}</span></strong>
+        <span className="ready-card-tag">{<UiText text={team.tag}/>}</span>
+        <span className="ready-card-meta"><span className={`ready-card-state is-${state}`}><i aria-hidden="true"/><UiText text={state==='active'?'Active':state==='paused'?'Paused':state==='setup'?'Not active yet':'Not added'}/></span><span>{<UiText text={teamNeeds(team)}/>}</span></span>
       </span>
-      <span className="ready-card-action" aria-hidden="true">{state==='active'?'Open':state==='new'?'Meet':'Review'}<ArrowRight size={15}/></span>
+      <span className="ready-card-action" aria-hidden="true"><UiText text={state==='active'?'Open':state==='new'?'Meet':'Review'}/><ArrowRight size={15}/></span>
     </button>};
-  return <section className="ready-team-gallery" id="ready-teams" aria-labelledby="ready-teams-title"><div className="office-section-heading"><div><h2 id="ready-teams-title" tabIndex={-1}>Ready teams</h2><p>Twelve specialist teams that share your approved business facts. Open one to see its job and what it needs before it can go live.</p></div></div><div className="ready-gallery-controls"><div role="group" aria-label="Team categories">{categories.map(c=><button type="button" key={c.id} aria-pressed={category===c.id&&!query} onClick={()=>{setCategory(c.id);setQuery('')}}>{c.label} <span>{c.count}</span></button>)}</div><input type="search" aria-label="Find a ready team" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search: bills, udhaar, Instagram, website…"/></div><div className="ready-grid">{visible.map(card)}</div>{!visible.length&&<div className="office-empty"><div><h3>No team matches “{query.trim()}”.</h3><p>Try a job such as captions, bills, reminders or email.</p><button type="button" className="office-text" onClick={()=>{setQuery('');setCategory('all')}}>Show all 12 teams <ArrowRight size={15}/></button></div></div>}</section>;
+  return <section className="ready-team-gallery" id="ready-teams" aria-labelledby="ready-teams-title"><div className="office-section-heading"><div><h2 id="ready-teams-title" tabIndex={-1}><UiText text={"Ready teams"}/></h2><p><UiText text={"Twelve specialist teams that share your approved business facts. Open one to see its job and what it needs before it can go live."}/></p></div></div><div className="ready-gallery-controls"><div role="group" aria-label={localize("Team categories")}>{categories.map(c=><button type="button" key={c.id} aria-pressed={category===c.id&&!query} onClick={()=>{setCategory(c.id);setQuery('')}}>{localize(c.label)} <span>{c.count}</span></button>)}</div><input type="search" aria-label={localize("Find a ready team")} value={query} onChange={e=>setQuery(e.target.value)} placeholder={localize("Search: bills, udhaar, Instagram, website…")}/></div><div className="ready-grid">{visible.map(card)}</div>{!visible.length&&<div className="office-empty"><div><h3><UiText text={"No team matches “"}/>{query.trim()}”.</h3><p><UiText text={"Try a job such as captions, bills, reminders or email."}/></p><button type="button" className="office-text" onClick={()=>{setQuery('');setCategory('all')}}><UiText text={"Show all 12 teams "}/><ArrowRight size={15}/></button></div></div>}</section>;
 
 }
 export function ReadyTeamSetup({code,workspace,busy,onClose,onSave}:{code:ReadyTeamId;workspace:WorkspaceState;busy:boolean;onClose:()=>void;onSave:(code:ReadyTeamId,options:Record<string,boolean>,revision?:number)=>Promise<void>}){
+const {t:localize}=useLanguage();
+
   const team=readyTeams.find(t=>t.code===code)!,existing=workspace.blueprints.find(b=>b.presetId===code);
   const [options,setOptions]=useState<Record<string,boolean>>(()=>Object.fromEntries(team.options.map(o=>[o.key,existing?.presetOptions?.[o.key]??false])));
   const modal=useRef<HTMLElement>(null),close=useRef(onClose),working=useRef(busy);close.current=onClose;working.current=busy;
   useEffect(()=>{const previous=document.activeElement as HTMLElement|null,overflow=document.body.style.overflow;document.body.style.overflow='hidden';modal.current?.querySelector<HTMLElement>('button')?.focus();
-    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!working.current)close.current();if(e.key==='Tab'){const items=Array.from(modal.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),a[href]')||[]),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}};
+    const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!working.current)close.current();if(e.key==='Tab'){const items=Array.from(modal.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),textarea:not(:disabled),select:not(:disabled),a[href]')||[]),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}}};
     document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);document.body.style.overflow=overflow;previous?.focus()};},[]);
   const paymentInvalid=options.payments&&!options.orders&&!options.bookings,followupInvalid=options.followups&&(!options.payments||!options.whatsapp),valid=!paymentInvalid&&!followupInvalid;
-  return <div className="office-modal-overlay"><section ref={modal} className="office-modal ready-team-setup" role="dialog" aria-modal="true" aria-labelledby="ready-team-title"><button type="button" className="office-close" aria-label="Close team setup" disabled={busy} onClick={onClose}><X size={20}/></button>
-    <header className="ready-setup-head"><span className="ready-card-portrait"><PixelTeammate id={team.id} name={teamLead(team)}/></span><div><span className="ready-card-crew">{crewNames[team.code]}</span><h2 id="ready-team-title">{teamLead(team)} <span>{teamRole(team)}</span></h2><p className="ready-setup-tag">{team.tag}</p></div></header>
-    <p>{team.description}</p>
-    <div className="ready-team-connection"><Cloud size={18}/><div><strong>What it needs</strong><span>{team.connection}</span></div></div>
-    {existing&&<p className="ready-setup-current">{existing.state==='active'?'This team is active. Saving changes pauses it until you approve the job again.':'This team is saved but not active yet. Review its job next, then activate it.'}</p>}
-    {team.options.length>0&&<fieldset className="studio-fields" disabled={busy}><legend><Link2 size={16}/> Live actions <small>Optional, off until connected</small></legend>{team.options.map(o=><label className="office-check ready-team-option" key={o.key}><input type="checkbox" checked={!!options[o.key]} onChange={e=>setOptions({...options,[o.key]:e.target.checked})}/><span><strong>{o.label}</strong><small>{o.hint}</small></span></label>)}</fieldset>}
-    {!valid&&<p role="alert" className="office-error">{paymentInvalid?'Turn on orders or bookings before payment requests.':'Unpaid-order reminders need live WhatsApp and payment requests turned on.'}</p>}
-    <p className="office-footnote">Next you review the team’s job and rules. Nothing is sent, posted or charged until the required account is connected and you approve it.</p>
-    <button type="button" className="office-primary" disabled={busy||!valid} onClick={()=>void onSave(code,options,existing?.revision)}><Check size={16}/>{busy?'Saving team…':'Save and review job'}</button></section></div>;
+  return <div className="office-modal-overlay"><section ref={modal} className="office-modal ready-team-setup" role="dialog" aria-modal="true" aria-labelledby="ready-team-title"><button type="button" className="office-close" aria-label={localize("Close team setup")} disabled={busy} onClick={onClose}><X size={20}/></button>
+    <header className="ready-setup-head"><span className="ready-card-portrait"><PixelTeammate id={team.id} name={teamLead(team)}/></span><div><span className="ready-card-crew">{crewNames[team.code]}</span><h2 id="ready-team-title">{teamLead(team)} <span>{<UiText text={teamRole(team)}/>}</span></h2><p className="ready-setup-tag">{<UiText text={team.tag}/>}</p></div></header>
+    <p>{<UiText text={team.description}/>}</p>
+    <div className="ready-team-connection"><Cloud size={18}/><div><strong><UiText text={"What it needs"}/></strong><span>{<UiText text={team.connection}/>}</span></div></div>
+    {existing&&<p className="ready-setup-current"><UiText text={existing.state==='active'?'This team is active. Saving changes pauses it until you approve the job again.':'This team is saved but not active yet. Review its job next, then activate it.'}/></p>}
+    {team.options.length>0&&<fieldset className="studio-fields" disabled={busy}><legend><Link2 size={16}/> <UiText text={"Live actions "}/><small><UiText text={"Optional, off until connected"}/></small></legend>{team.options.map(o=><label className="office-check ready-team-option" key={o.key}><input type="checkbox" checked={!!options[o.key]} onChange={e=>setOptions({...options,[o.key]:e.target.checked})}/><span><strong>{<UiText text={o.label}/>}</strong><small>{<UiText text={o.hint}/>}</small></span></label>)}</fieldset>}
+    {!valid&&<p role="alert" className="office-error"><UiText text={paymentInvalid?'Turn on orders or bookings before payment requests.':'Unpaid-order reminders need live WhatsApp and payment requests turned on.'}/></p>}
+    <p className="office-footnote"><UiText text={"Next you review the team’s job and rules. Nothing is sent, posted or charged until the required account is connected and you approve it."}/></p>
+    <button type="button" className="office-primary" disabled={busy||!valid} onClick={()=>void onSave(code,options,existing?.revision)}><Check size={16}/><UiText text={busy?'Saving team…':'Save and review job'}/></button></section></div>;
 }

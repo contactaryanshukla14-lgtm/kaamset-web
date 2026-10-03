@@ -1,3 +1,4 @@
+import {UiText} from './Language';
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
@@ -44,7 +45,11 @@ const WebsiteStudio = lazy(() => import("./WebsiteStudio"));
 const WhatsAppSalesDesk = lazy(() => import("./WhatsAppSalesDesk"));
 import DeskLoading from "./DeskLoading";
 import { memberCharacter, teamName, websiteStageName } from "./team-identity";
-import { BusinessMemory, ContentStudio } from "./OwnerTools";
+import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
+import {LanguagePicker,useLanguage} from './Language';
+import SiaAssistant,{showSia} from './SiaAssistant';
+import {AssetPicker,SavedBusinessAssets} from './BusinessAssets';
+import type {BusinessAssetInput} from './api';
 import {
   Catalogue,
   MilanScheduler,
@@ -174,8 +179,10 @@ const initial: BusinessSetup = {
 const label = (s: string) => s.replaceAll("_", " ");
 const setupSteps = ["Your business", "In your words", "Team & approval"];
 function Brand() {
+const {t:localize}=useLanguage();
+
   return (
-    <a className="office-brand" href="/" aria-label="KaamSet home">
+    <a className="office-brand" href="/" aria-label={localize("KaamSet home")}>
       <span className="office-mark">
         <i />
         <i />
@@ -183,7 +190,7 @@ function Brand() {
         <i />
       </span>
       <strong>
-        kaam<span>set</span>
+        <UiText text={"kaam"}/><span><UiText text={"set"}/></span>
       </strong>
     </a>
   );
@@ -192,11 +199,18 @@ function Setup({
   busy,
   onFinish,
   onSignIn,
+  getSetupToken,
 }: {
   busy: string;
   onFinish: (setup: BusinessSetup) => Promise<void>;
   onSignIn: () => void;
+  getSetupToken:()=>Promise<string>;
 }) {
+const {t:localize}=useLanguage();
+
+  const {language,t}=useLanguage();
+  const [assets,setAssets]=useState<BusinessAssetInput[]>([]),[assetRights,setAssetRights]=useState(false);
+  const [readingAssets,setReadingAssets]=useState(false);
   const [step, setStep] = useState(0),
     [setup, setSetup] = useState<BusinessSetup>(() => {
       try {
@@ -212,6 +226,8 @@ function Setup({
     [error, setError] = useState("");
   const file = useRef<HTMLInputElement>(null),
     stepHeading = useRef<HTMLHeadingElement>(null);
+  const previousUiLanguage=useRef(language);
+  useEffect(()=>{if(previousUiLanguage.current!==language){previousUiLanguage.current=language;field('language',language)}},[language]);
   useEffect(() => {
     if (step === 2) stepHeading.current?.focus();
   }, [step]);
@@ -229,17 +245,19 @@ function Setup({
         : setup.goal.trim().length >= 10 && approved;
   async function next(e: FormEvent) {
     e.preventDefault();
-    if (!valid || busy) return;
+    if(busy||readingAssets)return;
+    if(!valid||step===2&&assets.length>0&&(!assetRights||assets.some(a=>a.alt.trim().length<2))){setError('Check the required fields and approvals before continuing.');showSia('field','Check the required fields and approvals before continuing.');return;}
     if (step < 2) setStep(step + 1);
-    else await onFinish(setup);
+    else await onFinish({...setup,...(assets.length?{assets}:{} )});
   }
-  const chosen = readyTeams.find((t) => setup.goal === `Ready team: ${t.code}`);
-  const teamOption = (t: (typeof readyTeams)[number]) => {
-    const on = setup.goal === `Ready team: ${t.code}`;
+  function voice(key:'name'|'category'|'city'|'description'|'rules'){return <VoiceInput token={null} getToken={getSetupToken} enabled onText={text=>{field(key,text.slice(0,key==='description'?5000:key==='rules'?2000:80));setError('')}} onError={setError} label={`Speak ${key==='description'?'business description':key==='rules'?'your rules':key==='category'?'business type':key==='name'?'business name':'city'}`}/>;}
+  const chosen = readyTeams.find((team) => setup.goal === `Ready team: ${team.code}`);
+  const teamOption = (team: (typeof readyTeams)[number]) => {
+    const on = setup.goal === `Ready team: ${team.code}`;
     return (
-      <button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={on} onClick={() => field("goal", `Ready team: ${t.code}`)}>
-        <span className="ready-onboarding-portrait" aria-hidden="true"><PixelTeammate id={t.id} name={teamLead(t)} /></span>
-        <span><strong>{teamLead(t)} <em>{teamRole(t)}</em></strong><small>{t.tag}</small></span>
+      <button className="ready-onboarding-option" type="button" key={team.code} aria-pressed={on} onClick={() => field("goal", `Ready team: ${team.code}`)}>
+        <span className="ready-onboarding-portrait" aria-hidden="true"><PixelTeammate id={team.id} name={teamLead(team)} /></span>
+        <span><strong>{teamLead(team)} <em>{t(teamRole(team))}</em></strong><small>{t(team.tag)}</small></span>
         {on && <Check className="ready-onboarding-check" size={16} aria-hidden="true" />}
       </button>
     );
@@ -248,85 +266,84 @@ function Setup({
     <div className="office-onboarding">
       <header>
         <Brand />
+        <LanguagePicker/>
         <button type="button" className="office-text" onClick={onSignIn}>
-          Have a saved workspace? Sign in <ArrowUpRight size={15} />
+          <UiText text={"Have a saved workspace? Sign in "}/><ArrowUpRight size={15} />
         </button>
       </header>
       <main className="office-welcome">
         <aside className="office-story">
           <h1>
-            Apni team chuniye.
-            <span>Team sambhal legi.</span>
+            <UiText text={"Apni team chuniye."}/><span><UiText text={"Team sambhal legi."}/></span>
           </h1>
           <p>
-            Describe your business once. Pick a ready team for billing, udhaar,
-            customers, Instagram or your website. It prepares the work; you
-            approve what goes out.
-          </p>
+            <UiText text={"Describe your business once. Pick a ready team for billing, udhaar, customers, Instagram or your website. It prepares the work; you approve what goes out."}/></p>
           <div className="onboarding-crew" aria-hidden="true">
             {[["baba", "Arjun", "Counter"], ["ma", "Naina", "Khata"], ["chotu", "Sia", "Advisor"], ["tara", "Tara", "Dukaan"], ["vijay", "Vijay", "Website"]].map(([id, name, job]) => (
               <figure key={id}>
                 <PixelTeammate id={id} name={name} />
-                <figcaption>{name}<small>{job}</small></figcaption>
+                <figcaption>{name}<small>{t(job)}</small></figcaption>
               </figure>
             ))}
           </div>
           <ul className="onboarding-promises">
-            <li><MessageCircle size={17} aria-hidden="true" /><span>Write the way you speak. Hindi, Hinglish or English is fine.</span></li>
-            <li><ShieldCheck size={17} aria-hidden="true" /><span>Replies, posts and payment requests wait for your approval and your connected accounts.</span></li>
-            <li><Cloud size={17} aria-hidden="true" /><span>Approved jobs keep running in the cloud after you close this page.</span></li>
+            <li><MessageCircle size={17} aria-hidden="true" /><span><UiText text={"Write the way you speak. Hindi, Hinglish or English is fine."}/></span></li>
+            <li><ShieldCheck size={17} aria-hidden="true" /><span><UiText text={"Replies, posts and payment requests wait for your approval and your connected accounts."}/></span></li>
+            <li><Cloud size={17} aria-hidden="true" /><span><UiText text={"Approved jobs keep running in the cloud after you close this page."}/></span></li>
           </ul>
         </aside>
         <section className="office-setup-card" aria-labelledby="setup-step-title">
-          <ol className="setup-progress" aria-label="Setup progress">
+          <ol className="setup-progress" aria-label={localize("Setup progress")}>
             {setupSteps.map((name, n) => (
               <li key={name} className={n < step ? "is-done" : n === step ? "is-current" : ""} aria-current={n === step ? "step" : undefined}>
                 <i aria-hidden="true">{n < step ? <Check size={12} /> : n + 1}</i>
-                <span>{name}</span>
+                <span>{t(name)}</span>
               </li>
             ))}
           </ol>
-          <p className="setup-progress-text">Step {step + 1} of 3</p>
+          <p className="setup-progress-text"><UiText text={"Step "}/>{step + 1} <UiText text={"of 3"}/></p>
           <form onSubmit={next}>
+            <p className="setup-voice-note">{t('You can type or speak each answer. Review the words before continuing.')}</p>
             <div className="setup-step-panel" key={step}>
             {step === 0 ? (
               <>
-                <h2 id="setup-step-title">What’s your business?</h2>
-                <p>Just the basics. You can change these later.</p>
+                <h2 id="setup-step-title"><UiText text={"What’s your business?"}/></h2>
+                <p><UiText text={"Just the basics. You can change these later."}/></p>
                 <label>
-                  Business name
-                  <input
+                  <UiText text={"Business name"}/><input
                     autoFocus
                     value={setup.name}
                     onChange={(e) => field("name", e.target.value)}
                     maxLength={80}
-                    placeholder="e.g. Asha Studio"
+                    minLength={2}
+                    placeholder={localize("e.g. Asha Studio")}
                     required
                   />
                 </label>
+                {voice('name')}
                 <label>
-                  What kind of business?
-                  <input
+                  <UiText text={"What kind of business?"}/><input
                     value={setup.category}
                     onChange={(e) => field("category", e.target.value)}
                     maxLength={80}
-                    placeholder="Chai stall, kirana, salon, tailoring…"
+                    minLength={2}
+                    placeholder={localize("Chai stall, kirana, salon, tailoring…")}
                     required
                   />
                 </label>
+                {voice('category')}
                 <div className="office-form-row">
                   <label>
-                    City or area <small>Optional</small>
+                    <UiText text={"City or area "}/><small><UiText text={"Optional"}/></small>
                     <input
                       value={setup.city}
                       onChange={(e) => field("city", e.target.value)}
                       maxLength={80}
-                      placeholder="e.g. Pune"
+                      placeholder={localize("e.g. Pune")}
                     />
                   </label>
                   <label>
-                    Language you prefer
-                    <select
+                    <UiText text={"Language you prefer"}/><select
                       value={setup.language}
                       onChange={(e) => field("language", e.target.value)}
                     >
@@ -336,20 +353,20 @@ function Setup({
                     </select>
                   </label>
                 </div>
+                {voice('city')}
               </>
             ) : step === 1 ? (
               <>
-                <h2 id="setup-step-title">Tell us about it, in your words.</h2>
+                <h2 id="setup-step-title"><UiText text={"Tell us about it, in your words."}/></h2>
                 <p>
-                  Explain it like you would to a new helper at the counter.
-                </p>
-                <ul className="setup-prompts" aria-label="Things worth mentioning">
-                  <li>What you sell</li>
-                  <li>Who buys from you</li>
-                  <li>What takes most of your time</li>
+                  <UiText text={"Explain it like you would to a new helper at the counter."}/></p>
+                <ul className="setup-prompts" aria-label={localize("Things worth mentioning")}>
+                  <li><UiText text={"What you sell"}/></li>
+                  <li><UiText text={"Who buys from you"}/></li>
+                  <li><UiText text={"What takes most of your time"}/></li>
                 </ul>
                 <label htmlFor="setup-description">
-                  <span id="setup-description-label">Your business, in your own words</span>
+                  <span id="setup-description-label"><UiText text={"Your business, in your own words"}/></span>
                   <textarea
                     id="setup-description"
                     aria-labelledby="setup-description-label"
@@ -357,17 +374,19 @@ function Setup({
                     value={setup.description}
                     rows={7}
                     maxLength={5000}
+                    minLength={20}
                     aria-describedby="setup-description-count"
                     onChange={(e) => field("description", e.target.value)}
-                    placeholder="Main Pune mein chai aur snacks ka stall chalata hoon. Office customers WhatsApp par order poochte hain. Subah bahut busy hota hoon, payment aur udhaar ka record sambhalna mushkil hota hai…"
+                    placeholder={localize("Main Pune mein chai aur snacks ka stall chalata hoon. Office customers WhatsApp par order poochte hain. Subah bahut busy hota hoon, payment aur udhaar ka record sambhalna mushkil hota hai…")}
                     required
                   />
                   <small id="setup-description-count" className="setup-count">
                     {setup.description.trim().length < 20
-                      ? `A few more words, please (${20 - setup.description.trim().length} more characters)`
-                      : `${setup.description.length.toLocaleString("en-IN")} / 5,000 characters`}
+                      ? t('Please add {count} more characters.').replace('{count}',String(20 - setup.description.trim().length))
+                      : t('{count} / 5,000 characters').replace('{count}',setup.description.length.toLocaleString('en-IN'))}
                   </small>
                 </label>
+                {voice('description')}
                 <input
                   type="file"
                   hidden
@@ -393,27 +412,26 @@ function Setup({
                   className="office-text"
                   onClick={() => file.current?.click()}
                 >
-                  <Upload size={15} /> Use my business brief (.md / .txt)
-                </button>
+                  <Upload size={15} /> <UiText text={"Use my business brief (.md / .txt)"}/></button>
                 <label>
-                  Public contact <small>Optional</small>
+                  <UiText text={"Public contact "}/><small><UiText text={"Optional"}/></small>
                   <input
                     value={setup.contact}
                     onChange={(e) => field("contact", e.target.value)}
                     maxLength={150}
-                    placeholder="Business phone or email"
+                    placeholder={localize("Business phone or email")}
                   />
                 </label>
+                <AssetPicker assets={assets} onChange={a=>{setAssets(a);setAssetRights(false);setApproved(false)}} onError={setError} onBusyChange={setReadingAssets}/>
               </>
             ) : (
               <>
-                <h2 id="setup-step-title" ref={stepHeading} tabIndex={-1}>Pick your first team, then approve.</h2>
-                <p>All 12 ready teams share what you wrote. Start with one; add others any time. No payment account is needed to start.</p>
-                <label className="setup-team-picker">Your first ready team
-                  <select aria-label="Your first ready team" value={chosen?.code || ""} onChange={e=>field("goal",`Ready team: ${e.target.value}`)}>
-                    <option value="" disabled>Choose a team</option>
-                    <optgroup label="Everyday shop work">{readyTeams.filter(t=>merchantCodes.includes(t.code)).map(t=><option key={t.code} value={t.code}>{t.name}</option>)}</optgroup>
-                    <optgroup label="Customers & growth">{readyTeams.filter(t=>!merchantCodes.includes(t.code)).map(t=><option key={t.code} value={t.code}>{t.name}</option>)}</optgroup>
+                <h2 id="setup-step-title" ref={stepHeading} tabIndex={-1}><UiText text={"Pick your first team, then approve."}/></h2>
+                <p><UiText text={"All 12 ready teams share what you wrote. Start with one; add others any time. No payment account is needed to start."}/></p>
+                <label className="setup-team-picker"><UiText text={"Your first ready team"}/><select aria-label={localize("Your first ready team")} value={chosen?.code || ""} onChange={e=>field("goal",`Ready team: ${e.target.value}`)}>
+                    <option value="" disabled><UiText text={"Choose a team"}/></option>
+                    <optgroup label={localize("Everyday shop work")}>{readyTeams.filter(team=>merchantCodes.includes(team.code)).map(team=><option key={team.code} value={team.code}>{teamLead(team)} · {t(teamRole(team))}</option>)}</optgroup>
+                    <optgroup label={localize("Customers & growth")}>{readyTeams.filter(team=>!merchantCodes.includes(team.code)).map(team=><option key={team.code} value={team.code}>{teamLead(team)} · {t(teamRole(team))}</option>)}</optgroup>
                   </select>
                 </label>
                 {[
@@ -430,28 +448,29 @@ function Setup({
                     <span className="ready-onboarding-portrait"><PixelTeammate id={chosen.id} name={teamLead(chosen)} /></span>
                     <div>
                       <strong>{chosen.name}</strong>
-                      <p>{chosen.description}</p>
-                      <small><Link2 size={13} aria-hidden="true" /> {chosen.connection}</small>
+                      <p>{t(chosen.description)}</p>
+                      <small><Link2 size={13} aria-hidden="true" /> {t(chosen.connection)}</small>
                     </div>
                   </div>
                 )}
                 <section className="setup-approval" aria-labelledby="setup-approval-title">
-                  <h3 id="setup-approval-title">Check and approve</h3>
+                  <h3 id="setup-approval-title"><UiText text={"Check and approve"}/></h3>
                   <dl>
-                    <div><dt>Business</dt><dd>{setup.name}, {setup.category}{setup.city.trim() ? `, ${setup.city}` : ""}</dd></div>
-                    <div><dt>Language</dt><dd>{setup.language}</dd></div>
-                    <div><dt>First team</dt><dd>{chosen?.name || "Not chosen"}</dd></div>
-                    <div className="setup-approval-words"><dt>In your words</dt><dd>{setup.description.trim().slice(0, 180)}{setup.description.trim().length > 180 ? "…" : ""}</dd></div>
+                    <div><dt><UiText text={"Business"}/></dt><dd>{setup.name}, {setup.category}{setup.city.trim() ? `, ${setup.city}` : ""}</dd></div>
+                    <div><dt><UiText text={"Language"}/></dt><dd>{setup.language}</dd></div>
+                    <div><dt><UiText text={"First team"}/></dt><dd>{chosen?.name || "Not chosen"}</dd></div>
+                    <div className="setup-approval-words"><dt><UiText text={"In your words"}/></dt><dd>{setup.description.trim().slice(0, 180)}<UiText text={setup.description.trim().length > 180 ? "…" : ""}/></dd></div>
                   </dl>
                   <label>
-                    When should your team ask you first?
-                    <textarea
+                    <UiText text={"When should your team ask you first?"}/><textarea
                       rows={2}
                       maxLength={2000}
                       value={setup.rules}
                       onChange={(e) => field("rules", e.target.value)}
                     />
                   </label>
+                  {voice('rules')}
+                  {!!assets.length&&<label className="office-check"><input type="checkbox" checked={assetRights} onChange={e=>setAssetRights(e.target.checked)}/><span>{t('I own or have permission to use these images. They stay private until I approve publishing.')}</span></label>}
                   <label className="office-check setup-approval-check">
                     <input
                       type="checkbox"
@@ -459,10 +478,7 @@ function Setup({
                       onChange={(e) => setApproved(e.target.checked)}
                     />
                     <span>
-                      These facts are correct. My team may use them to prepare
-                      work. Anything sent, posted or charged still needs my
-                      approval.
-                    </span>
+                      <UiText text={"These facts are correct. My team may use them to prepare work. Anything sent, posted or charged still needs my approval."}/></span>
                   </label>
                 </section>
               </>
@@ -481,10 +497,9 @@ function Setup({
                   disabled={!!busy}
                   onClick={() => setStep(step - 1)}
                 >
-                  Back
-                </button>
+                  <UiText text={"Back"}/></button>
               )}
-              <button className="office-primary" disabled={!valid || !!busy}>
+              <button className="office-primary" disabled={!!busy||readingAssets}>
                 {busy ? (
                   <>
                     <LoaderCircle className="spin" size={16} />
@@ -492,16 +507,14 @@ function Setup({
                   </>
                 ) : (
                   <>
-                    {step === 2 ? "Approve and open my office" : "Continue"}
+                    <UiText text={step === 2 ? "Approve and open my office" : "Continue"}/>
                     <ArrowRight size={17} />
                   </>
                 )}
               </button>
             </div>
             <p className="office-footnote">
-              No account needed to start. Verify your email later to keep this
-              workspace on any device.
-            </p>
+              <UiText text={"No account needed to start. Verify your email later to keep this workspace on any device."}/></p>
           </form>
         </section>
       </main>
@@ -521,6 +534,8 @@ function AccountDialog({
   onToken: (token: string) => void;
   resetToken?: string | null;
 }) {
+const {t:localize}=useLanguage();
+
   const [mode, setMode] = useState<"register" | "login" | "recover" | "reset">(
       resetToken ? "reset" : token && !saved ? "register" : "login",
     ),
@@ -587,7 +602,7 @@ function AccountDialog({
       if (e.key === "Tab" && node) {
         const items = Array.from(
           node.querySelectorAll<HTMLElement>(
-            "button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href]",
+            "button:not(:disabled),input:not(:disabled),textarea:not(:disabled),select:not(:disabled),a[href]",
           ),
         );
         const first = items[0],
@@ -614,31 +629,31 @@ function AccountDialog({
       >
         <button
           className="office-close"
-          aria-label="Close account dialog"
+          aria-label={localize("Close account dialog")}
           onClick={onClose}
         >
           <X size={20} />
         </button>
-        <span className="office-eyebrow">YOUR BUSINESS WORKSPACE</span>
+        <span className="office-eyebrow"><UiText text={"YOUR BUSINESS WORKSPACE"}/></span>
+        <LanguagePicker/>
         <h2 id="account-title">
-          {mode === "register"
+          <UiText text={mode === "register"
             ? "Save your office. Come back anytime."
             : mode === "recover"
               ? "Recover your account."
               : mode === "reset"
                 ? "Choose a new password."
-                : "Welcome back."}
+                : "Welcome back."}/>
         </h2>
         <p>
-          {mode === "register"
+          <UiText text={mode === "register"
             ? "Verify your email to recover your team, work and connections on another device."
-            : "Sign in to your saved business workspace."}
+            : "Sign in to your saved business workspace."}/>
         </p>
         <form onSubmit={submit}>
           {mode === "register" && (
             <label>
-              Your name
-              <input
+              <UiText text={"Your name"}/><input
                 required
                 autoComplete="name"
                 value={name}
@@ -649,8 +664,7 @@ function AccountDialog({
           )}
           {mode !== "reset" && (
             <label>
-              Email
-              <input
+              <UiText text={"Email"}/><input
                 required
                 type="email"
                 autoComplete="email"
@@ -661,8 +675,7 @@ function AccountDialog({
           )}
           {mode !== "recover" && (
             <label>
-              Password
-              <input
+              <UiText text={"Password"}/><input
                 required
                 type="password"
                 minLength={mode === "register" || mode === "reset" ? 12 : 1}
@@ -676,11 +689,11 @@ function AccountDialog({
             </label>
           )}
           {mode === "register" || mode === "reset" ? (
-            <small>Use at least 12 characters.</small>
+            <small><UiText text={"Use at least 12 characters."}/></small>
           ) : (
             mode === "login" && (
               <label>
-                Authenticator code <small>If enabled</small>
+                <UiText text={"Authenticator code "}/><small><UiText text={"If enabled"}/></small>
                 <input
                   inputMode="numeric"
                   value={code}
@@ -692,13 +705,12 @@ function AccountDialog({
           )}
           {choices.length > 0 && (
             <label>
-              Business
-              <select
+              <UiText text={"Business"}/><select
                 required
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
               >
-                <option value="">Choose your business</option>
+                <option value=""><UiText text={"Choose your business"}/></option>
                 {choices.map((c) => (
                   <option key={c.tenantId} value={c.tenantId}>
                     {c.business}
@@ -721,7 +733,7 @@ function AccountDialog({
             className="office-primary"
             disabled={busy || (mode === "register" && !token)}
           >
-            {busy
+            <UiText text={busy
               ? "Please wait…"
               : mode === "register"
                 ? "Send verification email"
@@ -729,7 +741,7 @@ function AccountDialog({
                   ? "Send recovery link"
                   : mode === "reset"
                     ? "Update password"
-                    : "Sign in"}
+                    : "Sign in"}/>
             <ArrowRight size={16} />
           </button>
         </form>
@@ -742,7 +754,7 @@ function AccountDialog({
               setMessage("");
             }}
           >
-            {mode === "login" ? "Forgot your password?" : "Back to sign in"}
+            <UiText text={mode === "login" ? "Forgot your password?" : "Back to sign in"}/>
           </button>
         )}
         {token && !saved && (
@@ -754,9 +766,9 @@ function AccountDialog({
               setMessage("");
             }}
           >
-            {mode === "register"
+            <UiText text={mode === "register"
               ? "I already have an account"
-              : "Save this workspace instead"}
+              : "Save this workspace instead"}/>
           </button>
         )}
       </section>
@@ -774,6 +786,8 @@ function PaymentSettings({
   onChange: () => Promise<unknown>;
   onSaveAccount: () => void;
 }) {
+const {t:localize}=useLanguage();
+
   const [mid, setMid] = useState(""),
     [merchantKey, setKey] = useState(""),
     [mode, setMode] = useState<"staging" | "production">(workspace.paymentSetup?.mode || "staging"),
@@ -809,7 +823,7 @@ function PaymentSettings({
     <section className="office-card office-payment">
       <div className="office-card-head">
         <span className="paytm-wordmark">
-          pay<span>tm</span>
+          <UiText text={"pay"}/><span><UiText text={"tm"}/></span>
         </span>
         <Status
           value={
@@ -817,62 +831,55 @@ function PaymentSettings({
           }
         />
       </div>
-      <h3>{workspace.paymentSetup?.configured ? "Paytm Checkout settings are saved." : "Add Paytm Checkout for automatic verification."}</h3>
+      <h3><UiText text={workspace.paymentSetup?.configured ? "Paytm Checkout settings are saved." : "Add Paytm Checkout for automatic verification."}/></h3>
       <p>
-        Send an accepted order’s payment request, let the customer pay, then
-        verify the transaction with Paytm before marking it collected.
-      </p>
+        <UiText text={"Send an accepted order’s payment request, let the customer pay, then verify the transaction with Paytm before marking it collected."}/></p>
       {workspace.paymentSetup && (
         <p className="office-notice">
-          {workspace.paymentSetup.mode === "staging"
+          <UiText text={workspace.paymentSetup.mode === "staging"
             ? "Test merchant"
-            : "Live merchant"}{" "}
-          · MID ending {workspace.paymentSetup.midSuffix}. Payment verification
-          happens with Paytm.
-        </p>
+            : "Live merchant"}/>{" "}
+          <UiText text={"· MID ending "}/>{workspace.paymentSetup.midSuffix}<UiText text={". Payment verification happens with Paytm."}/></p>
       )}
       {!workspace.account?.saved ? (
-        <div><p className="office-footnote">Save your business with a verified email first, so only you can recover its payment connection.</p><button className="office-secondary" onClick={onSaveAccount}>
-          Save your business account to connect Paytm <ChevronRight size={16} />
+        <div><p className="office-footnote"><UiText text={"Save your business with a verified email first, so only you can recover its payment connection."}/></p><button className="office-secondary" onClick={onSaveAccount}>
+          <UiText text={"Save your business account to connect Paytm "}/><ChevronRight size={16} />
         </button></div>
       ) : (!workspace.paymentSetup?.configured || changing) ? (
         <form onSubmit={submit}>
           <div className="office-form-row">
             <label>
-              Payment mode
-              <select
+              <UiText text={"Payment mode"}/><select
                 value={mode}
                 onChange={(e) => {
                   setMode(e.target.value as "staging" | "production");
                   setApproved(false);
                 }}
               >
-                <option value="staging">Test payments</option>
-                <option value="production">Live payments</option>
+                <option value="staging"><UiText text={"Test payments"}/></option>
+                <option value="production"><UiText text={"Live payments"}/></option>
               </select>
             </label>
             <label>
-              Merchant ID
-              <input
+              <UiText text={"Merchant ID"}/><input
                 value={mid}
                 required
                 maxLength={40}
                 autoComplete="off"
-                placeholder="MID from your Paytm dashboard"
+                placeholder={localize("MID from your Paytm dashboard")}
                 onChange={(e) => { setMid(e.target.value); setApproved(false); }}
               />
             </label>
           </div>
           <label>
-            Merchant key
-            <input
+            <UiText text={"Merchant key"}/><input
               type="password"
               value={merchantKey}
               required
               minLength={16}
               maxLength={16}
               autoComplete="new-password"
-              placeholder="16-character merchant key"
+              placeholder={localize("16-character merchant key")}
               onChange={(e) => { setKey(e.target.value); setApproved(false); }}
             />
           </label>
@@ -883,35 +890,42 @@ function PaymentSettings({
               onChange={(e) => setApproved(e.target.checked)}
             />
             <span>
-              {mode === "production"
+              <UiText text={mode === "production"
                 ? "I am authorised to use this live merchant account. Customer-accepted requests may collect real payments."
-                : "I am authorised to use this test merchant account."}
+                : "I am authorised to use this test merchant account."}/>
             </span>
           </label>
           {error && <p className="office-error">{error}</p>}
           <button className="office-primary" disabled={busy || !approved}>
-            {busy ? "Saving securely…" : "Save Paytm connection"}
+            <UiText text={busy ? "Saving securely…" : "Save Paytm connection"}/>
             <ShieldCheck size={16} />
           </button>
         </form>
-      ) : <button className="office-secondary" onClick={() => setChanging(true)}>Change Paytm connection <Settings size={14} /></button>}
+      ) : <button className="office-secondary" onClick={() => setChanging(true)}><UiText text={"Change Paytm connection "}/><Settings size={14} /></button>}
       <a
         href="https://dashboard.paytmpayments.com/login/"
         target="_blank"
         rel="noreferrer"
         className="office-text"
       >
-        Find your merchant credentials in Paytm <ArrowUpRight size={14} />
+        <UiText text={"Find your merchant credentials in Paytm "}/><ArrowUpRight size={14} />
       </a>
-      <details className="office-payment-guide"><summary>Where do I find these two details?</summary><ol><li>Open your Paytm Payments merchant dashboard and choose Developer settings / API keys.</li><li>For a trial, choose Test mode and copy its Merchant ID and Merchant key here. Use the matching Test payments mode above.</li><li>Choose Live payments only after Paytm activates your merchant account. Copy the live MID and key, then approve the connection.</li></ol><p>Saving credentials connects this merchant’s checkout settings. A transaction is marked paid only after KaamSet verifies it with Paytm.</p></details>
+      <details className="office-payment-guide"><summary><UiText text={"Where do I find these two details?"}/></summary><ol><li><UiText text={"Open your Paytm Payments merchant dashboard and choose Developer settings / API keys."}/></li><li><UiText text={"For a trial, choose Test mode and copy its Merchant ID and Merchant key here. Use the matching Test payments mode above."}/></li><li><UiText text={"Choose Live payments only after Paytm activates your merchant account. Copy the live MID and key, then approve the connection."}/></li></ol><p><UiText text={"Saving credentials connects this merchant’s checkout settings. A transaction is marked paid only after KaamSet verifies it with Paytm."}/></p></details>
       <small className="office-footnote">
-        Keys are encrypted on the server. Customer screens and teammates never
-        receive them.
-      </small>
+        <UiText text={"Keys are encrypted on the server. Customer screens and teammates never receive them."}/></small>
     </section>
   );
 }
 export default function MerchantOffice() {
+const {t:localize}=useLanguage();
+
+  const {t}=useLanguage();
+  const setupTokenPromise=useRef<Promise<string>|null>(null);
+  async function getSetupToken(){
+    const saved=sessionStorage.getItem('kaamset_setup_voice_token');if(saved)return saved;
+    if(!setupTokenPromise.current)setupTokenPromise.current=api.onboardingSession().then(r=>{sessionStorage.setItem('kaamset_setup_voice_token',r.token);return r.token}).finally(()=>{setupTokenPromise.current=null});
+    return setupTokenPromise.current;
+  }
   const [token, setToken] = useState<string | null>(() =>
       localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey),
     ),
@@ -1098,7 +1112,8 @@ export default function MerchantOffice() {
   }, []);
   async function finishSetup(setup: BusinessSetup) {
     await act("Setting up your office", async () => {
-      const r = await api.onboard(setup);
+      const r = await api.onboard(setup,sessionStorage.getItem('kaamset_setup_voice_token')||undefined);
+      sessionStorage.removeItem('kaamset_setup_voice_token');
       acceptToken(r.token);
       setWorkspace(r.workspace);
       sessionStorage.removeItem("kaamset_setup_draft");
@@ -1145,6 +1160,8 @@ export default function MerchantOffice() {
     requestAnimationFrame(() => { pageContent.current?.focus({preventScroll: true}); window.scrollTo({top: 0, behavior: "instant"}); });
   }
   async function connectApp(id: string, title: string, restart = false) {
+    const limit=Number(sessionStorage.getItem(`kaamset_connection_wait_${id}`)||'0');
+    if(Date.now()<limit){showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.');return;}
     await act(`Opening ${title} connection`, async () => {
       if (restart) await api.disconnect(token!, id);
       const r = await api.connect(token!, id);
@@ -1173,6 +1190,7 @@ export default function MerchantOffice() {
             busy={busy}
             onFinish={finishSetup}
             onSignIn={() => setAccountOpen(true)}
+            getSetupToken={getSetupToken}
           />
           {error && (
             <div className="office-setup-error" role="alert">
@@ -1184,17 +1202,16 @@ export default function MerchantOffice() {
         <main className="office-loading">
           <Brand />
           {!error && <LoaderCircle className="spin" />}
-          <h2>Opening your cloud office</h2>
+          <h2><UiText text={"Opening your cloud office"}/></h2>
           {error && (
             <>
               <p className="office-error">{error}</p>
-              <button className="office-primary" disabled={!!busy} onClick={()=>void act("Reopening your workspace",async()=>{await refresh()})}>Try again <RefreshCw size={16}/></button>
+              <button className="office-primary" disabled={!!busy} onClick={()=>void act("Reopening your workspace",async()=>{await refresh()})}><UiText text={"Try again "}/><RefreshCw size={16}/></button>
               <button
                 className="office-secondary"
                 onClick={() => setAccountOpen(true)}
               >
-                Sign in to a saved workspace
-              </button>
+                <UiText text={"Sign in to a saved workspace"}/></button>
               <button
                 className="office-text"
                 onClick={() => {
@@ -1203,8 +1220,7 @@ export default function MerchantOffice() {
                   setToken(null);
                 }}
               >
-                Start a new workspace
-              </button>
+                <UiText text={"Start a new workspace"}/></button>
             </>
           )}
         </main>
@@ -1213,7 +1229,7 @@ export default function MerchantOffice() {
           {menu && (
             <button
               className="office-nav-backdrop"
-              aria-label="Close navigation"
+              aria-label={localize("Close navigation")}
               onClick={() => setMenu(false)}
             />
           )}
@@ -1230,8 +1246,8 @@ export default function MerchantOffice() {
               </div>
               <Settings size={15} />
             </button>
-            <nav aria-label="Business workspace">
-              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading">{group==='daily'?'Your dukaan':group==='channels'?'Customer channels':'Your setup'}</span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
+            <nav aria-label={localize("Business workspace")}>
+              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading"><UiText text={group==='daily'?'Your dukaan':group==='channels'?'Customer channels':'Your setup'}/></span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   className={page === id ? "selected" : ""}
@@ -1239,9 +1255,9 @@ export default function MerchantOffice() {
                   onClick={() => navigate(id)}
                 >
                   <Icon size={18} aria-hidden="true" />
-                  <span>{label}</span>
-                  {id === "work" && pending > 0 && <><b className="nav-badge-running" aria-hidden="true">{pending}</b><span className="office-sr-only">, {pending} running</span></>}
-                  {id === "team" && inactiveTeams > 0 && <><b className="nav-badge-attention" aria-hidden="true">{inactiveTeams}</b><span className="office-sr-only">, {inactiveTeams} not active</span></>}
+                  <span>{t(label)}</span>
+                  {id === "work" && pending > 0 && <><b className="nav-badge-running" aria-hidden="true">{pending}</b><span className="office-sr-only">, {pending} <UiText text={"running"}/></span></>}
+                  {id === "team" && inactiveTeams > 0 && <><b className="nav-badge-attention" aria-hidden="true">{inactiveTeams}</b><span className="office-sr-only">, {inactiveTeams} <UiText text={"not active"}/></span></>}
                 </button>
               ))}</div>)}
             </nav>
@@ -1258,21 +1274,20 @@ export default function MerchantOffice() {
                           ? `${pending} job${pending > 1 ? "s" : ""} running`
                           : "Cloud office ready"}
                   </strong>
-                  <small>Approved jobs keep running after you close this page</small>
+                  <small><UiText text={"Approved jobs keep running after you close this page"}/></small>
                 </div>
               </div>
               <button
                 className="office-text"
                 onClick={() => setAccountOpen(true)}
               >
-                {workspace.account?.saved
+                <UiText text={workspace.account?.saved
                   ? "Sign in on another account"
-                  : "Save my business account"}
+                  : "Save my business account"}/>
                 <ArrowUpRight size={14} />
               </button>
               <small>
-                {workspace.limits.modelsRemaining} AI calls available
-                {workspace.limits.period === "daily" ? " today" : ""}
+                {workspace.limits.modelsRemaining} <UiText text={"AI calls available"}/><UiText text={workspace.limits.period === "daily" ? " today" : ""}/>
               </small>
             </div>
           </aside>
@@ -1288,17 +1303,17 @@ export default function MerchantOffice() {
               >
                 <Menu size={22} />
               </button>
-              <span className="office-topbar-title">{pages.find((p) => p.id === page)?.label}</span>
+              <span className="office-topbar-title">{t(pages.find((p) => p.id === page)?.label||'')}</span>
               <div>
                 <span className={`office-live-dot ${workspace.account?.saved ? "" : "is-guest"}`} aria-hidden="true" />
                 <span className="office-topbar-account">
-                  {workspace.account?.saved
+                  <UiText text={workspace.account?.saved
                     ? "Saved workspace"
-                    : "Guest workspace, not saved yet"}
+                    : "Guest workspace, not saved yet"}/>
                 </span>
                 <button
                   className="office-icon-button"
-                  aria-label="Refresh workspace"
+                  aria-label={localize("Refresh workspace")}
                   disabled={!!busy}
                   onClick={() => act("Refreshing your office", () => refresh())}
                 >
@@ -1321,12 +1336,10 @@ export default function MerchantOffice() {
                 >
                   {workspace.controls?.humanTakeover ? (
                     <>
-                      <Play size={14} aria-hidden="true" /> Resume team
-                    </>
+                      <Play size={14} aria-hidden="true" /> <UiText text={"Resume team"}/></>
                   ) : (
                     <>
-                      <Pause size={14} aria-hidden="true" /> Take over
-                    </>
+                      <Pause size={14} aria-hidden="true" /> <UiText text={"Take over"}/></>
                   )}
                 </button>
               </div>
@@ -1336,7 +1349,7 @@ export default function MerchantOffice() {
                 <div className="office-error" role="alert">
                   {error}
                   <button
-                    aria-label="Dismiss error"
+                    aria-label={localize("Dismiss error")}
                     onClick={() => setError("")}
                   >
                     <X size={16} />
@@ -1347,7 +1360,7 @@ export default function MerchantOffice() {
                 <div className="office-notice" role="status">
                   {notice}
                   <button
-                    aria-label="Dismiss notice"
+                    aria-label={localize("Dismiss notice")}
                     onClick={() => setNotice("")}
                   >
                     <X size={16} />
@@ -1362,11 +1375,9 @@ export default function MerchantOffice() {
               )}
               {workspace.controls?.humanTakeover && (
                 <div className="office-notice office-takeover-notice">
-                  You’ve taken over. Automatic replies and publishing are
-                  stopped until you choose Resume team at the top.
-                </div>
+                  <UiText text={"You’ve taken over. Automatic replies and publishing are stopped until you choose Resume team at the top."}/></div>
               )}
-              <Suspense fallback={<DeskLoading label="Opening your teammate’s desk"/>}>
+              <Suspense fallback={<DeskLoading label={localize("Opening your teammate’s desk")}/>}>
               {['counter','shop','khata','money','requests'].includes(page)&&<MerchantOps key={page} page={page as OpsPage} token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={setChoosingTeam} onCatalogue={()=>navigate('business')} onPayments={()=>navigate('connections')} onAsk={askReadyTeam}/>}
               {page === "work" && (
                 <>
@@ -1379,25 +1390,22 @@ export default function MerchantOffice() {
                   />
                   <ReadyTeamGallery workspace={workspace} busy={!!busy} onChoose={openReadyTeam}/>
                   <div className="office-section-heading">
-                    <h2>Recent work</h2>
+                    <h2><UiText text={"Recent work"}/></h2>
                     <button
                       type="button"
                       className="office-text"
                       onClick={() => navigate("team")}
                     >
-                      Open my AI team <ChevronRight size={16} />
+                      <UiText text={"Open my AI team "}/><ChevronRight size={16} />
                     </button>
                   </div>
                   {!recentWork.length ? (
                     <section className="office-empty">
                       <Cloud size={28} aria-hidden="true" />
                       <div>
-                        <h3>No results yet.</h3>
+                        <h3><UiText text={"No results yet."}/></h3>
                         <p>
-                          Open a ready team, approve its job and give it a short
-                          task. Finished results are saved here for you to read
-                          and copy.
-                        </p>
+                          <UiText text={"Open a ready team, approve its job and give it a short task. Finished results are saved here for you to read and copy."}/></p>
                       </div>
                     </section>
                   ) : (
@@ -1411,7 +1419,7 @@ export default function MerchantOffice() {
                                 <Status value={s.state} />
                                 {entry.time && <small>{new Date(entry.time).toLocaleString("en-IN")}</small>}
                               </div>
-                              <h3>{s.businessName} · Business website</h3>
+                              <h3>{s.businessName} <UiText text={"· Business website"}/></h3>
                               {!!s.studioCheckpoint?.stages.length && (
                                 <div className="office-stage-trail">
                                   {s.studioCheckpoint.stages.map((stage) => (
@@ -1426,10 +1434,10 @@ export default function MerchantOffice() {
                                   : "Open your website team to review this job.")}</p>
                               {s.state === "published" && s.url && (
                                 <a className="office-secondary" href={s.url} target="_blank" rel="noreferrer">
-                                  Open live website <ArrowUpRight size={15} />
+                                  <UiText text={"Open live website "}/><ArrowUpRight size={15} />
                                 </a>
                               )}
-                              <button className="office-text" onClick={() => navigate("website")}>Open website team <ChevronRight size={15} /></button>
+                              <button className="office-text" onClick={() => navigate("website")}><UiText text={"Open website team "}/><ChevronRight size={15} /></button>
                             </article>
                           );
                         }
@@ -1456,8 +1464,7 @@ export default function MerchantOffice() {
                                 {t.state === "working" && (
                                   <span>
                                     <LoaderCircle className="spin" size={13} />{" "}
-                                    Working
-                                  </span>
+                                    <UiText text={"Working"}/></span>
                                 )}
                               </div>
                             ) : null}
@@ -1485,13 +1492,12 @@ export default function MerchantOffice() {
                                   }
                                 >
                                   <RefreshCw size={15} />
-                                  Try again with current facts
-                                </button>
+                                  <UiText text={"Try again with current facts"}/></button>
                               )}
                             {t.result ? (
                               <>
-                                <p className="office-work-preview">{t.result.output.replace(/[#*]/g, "").slice(0,200)}{t.result.output.length>200?"…":""}</p>
-                                <details className="office-work-artifact"><summary>Read full result</summary>
+                                <p className="office-work-preview">{t.result.output.replace(/[#*]/g, "").slice(0,200)}<UiText text={t.result.output.length>200?"…":""}/></p>
+                                <details className="office-work-artifact"><summary><UiText text={"Read full result"}/></summary>
                                 <ResultText text={t.result.output} />{t.result.copyItems?.length?<CopyItems items={t.result.copyItems} onError={setError}/>:null}
                                 <button
                                   className="office-text"
@@ -1507,16 +1513,15 @@ export default function MerchantOffice() {
                                   }
                                 >
                                   <Copy size={15} />
-                                  Copy result
-                                </button>
+                                  <UiText text={"Copy result"}/></button>
                                 <div className="office-next">
-                                  <strong>Next step</strong>
+                                  <strong><UiText text={"Next step"}/></strong>
                                   <p>{t.result.nextStep}</p>
                                 </div>
                                 </details>
                                 {t.result.sources.length > 0 && (
                                   <details>
-                                    <summary>View business sources</summary>
+                                    <summary><UiText text={"View business sources"}/></summary>
                                     {t.result.sources.map((s, i) => (
                                       <p key={i}>{s}</p>
                                     ))}
@@ -1542,33 +1547,29 @@ export default function MerchantOffice() {
                 <>
                   <div className="office-heading">
                     <div>
-                      <h1>Your AI team</h1>
+                      <h1><UiText text={"Your AI team"}/></h1>
                       <p>
-                        Every team uses the same approved business facts and
-                        works only within its own job and permissions.
-                      </p>
+                        <UiText text={"Every team uses the same approved business facts and works only within its own job and permissions."}/></p>
                     </div>
                     <button
                       type="button"
                       className="office-secondary"
                       onClick={() => navigate("work")}
                     >
-                      <Plus size={16} aria-hidden="true" /> Add a ready team
-                    </button>
+                      <Plus size={16} aria-hidden="true" /> <UiText text={"Add a ready team"}/></button>
                   </div>
                   {!current ? (
                     <section className="office-empty">
                       <Users size={30} aria-hidden="true" />
                       <div>
-                        <h3>No team yet.</h3>
-                        <p>Pick one of the 12 ready teams on My work. It starts by preparing drafts for your review.</p>
+                        <h3><UiText text={"No team yet."}/></h3>
+                        <p><UiText text={"Pick one of the 12 ready teams on My work. It starts by preparing drafts for your review."}/></p>
                         <button
                           type="button"
                           className="office-primary"
                           onClick={() => navigate("work")}
                         >
-                          See ready teams
-                        </button>
+                          <UiText text={"See ready teams"}/></button>
                       </div>
                     </section>
                   ) : (
@@ -1591,7 +1592,7 @@ export default function MerchantOffice() {
                       </aside>
                       <section className="office-card office-team-detail" key={current.id}>
                         <div className="office-card-head">
-                          <span className="office-eyebrow">Team brief</span>
+                          <span className="office-eyebrow"><UiText text={"Team brief"}/></span>
                           <Status value={current.state} />
                         </div>
                         <h2>{teamName(current)}</h2>
@@ -1601,7 +1602,7 @@ export default function MerchantOffice() {
                         </p>
                         <TeamIdentity team={current} workspace={workspace}/>
                         {current.state==='active'&&<TeammateTask key={current.id} token={token!} team={current} workspace={workspace} initialRequest={task?.blueprintId===current.id?task.text:undefined} requestToEdit={task?.blueprintId===current.id&&task.version?{text:task.text,version:task.version}:undefined} onChange={()=>refresh()} onError={setError} onDesk={selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]?()=>navigate(deskFor[current.presetId as ReadyTeamId]!):undefined}/>}
-                        <details className="teammate-job-details" open={current.state!=='active'}><summary>Team, rules & approved job</summary><p>{current.plan.outcome}</p>
+                        <details className="teammate-job-details" open={current.state!=='active'}><summary><UiText text={"Team, rules & approved job"}/></summary><p>{current.plan.outcome}</p>
                         <div className="office-team-members">
                           {(current.team || []).map((m) => (
                             <article key={m.id}>
@@ -1610,12 +1611,12 @@ export default function MerchantOffice() {
                                 <strong>{m.name}</strong>
                                 <span>{m.role}</span>
                                 <small>{m.responsibility}</small>
-                                {m.execution === "verified_code" && <small className="office-specialist-type">Verified code checks</small>}
+                                {m.execution === "verified_code" && <small className="office-specialist-type"><UiText text={"Verified code checks"}/></small>}
                               </div>
                             </article>
                           ))}
                         </div>
-                        <h3>How your team will work</h3>
+                        <h3><UiText text={"How your team will work"}/></h3>
                         <ul>
                           {current.plan.rules.map((r) => (
                             <li key={r}>{r}</li>
@@ -1624,7 +1625,7 @@ export default function MerchantOffice() {
                         </details>
                         {current.feasibility.blockers.length > 0 && (
                           <div className="office-setup-needed">
-                            <h3>Before your team can go live</h3>
+                            <h3><UiText text={"Before your team can go live"}/></h3>
                             <ul>
                               {current.feasibility.blockers.map((b) => (
                                 <li key={b}>{b}</li>
@@ -1635,18 +1636,17 @@ export default function MerchantOffice() {
                                 className="office-secondary"
                                 onClick={() => navigate("connections")}
                               >
-                                Connect apps
-                              </button>
+                                <UiText text={"Connect apps"}/></button>
                               <button
                                 className="office-text"
                                 onClick={() => navigate("business")}
                               >
-                                {current.plan.skills.some(s=>["bill_review","shop_publish"].includes(s))?"Add products & prices":"Update business facts"}
+                                <UiText text={current.plan.skills.some(s=>["bill_review","shop_publish"].includes(s))?"Add products & prices":"Update business facts"}/>
                               </button>
                             </div>
                           </div>
                         )}
-                        {current.plan.alternative&&<div className="office-setup-needed"><h3>Choose a supported ready teammate</h3><p>This older job needs a supported scope. Choose a ready teammate and review its settings.</p><button className="office-secondary" onClick={()=>navigate("work")}>Browse ready teammates</button></div>}
+                        {current.plan.alternative&&<div className="office-setup-needed"><h3><UiText text={"Choose a supported ready teammate"}/></h3><p><UiText text={"This older job needs a supported scope. Choose a ready teammate and review its settings."}/></p><button className="office-secondary" onClick={()=>navigate("work")}><UiText text={"Browse ready teammates"}/></button></div>}
                         <div className="office-actions">
                           <button
                             className="office-primary"
@@ -1666,12 +1666,10 @@ export default function MerchantOffice() {
                           >
                             {current.state === "active" ? (
                               <>
-                                <Pause size={15} /> Pause team
-                              </>
+                                <Pause size={15} /> <UiText text={"Pause team"}/></>
                             ) : (
                               <>
-                                <Play size={15} /> Activate team
-                              </>
+                                <Play size={15} /> <UiText text={"Activate team"}/></>
                             )}
                           </button>
                           <button
@@ -1684,20 +1682,19 @@ export default function MerchantOffice() {
                               })
                             }
                           >
-                            <RefreshCw size={15} /> Recheck setup
-                          </button>
-                          {selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]&&current.state==='active'&&<button className="office-secondary" onClick={()=>navigate(deskFor[current.presetId as ReadyTeamId]!)}>Open teammate’s desk <ArrowRight size={15}/></button>}
-                          {selectedReadyTeam(current.presetId)&&<><button className="office-secondary" disabled={!!busy} onClick={()=>setChoosingTeam(current.presetId as ReadyTeamId)}>Configure teammate</button><button className="office-text" disabled={!!busy} onClick={()=>{const url=new URL("/",location.origin);url.searchParams.set("team",current.presetId!);setRecipeCopied(false);setSharing({name:teamName(current),url:url.toString()})}}><Copy size={15}/> Share teammate</button></>}
+                            <RefreshCw size={15} /> <UiText text={"Recheck setup"}/></button>
+                          {selectedReadyTeam(current.presetId)&&deskFor[current.presetId as ReadyTeamId]&&current.state==='active'&&<button className="office-secondary" onClick={()=>navigate(deskFor[current.presetId as ReadyTeamId]!)}><UiText text={"Open teammate’s desk "}/><ArrowRight size={15}/></button>}
+                          {selectedReadyTeam(current.presetId)&&<><button className="office-secondary" disabled={!!busy} onClick={()=>setChoosingTeam(current.presetId as ReadyTeamId)}><UiText text={"Configure teammate"}/></button><button className="office-text" disabled={!!busy} onClick={()=>{const url=new URL("/",location.origin);url.searchParams.set("team",current.presetId!);setRecipeCopied(false);setSharing({name:teamName(current),url:url.toString()})}}><Copy size={15}/> <UiText text={"Share teammate"}/></button></>}
                         </div>
-                        <section className="office-team-results" aria-label="This teammate’s work">
-                          <div className="office-card-head"><h3>This teammate’s work</h3><button className="office-text" onClick={()=>navigate('work')}>All workspace results <ArrowRight size={15}/></button></div>
+                        <section className="office-team-results" aria-label={localize("This teammate’s work")}>
+                          <div className="office-card-head"><h3><UiText text={"This teammate’s work"}/></h3><button className="office-text" onClick={()=>navigate('work')}><UiText text={"All workspace results "}/><ArrowRight size={15}/></button></div>
                           {workspace.tasks.filter(t=>t.blueprintId===current.id).slice(-3).reverse().map((t,index)=><article className="office-team-result" key={t.id}>
                             <div className="office-card-head"><Status value={t.state}/><small>{new Date(t.createdAt).toLocaleString('en-IN')}</small></div>
-                            <h4>{t.result?.title||t.text}</h4>{['failed','waiting_owner'].includes(t.state)&&<button className="office-secondary" disabled={!!busy} onClick={()=>setTask({blueprintId:current.id,text:t.text,version:Date.now()})}>Edit this task <RefreshCw size={14}/></button>}
-                            {!!t.checkpoint?.stages.length&&<div className="office-stage-trail">{t.checkpoint.stages.map(s=><span key={s.role}><Check size={13}/>{s.specialistName} · {s.role==='specialist'?'Prepared':'Reviewed'}</span>)}</div>}
-                            {t.result?<><details open={index===0}><summary>Read the result</summary><ResultText text={t.result.output}/>{!!t.result.copyItems?.length&&<CopyItems items={t.result.copyItems} onError={setError}/>}<button className="office-text" onClick={()=>void act("Copying result",async()=>{await navigator.clipboard.writeText(t.result!.output);setNotice("Result copied. Review before sending or publishing.")})}><Copy size={14}/> Copy result</button><div className="office-next"><strong>Next step</strong><p>{t.result.nextStep}</p></div></details><details><summary>Business sources</summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||(['queued','working'].includes(t.state)?'Your cloud team is working. You can close this browser and return to the result.':'Open the approved job and recheck its setup to continue.')}</p>}
+                            <h4>{t.result?.title||t.text}</h4>{['failed','waiting_owner'].includes(t.state)&&<button className="office-secondary" disabled={!!busy} onClick={()=>setTask({blueprintId:current.id,text:t.text,version:Date.now()})}><UiText text={"Edit this task "}/><RefreshCw size={14}/></button>}
+                            {!!t.checkpoint?.stages.length&&<div className="office-stage-trail">{t.checkpoint.stages.map(s=><span key={s.role}><Check size={13}/>{s.specialistName} · <UiText text={s.role==='specialist'?'Prepared':'Reviewed'}/></span>)}</div>}
+                            {t.result?<><details open={index===0}><summary><UiText text={"Read the result"}/></summary><ResultText text={t.result.output}/>{!!t.result.copyItems?.length&&<CopyItems items={t.result.copyItems} onError={setError}/>}<button className="office-text" onClick={()=>void act("Copying result",async()=>{await navigator.clipboard.writeText(t.result!.output);setNotice("Result copied. Review before sending or publishing.")})}><Copy size={14}/> <UiText text={"Copy result"}/></button><div className="office-next"><strong><UiText text={"Next step"}/></strong><p>{t.result.nextStep}</p></div></details><details><summary><UiText text={"Business sources"}/></summary>{t.result.sources.map((s,i)=><p key={i}>{s}</p>)}</details></>:<p>{t.reason||(['queued','working'].includes(t.state)?'Your cloud team is working. You can close this browser and return to the result.':'Open the approved job and recheck its setup to continue.')}</p>}
                           </article>)}
-                          {!workspace.tasks.some(t=>t.blueprintId===current.id)&&<p className="office-footnote">Saved results and progress will appear here after your first task.</p>}
+                          {!workspace.tasks.some(t=>t.blueprintId===current.id)&&<p className="office-footnote"><UiText text={"Saved results and progress will appear here after your first task."}/></p>}
                         </section>
                       </section>
                     </div>
@@ -1768,7 +1765,7 @@ export default function MerchantOffice() {
                   />
                   {!!workspace.payments?.length && (
                     <section className="office-card">
-                      <h3>Payment evidence</h3>
+                      <h3><UiText text={"Payment evidence"}/></h3>
                       {workspace.payments.map((p) => (
                         <div className="office-payment-row" key={p.id}>
                           <div>
@@ -1776,16 +1773,16 @@ export default function MerchantOffice() {
                               ₹{(p.amountPaise / 100).toLocaleString("en-IN")}
                             </strong>
                             <small>
-                              {p.mode === "staging"
+                              <UiText text={p.mode === "staging"
                                 ? "Test payment"
-                                : "Live payment"}{" "}
+                                : "Live payment"}/>{" "}
                               · {p.txnId || "No verified transaction yet"}
                             </small>
                           </div>
                           <Status value={p.state} />
                           {p.url && p.state !== "paid" && (
                             <a href={p.url} target="_blank" rel="noreferrer">
-                              Open checkout <ArrowUpRight size={14} />
+                              <UiText text={"Open checkout "}/><ArrowUpRight size={14} />
                             </a>
                           )}
                           <button
@@ -1798,8 +1795,7 @@ export default function MerchantOffice() {
                               })
                             }
                           >
-                            Verify status
-                          </button>
+                            <UiText text={"Verify status"}/></button>
                         </div>
                       ))}
                     </section>
@@ -1810,12 +1806,9 @@ export default function MerchantOffice() {
                 <>
                   <div className="office-heading">
                     <div>
-                      <h1>Connections</h1>
+                      <h1><UiText text={"Connections"}/></h1>
                       <p>
-                        Connect only the accounts a team needs. A connected
-                        account does nothing until you turn on its actions in
-                        that team’s desk.
-                      </p>
+                        <UiText text={"Connect only the accounts a team needs. A connected account does nothing until you turn on its actions in that team’s desk."}/></p>
                     </div>
                   </div>
                   <div className="office-connection-grid">
@@ -1868,14 +1861,14 @@ export default function MerchantOffice() {
                                 className="office-secondary"
                                 disabled={!!busy}
                                 onClick={() =>
-                                  connectApp(id, title, !!connected)
+                                  connectApp(id, title, connected?.status==='needs_attention')
                                 }
                               >
-                                {connected ? "Continue connection" : "Connect"} <ArrowUpRight size={14} />
+                                <UiText text={connected ? "Continue connection" : "Connect"}/> <ArrowUpRight size={14} />
                               </button>
                             ) : (
                               <>
-                                {(id === "instagram" || id === "gmail") && <button className="office-secondary" onClick={() => navigate("customers")}>Start {id === "instagram" ? "Riya" : "Meera"} replies <ChevronRight size={14}/></button>}
+                                {(id === "instagram" || id === "gmail") && <button className="office-secondary" onClick={() => navigate("customers")}><UiText text={"Start "}/><UiText text={id === "instagram" ? "Riya" : "Meera"}/> <UiText text={"replies "}/><ChevronRight size={14}/></button>}
                                 <button
                                   className="office-text"
                                   disabled={!!busy}
@@ -1886,16 +1879,16 @@ export default function MerchantOffice() {
                                     })
                                   }
                                 >
-                                  Disconnect
-                                </button>
+                                  <UiText text={"Disconnect"}/></button>
                               </>
                             )}
                             {connected && <button className="office-secondary" disabled={!!busy} onClick={() => act("Checking app connection", async () => {
                               const result = await api.refreshConnection(token!, id) as {status?: string};
                               await refresh();
                               setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : `${title} still needs authorization. Choose Continue connection to try again.`);
-                            })}>Check connection</button>}
+                            })}><UiText text={"Check connection"}/></button>}
                           </div>
+                          {id==='instagram'&&connected?.status!=='connected'&&<details className="instagram-recovery"><summary>{t('Trouble connecting Instagram?')}</summary><p>{t('Instagram Business or Creator accounts are supported. A 429 comes from Instagram limiting sign-in attempts. Repeated retries can prolong the problem.')}</p><a href="https://www.instagram.com/" target="_blank" rel="noreferrer">{t('Open Instagram to check your account')}</a><button type="button" className="office-text" onClick={()=>{sessionStorage.setItem('kaamset_connection_wait_instagram',String(Date.now()+15*60000));showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.')}}>{t('Instagram showed “Too many requests”')}</button>{connected&&<button type="button" className="office-text" disabled={!!busy} onClick={()=>{if(window.confirm(t('Start a new Instagram connection? Use this only after the old link expires or Instagram allows sign-in again.')))void connectApp(id,title,true)}}>{t('Start fresh')}</button>}<small>{t('KaamSet pauses retries for 15 minutes when you report this error. Instagram may require longer. Check connection first if consent already finished.')}</small></details>}
                           {connected?.identity && (
                             <small>@{connected.identity.username}</small>
                           )}
@@ -1906,38 +1899,34 @@ export default function MerchantOffice() {
                       <span className="office-app-icon app-whatsapp">
                         <MessageCircle size={24} />
                       </span>
-                      <h3>WhatsApp</h3>
+                      <h3><UiText text={"WhatsApp"}/></h3>
                       <p>
-                        Pair your device with an isolated cloud session. Review
-                        reply rules before enabling your team.
-                      </p>
+                        <UiText text={"Pair your device with an isolated cloud session. Review reply rules before enabling your team."}/></p>
                       <button
                         className="office-secondary"
                         onClick={() => navigate("whatsapp")}
                       >
-                        Set up WhatsApp <ChevronRight size={14} />
+                        <UiText text={"Set up WhatsApp "}/><ChevronRight size={14} />
                       </button>
                     </article>
                     <article className="office-card">
                       <span className="office-app-icon">
                         <Brain size={24} />
                       </span>
-                      <h3>Indian voice & shared memory</h3>
+                      <h3><UiText text={"Indian voice & shared memory"}/></h3>
                       <p>
-                        Speak your job with Sarvam. Save approved knowledge to
-                        Cognee so your teammates use the same facts.
-                      </p>
+                        <UiText text={"Speak your job with Sarvam. Save approved knowledge to Cognee so your teammates use the same facts."}/></p>
                       <span className="office-status">
-                        Voice{" "}
-                        {workspace.providers?.sarvam ? "ready" : "needs setup"}{" "}
-                        · Memory{" "}
-                        {workspace.providers?.cognee ? "ready" : "needs setup"}
+                        <UiText text={"Voice"}/>{" "}
+                        <UiText text={workspace.providers?.sarvam ? "ready" : "needs setup"}/>{" "}
+                        <UiText text={"· Memory"}/>{" "}
+                        <UiText text={workspace.providers?.cognee ? "ready" : "needs setup"}/>
                       </span>
                       <button
                         className="office-text"
                         onClick={() => navigate("business")}
                       >
-                        Open shared memory <ChevronRight size={14} />
+                        <UiText text={"Open shared memory "}/><ChevronRight size={14} />
                       </button>
                     </article>
                   </div>
@@ -1952,23 +1941,21 @@ export default function MerchantOffice() {
               )}
               {page === "business" && (
                 <>
+                  <section className="office-card interface-settings"><h2>{t('Language & help')}</h2><LanguagePicker/><p>{t('This changes the interface on this device. Your team follows the language saved in your approved business description.')}</p></section>
+                  <SavedBusinessAssets token={token!} onChange={()=>refresh()}/>
                   <div className="office-heading">
                     <div>
-                      <h1>Business &amp; memory</h1>
+                      <h1><UiText text={"Business & memory"}/></h1>
                       <p>
-                        What your teams know about your business, where it came
-                        from, and what they may use. Changing your facts pauses
-                        affected teams until you review them again.
-                      </p>
+                        <UiText text={"What your teams know about your business, where it came from, and what they may use. Changing your facts pauses affected teams until you review them again."}/></p>
                     </div>
                   </div>
                   <Suspense fallback={<DeskLoading/>}><BusinessStart token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={openReadyTeam} onOpenTask={id=>{setSelected(id);sessionStorage.setItem("kaamset_selected_teammate",id);setTask(null);navigate("team")}}/></Suspense>
-                  <details className="business-optional-setup"><summary>Edit your business description</summary>
+                  <details className="business-optional-setup"><summary><UiText text={"Edit your business description"}/></summary>
                   <section className="office-card">
-                    <p className="business-pause-note">Saving changed facts pauses the teams that use them. Review each team afterwards and activate it again.</p>
+                    <p className="business-pause-note"><UiText text={"Saving changed facts pauses the teams that use them. Review each team afterwards and activate it again."}/></p>
                     <label>
-                      Business description your teams use
-                      <textarea
+                      <UiText text={"Business description your teams use"}/><textarea
                         rows={12}
                         maxLength={12000}
                         value={brief}
@@ -1985,9 +1972,7 @@ export default function MerchantOffice() {
                         onChange={(e) => setBriefApproved(e.target.checked)}
                       />
                       <span>
-                        I’ve reviewed and approved these facts. No passwords,
-                        payment keys or private customer details are included.
-                      </span>
+                        <UiText text={"I’ve reviewed and approved these facts. No passwords, payment keys or private customer details are included."}/></span>
                     </label>
                     <button
                       className="office-primary"
@@ -2005,11 +1990,11 @@ export default function MerchantOffice() {
                         })
                       }
                     >
-                      Save approved facts <Check size={16} />
+                      <UiText text={"Save approved facts "}/><Check size={16} />
                     </button>
                   </section>
                   </details>
-                  <details className="business-optional-setup"><summary>Products, prices and stock for bills and quotes</summary>
+                  <details className="business-optional-setup"><summary><UiText text={"Products, prices and stock for bills and quotes"}/></summary>
                   <Catalogue
                     token={token}
                     workspace={workspace}
@@ -2017,17 +2002,16 @@ export default function MerchantOffice() {
                     onChange={() => refresh()}
                   />
                   </details>
-                  <section className="office-card"><BusinessMemory token={token} enabled={!!workspace.providers?.cognee}/></section>
+                  <section className="office-card"><BusinessMemory token={token} enabled={!!workspace.providers?.cognee} onChange={()=>refresh()}/></section>
                   <section className="office-card">
-                    <h3>Workspace & account</h3>
+                    <h3><UiText text={"Workspace & account"}/></h3>
                     <p>
-                      {workspace.account?.saved
+                      <UiText text={workspace.account?.saved
                         ? "Your verified account can recover this workspace on another device."
-                        : "This guest workspace expires. Verify your email to save your business workspace."}
+                        : "This guest workspace expires. Verify your email to save your business workspace."}/>
                     </p>
                     <p>
-                      Available AI requests: {workspace.limits.modelsRemaining}.
-                      App operations: {workspace.limits.toolsRemaining}.
+                      <UiText text={"Available AI requests: "}/>{workspace.limits.modelsRemaining}<UiText text={". App operations: "}/>{workspace.limits.toolsRemaining}.
                       {workspace.limits.resetAt &&
                         ` Usage resets ${new Date(workspace.limits.resetAt).toLocaleString("en-IN")}.`}
                     </p>
@@ -2035,9 +2019,9 @@ export default function MerchantOffice() {
                       className="office-secondary"
                       onClick={() => setAccountOpen(true)}
                     >
-                      {workspace.account?.saved
+                      <UiText text={workspace.account?.saved
                         ? "Sign in to another workspace"
-                        : "Save workspace"}
+                        : "Save workspace"}/>
                     </button>
                     <button
                       className="office-text"
@@ -2056,16 +2040,15 @@ export default function MerchantOffice() {
                         })
                       }
                     >
-                      Sign out of this browser
-                    </button>
+                      <UiText text={"Sign out of this browser"}/></button>
                   </section>
                 </>
               )}
               </Suspense>
             </main>
             <footer className="office-footer">
-              <span>kaamset · Made for the work of your business.</span>
-              <span>Cloud work follows your facts and permissions.</span>
+              <span><UiText text={"kaamset · Made for the work of your business."}/></span>
+              <span><UiText text={"Cloud work follows your facts and permissions."}/></span>
             </footer>
           </div>
         </div>
@@ -2079,8 +2062,9 @@ export default function MerchantOffice() {
           onToken={acceptToken}
         />
       )}
+      <SiaAssistant getToken={()=>token?Promise.resolve(token):getSetupToken()}/>
       {choosingTeam&&workspace&&<ReadyTeamSetup key={choosingTeam} code={choosingTeam} workspace={workspace} busy={!!busy} onClose={()=>setChoosingTeam(null)} onSave={configureReadyTeam}/>}
-      {sharing&&<div className="office-modal-overlay"><section className="office-modal" role="dialog" aria-modal="true" aria-labelledby="share-title"><button className="office-close" aria-label="Close teammate sharing" onClick={()=>setSharing(null)}><X size={20}/></button><h2 id="share-title">Share {sharing.name}</h2><p>Your partner chooses this ready teammate using their own business facts, connections and approvals.</p><label>Teammate setup link<input readOnly value={sharing.url} onFocus={e=>e.target.select()}/></label><p className="office-footnote">This link contains only the teammate choice. Your business records and connected accounts remain in your workspace.</p><button className="office-primary" onClick={async()=>{try{await navigator.clipboard.writeText(sharing.url);setRecipeCopied(true)}catch{setError('Copy could not finish. Select and copy the setup link above.')}}}><Copy size={16}/>{recipeCopied?'Link copied':'Copy setup link'}</button></section></div>}
+      {sharing&&<div className="office-modal-overlay"><section className="office-modal" role="dialog" aria-modal="true" aria-labelledby="share-title"><button className="office-close" aria-label={localize("Close teammate sharing")} onClick={()=>setSharing(null)}><X size={20}/></button><h2 id="share-title"><UiText text={"Share "}/>{sharing.name}</h2><p><UiText text={"Your partner chooses this ready teammate using their own business facts, connections and approvals."}/></p><label><UiText text={"Teammate setup link"}/><input readOnly value={sharing.url} onFocus={e=>e.target.select()}/></label><p className="office-footnote"><UiText text={"This link contains only the teammate choice. Your business records and connected accounts remain in your workspace."}/></p><button className="office-primary" onClick={async()=>{try{await navigator.clipboard.writeText(sharing.url);setRecipeCopied(true)}catch{setError('Copy could not finish. Select and copy the setup link above.')}}}><Copy size={16}/><UiText text={recipeCopied?'Link copied':'Copy setup link'}/></button></section></div>}
     </div>
   );
 }
