@@ -1,14 +1,19 @@
 import { useRef, useState } from "react";
 import {
   ArrowRight,
+  Check,
   Copy,
   ExternalLink,
   Globe,
+  LoaderCircle,
   ShieldCheck,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { api, type WorkspaceState } from "./api";
 import PixelTeammate from "./PixelTeammate";
 import { memberCharacter, websiteStageName } from "./team-identity";
+import { Status } from "./WorkOverview";
 export default function WebsiteStudio({
   token,
   workspace,
@@ -59,39 +64,58 @@ export default function WebsiteStudio({
       inFlight.current = false;
     }
   }
+  const phoneInvalid = !!phone && !/^91[6-9]\d{9}$/.test(phone);
+  const sites = workspace?.sites?.slice().reverse() || [];
   return (
-    <section className="merchant-tool website-studio">
-      <div className="milan-heading">
+    <section className="merchant-tool website-studio" aria-labelledby="website-studio-title">
+      <header className="studio-head">
         <PixelTeammate
           id="vijay"
+          name="Vijay"
           state={busy || cloudWorking ? "working" : "idle"}
         />
         <div>
-          <span className="card-kicker">VIJAY · YOUR WEBSITE TEAM</span>
-          <h2>Your business deserves a home online.</h2>
+          <h2 id="website-studio-title">Vijay’s website team</h2>
           <p>
-            Describe your style. Vijay builds a responsive site from approved
-            facts and publishes it with a usable KaamSet link.
+            Give the team your brief and photos. They design, write and check a
+            mobile-friendly site from your approved facts, then publish it to a
+            link you can share.
           </p>
+          {!!vijay?.team?.length && (
+            <ul className="studio-roster" aria-label="Website team">
+              {vijay.team.map((member) => (
+                <li key={member.id}>
+                  <PixelTeammate id={memberCharacter(member)} name={member.name} />
+                  <span><strong>{member.name}</strong><small>{member.execution === "verified_code" ? "Code checks" : member.role}</small></span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </div>
+      </header>
       {error && (
-        <p className="workspace-error" role="alert">
+        <p className="office-error" role="alert">
           {error}
         </p>
       )}
       {!vijay && (
-        <div className="setup-box">
-          <strong>Set up and activate your ready Vijay team.</strong>
-          <p>
-            Your approved playbook becomes his source. He checks the job before
-            building.
-          </p>
-          <button className="button button-dark" onClick={onBuild}>
-            Set up Vijay’s website team <ArrowRight size={16} />
+        <div className="studio-setup">
+          <div>
+            <strong>Activate Vijay’s team first.</strong>
+            <p>
+              It uses your approved business description as its source and
+              checks the job before building.
+            </p>
+          </div>
+          <button type="button" className="office-primary" onClick={onBuild}>
+            Set up Vijay’s team <ArrowRight size={16} />
           </button>
         </div>
       )}
+      <div className="studio-columns">
+      <div className="studio-form">
+      <section className="studio-step" aria-labelledby="studio-step-brief">
+      <h3 id="studio-step-brief"><b aria-hidden="true">1</b>What goes on the site</h3>
       <div className="merchant-form-grid">
         <label>
           Public business name
@@ -106,12 +130,14 @@ export default function WebsiteStudio({
           />
         </label>
         <label>
-          Public WhatsApp number (optional)
+          Public WhatsApp number <small>Optional</small>
           <input
             value={phone}
             inputMode="tel"
-            placeholder="91 followed by your 10-digit number"
+            placeholder="91 and your 10-digit number"
             maxLength={12}
+            aria-invalid={phoneInvalid}
+            aria-describedby="studio-phone-help"
             onChange={(e) => {
               setPhone(e.target.value.replace(/\D/g, ""));
               setApproved(false);
@@ -119,7 +145,7 @@ export default function WebsiteStudio({
           />
         </label>
       </div>
-      <p className="small-muted">How should customers reach you? Add a public WhatsApp number above, or include your approved contact details in your business description. Your personal account details stay private.</p>
+      <p id="studio-phone-help" className={phoneInvalid ? "studio-help is-error" : "studio-help"}>{phoneInvalid ? "Use 91 followed by a 10-digit mobile number, for example 919876543210." : "How customers reach you. Leave it empty to use the contact details in your business description. Your private account details are never published."}</p>
       <label>
         What should the website feel like?
         <textarea
@@ -132,23 +158,13 @@ export default function WebsiteStudio({
           }}
         />
       </label>
-      <div className="website-scope">
-        <Globe size={20} />
-        <div>
-          <strong>Your website, built by a team</strong>
-          <p>
-            Vijay coordinates Aditi’s approved assets, Dev’s design and Kavya’s copy.
-            Each specialist uses your approved business facts; the site is
-            checked before publishing. Nisha runs trusted factual checks.
-          </p>
-        </div>
-      </div>
-      {!!vijay?.team?.length && <div className="office-team-members website-team-roster">{vijay.team.map((member) => <article key={member.id}><PixelTeammate id={memberCharacter(member)} /><div><strong>{member.name}</strong><span>{member.role}</span><small>{member.execution === "verified_code" ? "Trusted code checks · no extra model stage" : member.responsibility}</small></div></article>)}</div>}
-      <label>
-        What photos should Aditi use for your website?{" "}
-        <small>
-          Add your products, shop, work samples or logo · up to three JPEG or PNG photos, under 1.5 MB each
-        </small>
+      </section>
+      <section className="studio-step" aria-labelledby="studio-step-assets">
+      <h3 id="studio-step-assets"><b aria-hidden="true">2</b>Logo and photos</h3>
+      <p className="studio-help">Aditi chooses from what you add: your logo, shop, products or work. Up to three JPEG or PNG files, under 1.5 MB each.</p>
+      <label className={`studio-drop ${busy || readingPhotos ? "is-disabled" : ""}`}>
+        <Upload size={20} aria-hidden="true" />
+        <span><strong>{photos.length ? "Choose different photos" : "Choose photos"}</strong><small>{photos.length ? `${photos.length} of 3 selected` : "Up to 3 files"}</small></span>
         <input
           type="file"
           accept="image/jpeg,image/png"
@@ -189,47 +205,61 @@ export default function WebsiteStudio({
           }}
         />
       </label>
-      {!photos.length&&<label className="approval-checkbox"><input type="checkbox" checked={withoutPhotos} disabled={busy||readingPhotos} onChange={e=>{setWithoutPhotos(e.target.checked);setApproved(false)}}/>I don’t have photos yet. Build a clean text-based site from my business facts.</label>}
-      {readingPhotos && <p role="status">Preparing your photos for review…</p>}
+      {!photos.length&&<label className="office-check studio-no-photos"><input type="checkbox" checked={withoutPhotos} disabled={busy||readingPhotos} onChange={e=>{setWithoutPhotos(e.target.checked);setApproved(false)}}/><span>I don’t have photos yet. Build a clean, text-led site from my business facts.</span></label>}
+      {readingPhotos && <p className="studio-help" role="status"><LoaderCircle size={14} className="spin" aria-hidden="true" /> Preparing your photos for review…</p>}
       {!!photos.length && (
         <div className="website-photo-review">
           {photos.map((p, i) => (
-            <label key={i}>
+            <figure key={i}>
               <img
                 src={`data:image/jpeg;base64,${p.photo}`}
-                alt="Photo selected for owner review"
+                alt={`Selected photo ${i + 1}`}
               />
-              <input
-                maxLength={200}
-                value={p.alt}
-                aria-label={`Describe business photo ${i + 1}`}
-                onChange={(e) => {
-                  setPhotos(
-                    photos.map((a, n) =>
-                      n === i ? { ...a, alt: e.target.value } : a,
-                    ),
-                  );
-                  setApproved(false);
-                }}
-              />
-              <button type="button" className="text-button" disabled={busy || readingPhotos} onClick={() => {setPhotos(photos.filter((_,n)=>n!==i));setApproved(false);setWithoutPhotos(false)}}>Remove photo {i+1}</button>
-            </label>
+              <label>
+                Describe photo {i + 1}
+                <input
+                  maxLength={200}
+                  value={p.alt}
+                  aria-invalid={p.alt.trim().length < 2}
+                  onChange={(e) => {
+                    setPhotos(
+                      photos.map((a, n) =>
+                        n === i ? { ...a, alt: e.target.value } : a,
+                      ),
+                    );
+                    setApproved(false);
+                  }}
+                />
+              </label>
+              <button type="button" className="office-text" disabled={busy || readingPhotos} onClick={() => {setPhotos(photos.filter((_,n)=>n!==i));setApproved(false);setWithoutPhotos(false)}}><Trash2 size={14} aria-hidden="true" />Remove photo {i+1}</button>
+            </figure>
           ))}
         </div>
       )}
-      <label className="approval-checkbox">
+      </section>
+      <section className="studio-step studio-approve" aria-labelledby="studio-step-approve">
+      <h3 id="studio-step-approve"><b aria-hidden="true">3</b>Approve and publish</h3>
+      <ul className="studio-checklist" aria-label="Before publishing">
+        <li className={name.trim().length >= 2 && instructions.trim().length >= 5 && !phoneInvalid ? "is-done" : ""}>Name and brief</li>
+        <li className={photos.length || withoutPhotos ? "is-done" : ""}>{photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} described` : withoutPhotos ? "No photos, text-led site" : "Photos, or the no-photo choice"}</li>
+        <li className={approved ? "is-done" : ""}>Your approval</li>
+      </ul>
+      <label className="office-check">
         <input
           type="checkbox"
           checked={approved}
           disabled={busy || readingPhotos || !!cloudWorking}
           onChange={(e) => setApproved(e.target.checked)}
-        />{" "}
-        I approve publishing these business facts, contact details and photos. I
-        have rights to use the photos. My playbook has no passwords or private
-        customer information.
+        />
+        <span>
+          I approve publishing these business facts, contact details and photos.
+          I have rights to use the photos. My business description has no
+          passwords or private customer information.
+        </span>
       </label>
       <button
-        className="button button-primary"
+        type="button"
+        className="office-primary"
         disabled={
           busy ||
           readingPhotos ||
@@ -241,7 +271,7 @@ export default function WebsiteStudio({
           name.trim().length < 2 ||
           instructions.trim().length < 5 ||
           photos.some((p) => p.alt.trim().length < 2) ||
-          (!!phone && !/^91[6-9]\d{9}$/.test(phone))
+          phoneInvalid
         }
         onClick={() =>
           run(async () => {
@@ -259,33 +289,53 @@ export default function WebsiteStudio({
           })
         }
       >
-        {cloudWorking ? "Your website team is working in the cloud…" : "Build & publish with my website team"} <Globe size={17} />
+        {busy ? <LoaderCircle size={17} className="spin" aria-hidden="true" /> : <Globe size={17} aria-hidden="true" />}
+        {cloudWorking ? "Your website team is working…" : busy ? "Sending to your website team…" : "Build and publish my website"}
       </button>
-      <p className="small-muted">
-        Your team works in the cloud. You can close the browser and return to
-        the published link. Without photos, the designer creates a
-        typography-led site.
+      <p className="studio-help">
+        The team works in the cloud, so you can close this page. Your link
+        appears on the right once the site is published.
       </p>
-      <div className="order-list">
-        {workspace?.sites
-          ?.slice()
-          .reverse()
-          .map((site) => (
-            <article key={site.id}>
-              <div className="task-result-head">
-                <strong>{site.businessName}</strong>
-                <span className="readiness-pill">
-                  {site.state.replaceAll("_", " ")}
-                </span>
+      </section>
+      </div>
+      <aside className="studio-results" aria-labelledby="studio-results-title">
+        <h3 id="studio-results-title">Your websites</h3>
+        {!sites.length && (
+          <div className="studio-empty">
+            <Globe size={22} aria-hidden="true" />
+            <p>No website yet. When you publish, the team’s progress and your live link appear here.</p>
+          </div>
+        )}
+        {sites.map((site) => (
+          <article key={site.id} className={`studio-site is-${site.state}`}>
+            <div className="studio-site-head">
+              <strong>{site.businessName}</strong>
+              <Status value={site.state} />
+            </div>
+            {["queued", "working"].includes(site.state) && (
+              <div className="studio-progress" role="status">
+                <span className="business-live-bar" aria-hidden="true" />
+                <ol>
+                  {(site.studioCheckpoint?.stages || []).map((s) => (
+                    <li key={s.stage} className="is-done"><Check size={12} aria-hidden="true" />{websiteStageName(s.stage, s.specialistName)}</li>
+                  ))}
+                  <li className="is-working"><i aria-hidden="true" />{site.state === "queued" ? "Waiting for a cloud worker" : "Designing and writing"}</li>
+                </ol>
+                <p>Your link appears here after the site is published. Closing this page does not stop the job.</p>
               </div>
-              {site.reason && <p>{site.reason}</p>}
-              {site.state === "published" ? (
-                <>
-                  <a href={site.url} target="_blank" rel="noreferrer">
-                    Open live website <ExternalLink size={14} />
+            )}
+            {site.reason && <p className="studio-site-reason">{site.reason}</p>}
+            {site.state === "published" && (
+              <div className="studio-live">
+                <span className="studio-live-label">Live link</span>
+                <p className="site-url">{site.url}</p>
+                <div className="studio-live-actions">
+                  <a className="office-primary" href={site.url} target="_blank" rel="noreferrer">
+                    Open website <ExternalLink size={14} aria-hidden="true" />
                   </a>
                   <button
-                    className="text-button"
+                    type="button"
+                    className="office-secondary"
                     onClick={() =>
                       run(async () => {
                         await navigator.clipboard.writeText(site.url);
@@ -293,12 +343,12 @@ export default function WebsiteStudio({
                       })
                     }
                   >
-                    <Copy size={14} />
-                    {copied === site.id ? "Copied" : "Copy website link"}
+                    {copied === site.id ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+                    {copied === site.id ? "Copied" : "Copy link"}
                   </button>
-                  <p className="site-url">{site.url}</p>
                   <button
-                    className="text-button"
+                    type="button"
+                    className="office-text studio-unpublish"
                     disabled={busy || !token}
                     onClick={() =>
                       run(() => api.unpublishSite(token!, site.id))
@@ -306,28 +356,18 @@ export default function WebsiteStudio({
                   >
                     Unpublish website
                   </button>
-                </>
-              ) : ["queued", "working"].includes(site.state) ? (
-                <p role="status">
-                  {site.studioCheckpoint?.stages
-                    .map((s) =>
-                      websiteStageName(s.stage, s.specialistName),
-                    )
-                    .join(" · ")}
-                  {site.studioCheckpoint?.stages.length ? " · " : ""}Vijay is
-                  designing and writing in the cloud. Your link appears after
-                  the site is published.
-                </p>
-              ) : null}
-            </article>
-          ))}
+                </div>
+              </div>
+            )}
+          </article>
+        ))}
+      </aside>
       </div>
       <div className="quote-safety">
-        <ShieldCheck size={18} />
+        <ShieldCheck size={18} aria-hidden="true" />
         <p>
-          Website text is rendered safely, with no generated scripts. Prices
-          come from approved offers. Your public site contains no workspace
-          credentials or customer records.
+          Your team uses the business facts and prices you approved. Customer
+          records and login details stay private.
         </p>
       </div>
     </section>
