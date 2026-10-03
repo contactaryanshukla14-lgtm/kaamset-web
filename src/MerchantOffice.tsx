@@ -40,6 +40,7 @@ import {
   type WorkspaceState,
 } from "./api";
 import PixelTeammate from "./PixelTeammate";
+import {AwaazConnectionCard} from './AwaazPremium';
 const InboxPanel = lazy(() => import("./InboxPanel"));
 const WebsiteStudio = lazy(() => import("./WebsiteStudio"));
 const WhatsAppSalesDesk = lazy(() => import("./WhatsAppSalesDesk"));
@@ -1933,6 +1934,7 @@ const {t:localize}=useLanguage();
                         </article>
                       );
                     })}
+                    <AwaazConnectionCard/>
                     <article className="office-card">
                       <span className="office-app-icon app-whatsapp">
                         <MessageCircle size={24} />
