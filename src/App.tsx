@@ -15,7 +15,7 @@ export default function App() {
     <Suspense
       fallback={<main className="office-loading">Opening KaamSet…</main>}
     >
-      {window.location.pathname === '/merchant-lab' ? <MerchantLab/> : shop||receipt ? (<ShopFront cap={(shop||receipt)!} receipt={!!receipt}/>) : slug ? (
+      {window.location.pathname === '/merchant-lab'||query.get('merchantLab')==='1'&&!localStorage.getItem('kaamset_lab_token') ? <MerchantLab/> : shop||receipt ? (<ShopFront cap={(shop||receipt)!} receipt={!!receipt}/>) : slug ? (
         <BusinessWebsite slug={slug} />
       ) : order ? (
         <CustomerOrder cap={order} />

@@ -2,9 +2,10 @@ import type {MerchantLabView,LabPresenterInput} from './merchant-lab-types';
 const base=(import.meta.env.DEV?'':import.meta.env.VITE_KAAMSET_API_URL||'https://foundation-production-api-production.up.railway.app').replace(/\/$/,'');
 const root=base+'/v1/foundation/kaamset/merchant-lab';
 export const labTokenKey='kaamset_lab_token';
+export class MerchantLabApiError extends Error{constructor(message:string,readonly status:number){super(message);}}
 async function request<T>(path:string,token:string|null,body?:unknown){
  const response=await fetch(root+path,{method:body===undefined?'GET':'POST',headers:{...(token?{Authorization:`Bearer ${token}`}:{ }),...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(45000),cache:'no-store'});
- if(!response.ok){const result=await response.json().catch(()=>({}));throw new Error(result.error?.message||result.message||`Merchant Lab is temporarily unavailable (${response.status}).`);}return response.json() as Promise<T>;
+ if(!response.ok){const result=await response.json().catch(()=>({}));throw new MerchantLabApiError(result.error?.message||result.message||`Merchant Lab is temporarily unavailable (${response.status}).`,response.status);}return response.json() as Promise<T>;
 }
 export const merchantLabApi={
  prepare:(token:string|null)=>request<{token:string;lab:MerchantLabView}>('/prepare',token,{}),
