@@ -1,3 +1,4 @@
+import {UiText} from './Language';
 import { useRef, useState } from "react";
 import {
   ArrowRight,
@@ -14,6 +15,7 @@ import { api, type WorkspaceState } from "./api";
 import PixelTeammate from "./PixelTeammate";
 import { memberCharacter, websiteStageName } from "./team-identity";
 import { Status } from "./WorkOverview";
+import {useLanguage} from './Language';
 export default function WebsiteStudio({
   token,
   workspace,
@@ -25,6 +27,9 @@ export default function WebsiteStudio({
   onChange: () => Promise<unknown>;
   onBuild: () => void;
 }) {
+const {t:localize}=useLanguage();
+
+  const {t}=useLanguage();
   const [name, setName] = useState(workspace?.business?.name || ""),
     [instructions, setInstructions] = useState(()=>{
       const team=workspace?.blueprints.find(b=>b.state==='active'&&b.plan.skills.includes('website_publish'));
@@ -75,14 +80,11 @@ export default function WebsiteStudio({
           state={busy || cloudWorking ? "working" : "idle"}
         />
         <div>
-          <h2 id="website-studio-title">Vijay’s website team</h2>
+          <h2 id="website-studio-title"><UiText text={"Vijay’s website team"}/></h2>
           <p>
-            Give the team your brief and photos. They design, write and check a
-            mobile-friendly site from your approved facts, then publish it to a
-            link you can share.
-          </p>
+            <UiText text={"Give the team your brief and photos. They design, write and check a mobile-friendly site from your approved facts, then publish it to a link you can share."}/></p>
           {!!vijay?.team?.length && (
-            <ul className="studio-roster" aria-label="Website team">
+            <ul className="studio-roster" aria-label={localize("Website team")}>
               {vijay.team.map((member) => (
                 <li key={member.id}>
                   <PixelTeammate id={memberCharacter(member)} name={member.name} />
@@ -101,28 +103,25 @@ export default function WebsiteStudio({
       {!vijay && (
         <div className="studio-setup">
           <div>
-            <strong>Activate Vijay’s team first.</strong>
+            <strong><UiText text={"Activate Vijay’s team first."}/></strong>
             <p>
-              It uses your approved business description as its source and
-              checks the job before building.
-            </p>
+              <UiText text={"It uses your approved business description as its source and checks the job before building."}/></p>
           </div>
           <button type="button" className="office-primary" onClick={onBuild}>
-            Set up Vijay’s team <ArrowRight size={16} />
+            <UiText text={"Set up Vijay’s team "}/><ArrowRight size={16} />
           </button>
         </div>
       )}
       <div className="studio-columns">
       <div className="studio-form">
       <section className="studio-step" aria-labelledby="studio-step-brief">
-      <h3 id="studio-step-brief"><b aria-hidden="true">1</b>What goes on the site</h3>
+      <h3 id="studio-step-brief"><b aria-hidden="true">1</b><UiText text={"What goes on the site"}/></h3>
       <div className="merchant-form-grid">
         <label>
-          Public business name
-          <input
+          <UiText text={"Public business name"}/><input
             maxLength={80}
             value={name}
-            placeholder="Your business name"
+            placeholder={localize("Your business name")}
             onChange={(e) => {
               setName(e.target.value);
               setApproved(false);
@@ -130,11 +129,11 @@ export default function WebsiteStudio({
           />
         </label>
         <label>
-          Public WhatsApp number <small>Optional</small>
+          <UiText text={"Public WhatsApp number "}/><small><UiText text={"Optional"}/></small>
           <input
             value={phone}
             inputMode="tel"
-            placeholder="91 and your 10-digit number"
+            placeholder={localize("91 and your 10-digit number")}
             maxLength={12}
             aria-invalid={phoneInvalid}
             aria-describedby="studio-phone-help"
@@ -145,10 +144,9 @@ export default function WebsiteStudio({
           />
         </label>
       </div>
-      <p id="studio-phone-help" className={phoneInvalid ? "studio-help is-error" : "studio-help"}>{phoneInvalid ? "Use 91 followed by a 10-digit mobile number, for example 919876543210." : "How customers reach you. Leave it empty to use the contact details in your business description. Your private account details are never published."}</p>
+      <p id="studio-phone-help" role={phoneInvalid ? 'alert' : undefined} className={phoneInvalid ? "studio-help is-error" : "studio-help"}><UiText text={phoneInvalid ? "Use 91 followed by a 10-digit mobile number, for example 919876543210." : "How customers reach you. Leave it empty to use the contact details in your business description. Your private account details are never published."}/></p>
       <label>
-        What should the website feel like?
-        <textarea
+        <UiText text={"What should the website feel like?"}/><textarea
           rows={4}
           maxLength={1200}
           value={instructions}
@@ -160,11 +158,12 @@ export default function WebsiteStudio({
       </label>
       </section>
       <section className="studio-step" aria-labelledby="studio-step-assets">
-      <h3 id="studio-step-assets"><b aria-hidden="true">2</b>Logo and photos</h3>
-      <p className="studio-help">Aditi chooses from what you add: your logo, shop, products or work. Up to three JPEG or PNG files, under 1.5 MB each.</p>
+      <h3 id="studio-step-assets"><b aria-hidden="true">2</b><UiText text={"Logo and photos"}/></h3>
+      <p className="studio-help"><UiText text={"Aditi chooses from what you add: your logo, shop, products or work. Up to three JPEG or PNG files, under 1.5 MB each."}/></p>
+      {!!workspace?.businessAssets?.length&&<button type="button" className="office-secondary" disabled={busy||readingPhotos} onClick={()=>void run(async()=>{const result=await api.businessAssets(token!);setPhotos(result.assets.map(a=>({alt:a.alt,photo:a.src.split(',')[1],rightsConfirmed:true})));setApproved(false);setWithoutPhotos(false)})}>{t('Use my saved business images')}</button>}
       <label className={`studio-drop ${busy || readingPhotos ? "is-disabled" : ""}`}>
         <Upload size={20} aria-hidden="true" />
-        <span><strong>{photos.length ? "Choose different photos" : "Choose photos"}</strong><small>{photos.length ? `${photos.length} of 3 selected` : "Up to 3 files"}</small></span>
+        <span><strong><UiText text={photos.length ? "Choose different photos" : "Choose photos"}/></strong><small>{photos.length ? `${photos.length} of 3 selected` : "Up to 3 files"}</small></span>
         <input
           type="file"
           accept="image/jpeg,image/png"
@@ -205,8 +204,8 @@ export default function WebsiteStudio({
           }}
         />
       </label>
-      {!photos.length&&<label className="office-check studio-no-photos"><input type="checkbox" checked={withoutPhotos} disabled={busy||readingPhotos} onChange={e=>{setWithoutPhotos(e.target.checked);setApproved(false)}}/><span>I don’t have photos yet. Build a clean, text-led site from my business facts.</span></label>}
-      {readingPhotos && <p className="studio-help" role="status"><LoaderCircle size={14} className="spin" aria-hidden="true" /> Preparing your photos for review…</p>}
+      {!photos.length&&<label className="office-check studio-no-photos"><input type="checkbox" checked={withoutPhotos} disabled={busy||readingPhotos} onChange={e=>{setWithoutPhotos(e.target.checked);setApproved(false)}}/><span><UiText text={"I don’t have photos yet. Build a clean, text-led site from my business facts."}/></span></label>}
+      {readingPhotos && <p className="studio-help" role="status"><LoaderCircle size={14} className="spin" aria-hidden="true" /> <UiText text={"Preparing your photos for review…"}/></p>}
       {!!photos.length && (
         <div className="website-photo-review">
           {photos.map((p, i) => (
@@ -216,7 +215,7 @@ export default function WebsiteStudio({
                 alt={`Selected photo ${i + 1}`}
               />
               <label>
-                Describe photo {i + 1}
+                <UiText text={"Describe photo "}/>{i + 1}
                 <input
                   maxLength={200}
                   value={p.alt}
@@ -231,18 +230,18 @@ export default function WebsiteStudio({
                   }}
                 />
               </label>
-              <button type="button" className="office-text" disabled={busy || readingPhotos} onClick={() => {setPhotos(photos.filter((_,n)=>n!==i));setApproved(false);setWithoutPhotos(false)}}><Trash2 size={14} aria-hidden="true" />Remove photo {i+1}</button>
+              <button type="button" className="office-text" disabled={busy || readingPhotos} onClick={() => {setPhotos(photos.filter((_,n)=>n!==i));setApproved(false);setWithoutPhotos(false)}}><Trash2 size={14} aria-hidden="true" /><UiText text={"Remove photo "}/>{i+1}</button>
             </figure>
           ))}
         </div>
       )}
       </section>
       <section className="studio-step studio-approve" aria-labelledby="studio-step-approve">
-      <h3 id="studio-step-approve"><b aria-hidden="true">3</b>Approve and publish</h3>
-      <ul className="studio-checklist" aria-label="Before publishing">
-        <li className={name.trim().length >= 2 && instructions.trim().length >= 5 && !phoneInvalid ? "is-done" : ""}>Name and brief</li>
+      <h3 id="studio-step-approve"><b aria-hidden="true">3</b><UiText text={"Approve and publish"}/></h3>
+      <ul className="studio-checklist" aria-label={localize("Before publishing")}>
+        <li className={name.trim().length >= 2 && instructions.trim().length >= 5 && !phoneInvalid ? "is-done" : ""}><UiText text={"Name and brief"}/></li>
         <li className={photos.length || withoutPhotos ? "is-done" : ""}>{photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} described` : withoutPhotos ? "No photos, text-led site" : "Photos, or the no-photo choice"}</li>
-        <li className={approved ? "is-done" : ""}>Your approval</li>
+        <li className={approved ? "is-done" : ""}><UiText text={"Your approval"}/></li>
       </ul>
       <label className="office-check">
         <input
@@ -252,10 +251,7 @@ export default function WebsiteStudio({
           onChange={(e) => setApproved(e.target.checked)}
         />
         <span>
-          I approve publishing these business facts, contact details and photos.
-          I have rights to use the photos. My business description has no
-          passwords or private customer information.
-        </span>
+          <UiText text={"I approve publishing these business facts, contact details and photos. I have rights to use the photos. My business description has no passwords or private customer information."}/></span>
       </label>
       <button
         type="button"
@@ -290,20 +286,18 @@ export default function WebsiteStudio({
         }
       >
         {busy ? <LoaderCircle size={17} className="spin" aria-hidden="true" /> : <Globe size={17} aria-hidden="true" />}
-        {cloudWorking ? "Your website team is working…" : busy ? "Sending to your website team…" : "Build and publish my website"}
+        <UiText text={cloudWorking ? "Your website team is working…" : busy ? "Sending to your website team…" : "Build and publish my website"}/>
       </button>
       <p className="studio-help">
-        The team works in the cloud, so you can close this page. Your link
-        appears on the right once the site is published.
-      </p>
+        <UiText text={"The team works in the cloud, so you can close this page. Your link appears on the right once the site is published."}/></p>
       </section>
       </div>
       <aside className="studio-results" aria-labelledby="studio-results-title">
-        <h3 id="studio-results-title">Your websites</h3>
+        <h3 id="studio-results-title"><UiText text={"Your websites"}/></h3>
         {!sites.length && (
           <div className="studio-empty">
             <Globe size={22} aria-hidden="true" />
-            <p>No website yet. When you publish, the team’s progress and your live link appear here.</p>
+            <p><UiText text={"No website yet. When you publish, the team’s progress and your live link appear here."}/></p>
           </div>
         )}
         {sites.map((site) => (
@@ -319,19 +313,19 @@ export default function WebsiteStudio({
                   {(site.studioCheckpoint?.stages || []).map((s) => (
                     <li key={s.stage} className="is-done"><Check size={12} aria-hidden="true" />{websiteStageName(s.stage, s.specialistName)}</li>
                   ))}
-                  <li className="is-working"><i aria-hidden="true" />{site.state === "queued" ? "Waiting for a cloud worker" : "Designing and writing"}</li>
+                  <li className="is-working"><i aria-hidden="true" /><UiText text={site.state === "queued" ? "Waiting for a cloud worker" : "Designing and writing"}/></li>
                 </ol>
-                <p>Your link appears here after the site is published. Closing this page does not stop the job.</p>
+                <p><UiText text={"Your link appears here after the site is published. Closing this page does not stop the job."}/></p>
               </div>
             )}
             {site.reason && <p className="studio-site-reason">{site.reason}</p>}
             {site.state === "published" && (
               <div className="studio-live">
-                <span className="studio-live-label">Live link</span>
+                <span className="studio-live-label"><UiText text={"Live link"}/></span>
                 <p className="site-url">{site.url}</p>
                 <div className="studio-live-actions">
                   <a className="office-primary" href={site.url} target="_blank" rel="noreferrer">
-                    Open website <ExternalLink size={14} aria-hidden="true" />
+                    <UiText text={"Open website "}/><ExternalLink size={14} aria-hidden="true" />
                   </a>
                   <button
                     type="button"
@@ -344,7 +338,7 @@ export default function WebsiteStudio({
                     }
                   >
                     {copied === site.id ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
-                    {copied === site.id ? "Copied" : "Copy link"}
+                    <UiText text={copied === site.id ? "Copied" : "Copy link"}/>
                   </button>
                   <button
                     type="button"
@@ -354,8 +348,7 @@ export default function WebsiteStudio({
                       run(() => api.unpublishSite(token!, site.id))
                     }
                   >
-                    Unpublish website
-                  </button>
+                    <UiText text={"Unpublish website"}/></button>
                 </div>
               </div>
             )}
@@ -366,9 +359,7 @@ export default function WebsiteStudio({
       <div className="quote-safety">
         <ShieldCheck size={18} aria-hidden="true" />
         <p>
-          Your team uses the business facts and prices you approved. Customer
-          records and login details stay private.
-        </p>
+          <UiText text={"Your team uses the business facts and prices you approved. Customer records and login details stay private."}/></p>
       </div>
     </section>
   );

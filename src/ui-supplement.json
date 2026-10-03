@@ -1,0 +1,222 @@
+{
+  "Speak business name": {
+    "Hindi": "व्यवसाय का नाम बोलें",
+    "Hinglish": "Business ka naam boliye"
+  },
+  "Speak business type": {
+    "Hindi": "व्यवसाय का प्रकार बोलें",
+    "Hinglish": "Business ka kaam boliye"
+  },
+  "Speak city": {
+    "Hindi": "शहर का नाम बोलें",
+    "Hinglish": "Shehar ka naam boliye"
+  },
+  "Speak business description": {
+    "Hindi": "अपने व्यवसाय के बारे में बोलें",
+    "Hinglish": "Apne business ke baare mein boliye"
+  },
+  "Speak your rules": {
+    "Hindi": "अपनी शर्तें बोलें",
+    "Hinglish": "Apne niyam boliye"
+  },
+  "Speak your job": {
+    "Hindi": "अपना काम बोलकर बताएं",
+    "Hinglish": "Apna kaam bolkar bataiye"
+  },
+  "Interface language": {
+    "Hindi": "ऐप की भाषा",
+    "Hinglish": "App ki bhasha"
+  },
+  "Please fill this required field.": {
+    "Hindi": "यह जरूरी जानकारी भरें।",
+    "Hinglish": "Yeh zaroori jaankari bhariye."
+  },
+  "Use at least {count} characters in this field.": {
+    "Hindi": "यहां कम से कम {count} अक्षर लिखें।",
+    "Hinglish": "Yahan kam se kam {count} akshar likhiye."
+  },
+  "Check this field before continuing.": {
+    "Hindi": "आगे बढ़ने से पहले यह जानकारी जांचें।",
+    "Hinglish": "Aage badhne se pehle yeh jaankari jaanchiye."
+  },
+  "Check the format shown beside this field.": {
+    "Hindi": "इस जानकारी के पास बताया गया प्रारूप जांचें।",
+    "Hinglish": "Is field ke paas diya format jaanchiye."
+  },
+  "Use a complete email address, such as name@example.com.": {
+    "Hindi": "पूरा ईमेल पता लिखें, जैसे name@example.com।",
+    "Hinglish": "Poora email likhiye, jaise name@example.com."
+  },
+  "Check the required fields and approvals before continuing.": {
+    "Hindi": "आगे बढ़ने से पहले जरूरी जानकारी और अपनी मंजूरी जांचें।",
+    "Hinglish": "Aage badhne se pehle zaroori jaankari aur apni manzoori jaanchiye."
+  },
+  "Your setup helper": {
+    "Hindi": "सेटअप में आपकी मददगार",
+    "Hinglish": "Setup mein aapki madadgaar"
+  },
+  "Need help? Ask Sia": {
+    "Hindi": "मदद चाहिए? Sia से पूछें",
+    "Hinglish": "Madad chahiye? Sia se poochhiye"
+  },
+  "Minimise Sia": {
+    "Hindi": "Sia को छोटा करें",
+    "Hinglish": "Sia ko chhota karein"
+  },
+  "Close Sia help": {
+    "Hindi": "Sia की मदद बंद करें",
+    "Hinglish": "Sia ki madad band karein"
+  },
+  "Sia setup help": {
+    "Hindi": "Sia की सेटअप सहायता",
+    "Hinglish": "Sia ki setup madad"
+  },
+  "Ask a question": {
+    "Hindi": "अपना सवाल पूछें",
+    "Hinglish": "Apna sawaal poochhiye"
+  },
+  "Ask Sia to explain": {
+    "Hindi": "Sia से समझाने को कहें",
+    "Hinglish": "Sia se samjhane ko kahiye"
+  },
+  "Sia is answering…": {
+    "Hindi": "Sia जवाब दे रही है…",
+    "Hinglish": "Sia jawab de rahi hai…"
+  },
+  "Do not share passwords, OTPs or payment keys here.": {
+    "Hindi": "यहां पासवर्ड, OTP या भुगतान की गुप्त कुंजी न भेजें।",
+    "Hinglish": "Yahan password, OTP ya payment ki secret key mat bhejiye."
+  },
+  "How do I complete this step?": {
+    "Hindi": "मैं यह चरण कैसे पूरा करूं?",
+    "Hinglish": "Main yeh step kaise poora karoon?"
+  },
+  "Preparing voice…": {
+    "Hindi": "आवाज तैयार हो रही है…",
+    "Hinglish": "Awaaz taiyaar ho rahi hai…"
+  },
+  "Stop recording (25s max)": {
+    "Hindi": "रिकॉर्डिंग रोकें (अधिकतम 25 सेकंड)",
+    "Hinglish": "Recording rokiye (zyada se zyada 25 second)"
+  },
+  "Your latest sources are being indexed. Wait a moment, then check again. Your team can still use your saved business facts.": {
+    "Hindi": "आपके नए स्रोत खोज के लिए तैयार हो रहे हैं। थोड़ा इंतजार करके फिर जांचें। आपकी टीम सहेजी हुई जानकारी से काम कर सकती है।",
+    "Hinglish": "Aapke naye sources search ke liye taiyaar ho rahe hain. Thoda rukkar phir jaanchiye. Aapki team saved jaankari se kaam kar sakti hai."
+  },
+  "The last memory upload did not finish. Choose Save latest sources to memory to retry.": {
+    "Hindi": "पिछला मेमोरी अपलोड पूरा नहीं हुआ। दोबारा कोशिश करने के लिए ‘नए स्रोत मेमोरी में सहेजें’ चुनें।",
+    "Hinglish": "Pichhla memory upload poora nahi hua. Dobara koshish ke liye naye sources memory mein save karein."
+  },
+  "Cognee is busy. Wait before searching again. Your saved facts are intact.": {
+    "Hindi": "Cognee अभी व्यस्त है। फिर खोजने से पहले थोड़ा रुकें। आपकी सहेजी हुई जानकारी सुरक्षित है।",
+    "Hinglish": "Cognee abhi busy hai. Phir search karne se pehle thoda rukiye. Aapki saved jaankari salamat hai."
+  },
+  "Choose from my business images": {
+    "Hindi": "मेरी सहेजी हुई तस्वीरों से चुनें",
+    "Hinglish": "Meri saved business tasveeron se chuniye"
+  },
+  "Add your logo or photos in Business & memory.": {
+    "Hindi": "व्यवसाय और मेमोरी में अपना लोगो या तस्वीरें जोड़ें।",
+    "Hinglish": "Business aur memory mein apna logo ya tasveerein jodiye."
+  },
+  "Counter team": {
+    "Hindi": "काउंटर टीम",
+    "Hinglish": "Counter team"
+  },
+  "Online dukaan": {
+    "Hindi": "ऑनलाइन दुकान",
+    "Hinglish": "Online dukaan"
+  },
+  "Khata team": {
+    "Hindi": "खाता टीम",
+    "Hinglish": "Khata team"
+  },
+  "Customer requests": {
+    "Hindi": "ग्राहकों की जरूरतें",
+    "Hinglish": "Grahakon ki zarooratein"
+  },
+  "Growth insights": {
+    "Hindi": "व्यापार बढ़ाने के सुझाव",
+    "Hinglish": "Business badhane ke sujhav"
+  },
+  "Business advisor": {
+    "Hindi": "व्यवसाय सलाहकार",
+    "Hinglish": "Business salahkaar"
+  },
+  "Customer team": {
+    "Hindi": "ग्राहक टीम",
+    "Hinglish": "Customer team"
+  },
+  "Email sales desk": {
+    "Hindi": "ईमेल बिक्री डेस्क",
+    "Hinglish": "Email sales desk"
+  },
+  "Personal assistant": {
+    "Hindi": "निजी सहायक",
+    "Hinglish": "Personal assistant"
+  },
+  "Instagram team": {
+    "Hindi": "Instagram टीम",
+    "Hinglish": "Instagram team"
+  },
+  "Website team": {
+    "Hindi": "वेबसाइट टीम",
+    "Hinglish": "Website team"
+  },
+  "Owner updates": {
+    "Hindi": "मालिक के लिए जानकारी",
+    "Hinglish": "Malik ke liye updates"
+  },
+  "e.g. Asha Studio": {
+    "Hindi": "जैसे आशा स्टूडियो",
+    "Hinglish": "Jaise Asha Studio"
+  },
+  "e.g. Pune": {
+    "Hindi": "जैसे पुणे",
+    "Hinglish": "Jaise Pune"
+  },
+  "16-character merchant key": {
+    "Hindi": "16 अक्षर की मर्चेंट कुंजी",
+    "Hinglish": "16 akshar ki merchant key"
+  },
+  "91 and your 10-digit number": {
+    "Hindi": "91 और आपका 10 अंकों का नंबर",
+    "Hinglish": "91 aur aapka 10 ankon ka number"
+  },
+  "A short answer is enough": {
+    "Hindi": "छोटा सा जवाब काफी है",
+    "Hinglish": "Chhota sa jawab kaafi hai"
+  },
+  "2 rice bags, 3 soaps… or describe a photographed parchi": {
+    "Hindi": "2 चावल के बैग, 3 साबुन… या पर्ची की तस्वीर का विवरण",
+    "Hinglish": "2 chawal ke bag, 3 sabun… ya parchi ki photo ka vivaran"
+  },
+  "your-id@bank-handle": {
+    "Hindi": "your-id@bank-handle",
+    "Hinglish": "your-id@bank-handle"
+  },
+  "e.g. Pickup only, or Baner and Aundh": {
+    "Hindi": "जैसे केवल दुकान से लें, या बानेर और औंध",
+    "Hinglish": "Jaise sirf dukaan se lein, ya Baner aur Aundh"
+  },
+  "e.g. 60, 1440": {
+    "Hindi": "जैसे 60, 1440",
+    "Hinglish": "Jaise 60, 1440"
+  },
+  "Please add {count} more characters.": {
+    "Hindi": "कृपया {count} और अक्षर लिखें।",
+    "Hinglish": "Kripya {count} aur akshar likhiye."
+  },
+  "{count} / 5,000 characters": {
+    "Hindi": "{count} / 5,000 अक्षर",
+    "Hinglish": "{count} / 5,000 akshar"
+  },
+  "Sources are indexed. Search below to inspect exact passages.": {
+    "Hindi": "स्रोत खोज के लिए तैयार हैं। नीचे खोजकर मूल जानकारी देखें।",
+    "Hinglish": "Sources search ke liye taiyaar hain. Neeche search karke asal jaankari dekhiye."
+  },
+  "I own or have permission to use these images. They stay private until I approve publishing.": {
+    "Hindi": "ये तस्वीरें मेरी हैं या मुझे इन्हें इस्तेमाल करने की अनुमति है। प्रकाशित करने की मंजूरी देने तक ये निजी रहेंगी।",
+    "Hinglish": "Yeh tasveerein meri hain ya mujhe inhein istemaal karne ki ijazat hai. Publish karne ki manzoori dene tak yeh private rahengi."
+  }
+}
