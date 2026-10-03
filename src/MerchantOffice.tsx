@@ -403,7 +403,7 @@ function Setup({
                 <h2>Who should help you first?</h2>
                 <p>Choose a ready teammate. No payment account is needed to start preparing work.</p>
                 <div className="ready-onboarding-grid" role="group" aria-label="Choose your first teammate">
-                  {readyTeams.filter(t=>!['saathi','rang','udaan','raabta'].includes(t.code)).map(t=><button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={setup.goal===`Ready team: ${t.code}`} onClick={()=>field("goal",`Ready team: ${t.code}`)}><PixelTeammate id={t.id}/><span><strong>{t.name}</strong><small>{t.tag}</small></span>{setup.goal===`Ready team: ${t.code}`&&<Check size={16}/>}</button>)}
+                  {readyTeams.map(t=><button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={setup.goal===`Ready team: ${t.code}`} onClick={()=>field("goal",`Ready team: ${t.code}`)}><PixelTeammate id={t.id} name={t.name.split(' · ')[0]}/><span><strong>{t.name}</strong><small>{t.tag}</small></span>{setup.goal===`Ready team: ${t.code}`&&<Check size={16}/>}</button>)}
                 </div>
                 <label>
                   When should your team ask you?
@@ -1699,6 +1699,8 @@ export default function MerchantOffice() {
                   token={token}
                   workspace={workspace}
                   onChange={() => refresh()}
+                  onConnect={() => navigate("connections")}
+                  onWhatsApp={() => navigate("whatsapp")}
                 />
               )}
               {page === "whatsapp" && (
@@ -1865,6 +1867,7 @@ export default function MerchantOffice() {
                               </button>
                             ) : (
                               <>
+                                {(id === "instagram" || id === "gmail") && <button className="office-secondary" onClick={() => navigate("customers")}>Start {id === "instagram" ? "Riya" : "Meera"} replies <ChevronRight size={14}/></button>}
                                 <button
                                   className="office-text"
                                   disabled={!!busy}
