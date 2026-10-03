@@ -1,0 +1,5 @@
+/** Small code-native pixel props animate only while the stored job is actually working. */
+export default function PixelWorkstation({state,kind}:{state:string;kind:string}){
+ const picture=kind==='instagram'||kind==='content';
+ return <span className={`lab-workstation ${state==='working'?'is-running':''} ${state==='completed'?'is-done':''}`} aria-hidden="true"><svg viewBox="0 0 64 46" shapeRendering="crispEdges"><path d="M5 7h47v29H5z" fill="#cde7f1"/><path d="M8 10h41v23H8z" fill="#06395c"/><path d="M25 36h7v5H25zM16 41h27v3H16z" fill="#81b7cc"/>{picture?<><path d="M12 14h17v15H12z" fill="#2bb4dc"/><path d="M14 25l5-6 8 10H14z" fill="#a8ecf7"/><path d="M23 17h3v3h-3z" fill="#ffdb78"/><path d="M33 16h11v2H33zM33 21h8v2H33zM33 26h10v2H33z" fill="#62c6e5"/></>:<><path className="lab-pixel-line" d="M12 14h23v2H12zM12 20h29v2H12zM12 26h16v2H12z" fill="#65d0ed"/><path d="M38 13h7v4h-7zM32 25h13v4H32z" fill="#98dba8"/></>}<path d="M45 33h13v9H45z" fill="#dfb875"/><path d="M47 35h9v2h-9zM47 39h6v1h-6z" fill="#fff0d0"/><path className="lab-pixel-cursor" d="M36 25h3v4h-3z" fill="#fff"/></svg></span>
+}

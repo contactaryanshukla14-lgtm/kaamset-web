@@ -444,6 +444,7 @@ export type BusinessGuide={summary:string;sourceQuotes:string[];recommendedTeams
 export type RecordSummary={practice:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};reportedBusiness:{files:number;records:number;receivedPaise:number;pendingPaise:number;refundedPaise:number};providerVerified:false;policy:string};
 export type RecordPreview={hash:string;kind:'practice'|'owner_import';alreadyImported:boolean;rows:{id:string;date:string;description:string;amountPaise:number;method:string;status:string}[];summary:RecordSummary};
 export type WorkspaceState = {
+  labSummary?:{generation:string;version:number;name:string;connection:string;transactions:number;openJobs:number};
   businessGuide?:BusinessGuide;
   businessGuideRun?:{id:string;briefHash:string;state:'queued'|'working'|'completed'|'failed'|'waiting_owner';requestedAt:string;reason?:string};
   recordImports?:{id:string;hash:string;fileName:string;kind:'practice'|'owner_import';createdAt:string;rowCount:number}[];

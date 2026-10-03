@@ -1316,8 +1316,8 @@
     "Hinglish": "Handover darj ho gaya"
   },
   "Cancelled": {
-    "Hindi": "रद्द किया गया",
-    "Hinglish": "Cancel ho gaya"
+    "Hindi": "रद्द",
+    "Hinglish": "Cancelled"
   },
   "Awaiting handover": {
     "Hindi": "सौंपने का इंतज़ार",
@@ -1976,7 +1976,7 @@
     "Hinglish": "Payment baaki"
   },
   "Paid": {
-    "Hindi": "पेमेंट हो गया",
+    "Hindi": "भुगतान हुआ",
     "Hinglish": "Paid"
   },
   "Owner needed": {
@@ -5382,5 +5382,289 @@
   "I own or have permission to use these images. They stay private until I approve publishing.": {
     "Hindi": "ये तस्वीरें मेरी हैं या मुझे इन्हें इस्तेमाल करने की अनुमति है। प्रकाशित करने की मंजूरी देने तक ये निजी रहेंगी।",
     "Hinglish": "Yeh tasveerein meri hain ya mujhe inhein istemaal karne ki ijazat hai. Publish karne ki manzoori dene tak yeh private rahengi."
+  },
+  "Overview": {
+    "Hindi": "एक नज़र में",
+    "Hinglish": "Ek nazar mein"
+  },
+  "Payments": {
+    "Hindi": "भुगतान",
+    "Hinglish": "Payments"
+  },
+  "Payment requests": {
+    "Hindi": "भुगतान अनुरोध",
+    "Hinglish": "Payment requests"
+  },
+  "Settlements": {
+    "Hindi": "बैंक में जमा",
+    "Hinglish": "Bank mein jama"
+  },
+  "Refunds & exceptions": {
+    "Hindi": "रिफंड और समीक्षा",
+    "Hinglish": "Refund aur review"
+  },
+  "Reports": {
+    "Hindi": "रिपोर्ट",
+    "Hinglish": "Reports"
+  },
+  "AI team activity": {
+    "Hindi": "AI टीम का काम",
+    "Hinglish": "AI team ka kaam"
+  },
+  "Customer inbox": {
+    "Hindi": "ग्राहकों के संदेश",
+    "Hinglish": "Customers ke messages"
+  },
+  "Business memory": {
+    "Hindi": "कारोबार की याददाश्त",
+    "Hinglish": "Business ki memory"
+  },
+  "Open prepared store": {
+    "Hindi": "तैयार दुकान खोलें",
+    "Hinglish": "Taiyar dukaan kholein"
+  },
+  "KaamSet workspace": {
+    "Hindi": "KaamSet कार्यक्षेत्र",
+    "Hinglish": "KaamSet workspace"
+  },
+  "Presenter controls": {
+    "Hindi": "प्रस्तुतकर्ता के नियंत्रण",
+    "Hinglish": "Presenter controls"
+  },
+  "Demo pack": {
+    "Hindi": "डेमो सामग्री",
+    "Hinglish": "Demo pack"
+  },
+  "Review & connect": {
+    "Hindi": "देखें और जोड़ें",
+    "Hinglish": "Dekhein aur connect karein"
+  },
+  "Connect demo merchant": {
+    "Hindi": "डेमो व्यापारी जोड़ें",
+    "Hinglish": "Demo merchant connect karein"
+  },
+  "Connect this prepared demo merchant": {
+    "Hindi": "इस तैयार डेमो दुकान को जोड़ें",
+    "Hinglish": "Is taiyar demo dukaan ko connect karein"
+  },
+  "Authorize the demo merchant": {
+    "Hindi": "डेमो व्यापारी को अनुमति दें",
+    "Hinglish": "Demo merchant ko permission dein"
+  },
+  "Available demo capabilities": {
+    "Hindi": "डेमो में उपलब्ध काम",
+    "Hinglish": "Demo mein available kaam"
+  },
+  "Demo merchant · Simulated payments": {
+    "Hindi": "डेमो व्यापारी · काल्पनिक भुगतान",
+    "Hinglish": "Demo merchant · Simulated payments"
+  },
+  "Fictional prepared store": {
+    "Hindi": "तैयार काल्पनिक दुकान",
+    "Hinglish": "Taiyar fictional dukaan"
+  },
+  "Shared ledger synchronized": {
+    "Hindi": "साझा रिकॉर्ड अपडेट हैं",
+    "Hinglish": "Shared records updated hain"
+  },
+  "Reconnecting to stored records": {
+    "Hindi": "रिकॉर्ड से दोबारा जुड़ रहे हैं",
+    "Hinglish": "Records se reconnect kar rahe hain"
+  },
+  "Try sync again": {
+    "Hindi": "दोबारा अपडेट करें",
+    "Hinglish": "Dobara sync karein"
+  },
+  "Inject a customer enquiry": {
+    "Hindi": "डेमो ग्राहक का सवाल भेजें",
+    "Hinglish": "Demo customer ka sawal bhejein"
+  },
+  "Simulated channel": {
+    "Hindi": "डेमो चैनल",
+    "Hinglish": "Demo channel"
+  },
+  "Customer message": {
+    "Hindi": "ग्राहक का संदेश",
+    "Hinglish": "Customer ka message"
+  },
+  "Inject enquiry & queue team": {
+    "Hindi": "सवाल भेजें और टीम शुरू करें",
+    "Hinglish": "Sawal bhejein aur team shuru karein"
+  },
+  "Reply as the demo customer": {
+    "Hindi": "डेमो ग्राहक बनकर जवाब दें",
+    "Hinglish": "Demo customer bankar reply dein"
+  },
+  "Customer reply": {
+    "Hindi": "ग्राहक का जवाब",
+    "Hinglish": "Customer ka reply"
+  },
+  "Conversation": {
+    "Hindi": "बातचीत",
+    "Hinglish": "Conversation"
+  },
+  "Simulate a payment outcome": {
+    "Hindi": "डेमो भुगतान का परिणाम भेजें",
+    "Hinglish": "Demo payment ka result bhejein"
+  },
+  "Payment request": {
+    "Hindi": "भुगतान अनुरोध",
+    "Hinglish": "Payment request"
+  },
+  "Provider outcome": {
+    "Hindi": "भुगतान का परिणाम",
+    "Hinglish": "Payment ka result"
+  },
+  "Emit signed demo event": {
+    "Hindi": "प्रमाणित डेमो घटना भेजें",
+    "Hinglish": "Signed demo event bhejein"
+  },
+  "Repeat latest event": {
+    "Hindi": "पिछली घटना दोबारा भेजें",
+    "Hinglish": "Pichhla event repeat karein"
+  },
+  "Demo follow-up clock": {
+    "Hindi": "डेमो फॉलो-अप का समय",
+    "Hinglish": "Demo follow-up ka time"
+  },
+  "Advance 24 hours": {
+    "Hindi": "24 घंटे आगे बढ़ाएं",
+    "Hinglish": "24 ghante aage badhaayein"
+  },
+  "Simulated channel health": {
+    "Hindi": "डेमो चैनल की स्थिति",
+    "Hinglish": "Demo channel ki status"
+  },
+  "Reconnect": {
+    "Hindi": "दोबारा जोड़ें",
+    "Hinglish": "Reconnect karein"
+  },
+  "Reset this Lab": {
+    "Hindi": "यह डेमो रीसेट करें",
+    "Hinglish": "Yeh demo reset karein"
+  },
+  "Start job": {
+    "Hindi": "काम शुरू करें",
+    "Hinglish": "Kaam shuru karein"
+  },
+  "Run again": {
+    "Hindi": "फिर चलाएं",
+    "Hinglish": "Phir chalaayein"
+  },
+  "Evidence & sources": {
+    "Hindi": "प्रमाण और स्रोत",
+    "Hinglish": "Evidence aur sources"
+  },
+  "Open payment request": {
+    "Hindi": "भुगतान अनुरोध खोलें",
+    "Hinglish": "Payment request kholein"
+  },
+  "Ready to start": {
+    "Hindi": "शुरू करने के लिए तैयार",
+    "Hinglish": "Shuru karne ke liye taiyar"
+  },
+  "Queued in cloud": {
+    "Hindi": "क्लाउड की कतार में",
+    "Hinglish": "Cloud ki queue mein"
+  },
+  "Completed": {
+    "Hindi": "पूरा हुआ",
+    "Hinglish": "Poora hua"
+  },
+  "Needs owner review": {
+    "Hindi": "मालिक की समीक्षा चाहिए",
+    "Hinglish": "Owner ka review chahiye"
+  },
+  "Successful": {
+    "Hindi": "सफल",
+    "Hinglish": "Successful"
+  },
+  "Failed": {
+    "Hindi": "असफल",
+    "Hinglish": "Failed"
+  },
+  "Partially paid": {
+    "Hindi": "आंशिक भुगतान",
+    "Hinglish": "Part payment"
+  },
+  "Overdue": {
+    "Hindi": "भुगतान बाकी",
+    "Hinglish": "Payment baaki"
+  },
+  "Settled": {
+    "Hindi": "बैंक में जमा",
+    "Hinglish": "Bank mein jama"
+  },
+  "Demo connected": {
+    "Hindi": "डेमो जुड़ा है",
+    "Hinglish": "Demo connected"
+  },
+  "Active in demo": {
+    "Hindi": "डेमो में सक्रिय",
+    "Hinglish": "Demo mein active"
+  },
+  "Collections & settlements": {
+    "Hindi": "भुगतान और बैंक जमा",
+    "Hinglish": "Payments aur bank jama"
+  },
+  "Gross collections": {
+    "Hindi": "कुल भुगतान",
+    "Hinglish": "Total payments"
+  },
+  "Net settlements": {
+    "Hindi": "शुद्ध बैंक जमा",
+    "Hinglish": "Net bank jama"
+  },
+  "Prepared jobs & saved results": {
+    "Hindi": "तैयार काम और सहेजे परिणाम",
+    "Hinglish": "Taiyar kaam aur saved results"
+  },
+  "One business, connected records": {
+    "Hindi": "एक कारोबार, जुड़े रिकॉर्ड",
+    "Hinglish": "Ek business, connected records"
+  },
+  "Approved catalogue": {
+    "Hindi": "स्वीकृत उत्पाद सूची",
+    "Hinglish": "Approved catalogue"
+  },
+  "Fictional customers": {
+    "Hindi": "काल्पनिक ग्राहक",
+    "Hinglish": "Fictional customers"
+  },
+  "Scheduled commitments": {
+    "Hindi": "तय किए गए काम",
+    "Hinglish": "Scheduled commitments"
+  },
+  "Reply as the simulated customer": {
+    "Hindi": "डेमो ग्राहक बनकर जवाब दें",
+    "Hinglish": "Demo customer bankar reply dein"
+  },
+  "Start the teammate’s reply": {
+    "Hindi": "टीम का जवाब शुरू करें",
+    "Hinglish": "Team ka reply shuru karein"
+  },
+  "Send input & queue team": {
+    "Hindi": "संदेश भेजें और टीम शुरू करें",
+    "Hinglish": "Message bhejein aur team shuru karein"
+  },
+  "Connect your live accounts": {
+    "Hindi": "अपने असली खाते जोड़ें",
+    "Hinglish": "Apne live accounts connect karein"
+  },
+  "Edit business sources": {
+    "Hindi": "कारोबार की जानकारी बदलें",
+    "Hinglish": "Business ki information badlein"
+  },
+  "Available in demo": {
+    "Hindi": "डेमो में उपलब्ध",
+    "Hinglish": "Demo mein available"
+  },
+  "Disconnected in demo": {
+    "Hindi": "डेमो में डिस्कनेक्ट",
+    "Hinglish": "Demo mein disconnected"
+  },
+  "Actual AI and cloud workers. Simulated payments and customer channels. No Paytm credentials needed.": {
+    "Hindi": "असली AI और क्लाउड पर काम। भुगतान और ग्राहक चैनल काल्पनिक हैं। Paytm की कुंजी ज़रूरी नहीं है।",
+    "Hinglish": "Actual AI aur cloud par kaam. Payments aur customer channels simulated hain. Paytm keys ki zaroorat nahi hai."
   }
 }
