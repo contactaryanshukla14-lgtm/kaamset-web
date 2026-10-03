@@ -235,164 +235,7 @@
   font-weight: 750;
   letter-spacing: 1.8px;
 }
-.office-onboarding {
-  min-height: 100vh;
-  background: linear-gradient(120deg, #f6fbff, #f5f7fa);
-}
-.office-onboarding > header {
-  max-width: 1280px;
-  margin: auto;
-  padding: 32px 48px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.office-welcome {
-  max-width: 1280px;
-  padding: 35px 48px 65px;
-  margin: auto;
-  display: grid;
-  grid-template-columns: 1.06fr 1fr;
-  gap: 84px;
-  align-items: center;
-}
-.office-story h1 {
-  font-size: clamp(40px, 4.5vw, 61px);
-  line-height: 1.12;
-  letter-spacing: -0.055em;
-  margin-top: 22px;
-}
-.office-story h1 em {
-  font-style: normal;
-  color: #009fcc;
-}
-.office-story > p {
-  font-size: 16px;
-  max-width: 455px;
-}
-.office-crew-scene {
-  position: relative;
-  height: 305px;
-  margin: 20px 0;
-}
-.scene-orbit {
-  position: absolute;
-  inset: 60px 0 10px;
-  border: 1px solid #dbeff5;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, #d8f3ff6b, transparent 65%);
-}
-.scene-member {
-  position: absolute;
-  width: 140px;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
-.scene-member .pixel-avatar {
-  width: 132px;
-  height: 150px;
-  filter: drop-shadow(0 10px 6px #002b5910);
-}
-.scene-member .pixel-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
-.scene-member > span {
-  font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: white;
-  border: 1px solid #dbe7ee;
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-.scene-member small {
-  font-size: 10px;
-  color: #7990a1;
-  font-weight: 400;
-}
-.scene-riya {
-  left: 0;
-  top: 42px;
-}
-.scene-milo {
-  left: 35%;
-  top: 5px;
-}
-.scene-vijay {
-  right: 0;
-  top: 51px;
-}
-.scene-cloud {
-  position: absolute;
-  bottom: 10px;
-  left: 30%;
-  background: #002b59;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 20px;
-  border-radius: 9px;
-  font-size: 12px;
-  box-shadow: 0 10px 30px #002b5920;
-}
-.office-promise {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #5b788b;
-  font-size: 12px;
-}
-.office-setup-card {
-  padding: 34px 36px;
-  background: white;
-  border: 1px solid #e3ebf0;
-  border-radius: 18px;
-  box-shadow: 0 22px 60px #002b5908;
-}
-.setup-step {
-  display: flex;
-  justify-content: space-between;
-  color: #728293;
-  font-size: 10px;
-  letter-spacing: 1.2px;
-}
-.setup-step strong {
-  letter-spacing: 0;
-}
-.setup-step-bars {
-  display: flex;
-  gap: 7px;
-  margin: 14px 0 25px;
-}
-.setup-step-bars i {
-  height: 3px;
-  flex: 1;
-  background: #edf2f5;
-}
-.setup-step-bars i.filled {
-  background: #00b9f1;
-}
-.office-setup-card h2 {
-  margin: 0 0 9px;
-}
-.office-setup-card p {
-  font-size: 13px;
-}
-.setup-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 25px;
-}
-.setup-buttons .office-primary {
-  flex: 1;
-}
+/* Onboarding layout lives in office-system.css. */
 .office-footnote {
   display: block;
   font-size: 11px !important;
@@ -1326,9 +1169,6 @@
   .office-content {
     padding-top: 55px;
   }
-  .office-welcome {
-    padding-top: 60px;
-  }
 }
 @media (max-width: 1150px) {
   .office-sidebar {
@@ -1352,12 +1192,6 @@
     grid-template-columns: 200px 1fr;
     gap: 15px;
   }
-  .office-welcome {
-    gap: 40px;
-  }
-  .office-story h1 {
-    font-size: 45px;
-  }
   .office-summary > div {
     padding: 17px;
   }
@@ -1366,40 +1200,6 @@
   }
 }
 @media (max-width: 850px) {
-  .office-welcome {
-    grid-template-columns: 1fr;
-    max-width: 620px;
-    padding: 25px 25px 50px;
-  }
-  .office-story h1 {
-    font-size: 42px;
-  }
-  .office-story > p {
-    font-size: 14px;
-  }
-  .office-crew-scene {
-    height: 245px;
-    margin: 10px 0;
-  }
-  .scene-member .pixel-avatar {
-    width: 105px;
-    height: 126px;
-  }
-  .scene-member {
-    width: 120px;
-  }
-  .scene-cloud {
-    bottom: 0;
-  }
-  .office-onboarding > header {
-    padding: 25px;
-    gap: 20px;
-  }
-  .office-onboarding > header > .office-text {
-    font-size: 10px;
-    max-width: 170px;
-    text-align: right;
-  }
   .office-sidebar {
     transform: translateX(-100%);
     visibility: hidden;
@@ -1480,9 +1280,6 @@
     max-width: 155px;
     text-align: right;
   }
-  .office-setup-card {
-    padding: 26px;
-  }
   .office-modal {
     padding: 28px;
   }
@@ -1540,45 +1337,6 @@
   }
   .office-stage-trail {
     flex-wrap: wrap;
-  }
-  .office-crew-scene {
-    height: 215px;
-  }
-  .scene-member .pixel-avatar {
-    width: 85px;
-    height: 104px;
-  }
-  .scene-member {
-    width: 95px;
-  }
-  .scene-member > span {
-    font-size: 10px;
-    padding: 6px 7px;
-    gap: 5px;
-  }
-  .scene-member small {
-    font-size: 8px;
-  }
-  .scene-cloud {
-    left: 25%;
-    font-size: 10px;
-    padding: 10px 13px;
-  }
-  .office-setup-card {
-    padding: 24px 20px;
-  }
-  .office-story h1 {
-    font-size: 37px;
-  }
-  .office-story > p {
-    font-size: 13px;
-  }
-  .office-onboarding > header {
-    padding: 22px;
-  }
-  .office-welcome {
-    padding: 15px 22px 45px;
-    gap: 25px;
   }
   .office-brand strong {
     font-size: 25px;

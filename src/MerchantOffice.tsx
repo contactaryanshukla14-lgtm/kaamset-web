@@ -49,15 +49,17 @@ import {
   Catalogue,
   MilanScheduler,
   OrderDesk,
-  SharedBrain,
 } from "./MerchantTools";
-import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,type ReadyTeamId} from "./ReadyTeams";
+import {readyTeams,selectedReadyTeam,ReadyTeamGallery,ReadyTeamSetup,merchantCodes,teamLead,teamRole,type ReadyTeamId} from "./ReadyTeams";
+import WorkOverview, { Status } from "./WorkOverview";
 import MerchantOps,{type OpsPage} from "./MerchantOps";
 import UpiSettings from "./UpiSettings";
 const TeammateTask = lazy(() => import("./TeammateTask"));
 const TeamIdentity = lazy(() => import("./TeamIdentity"));
+const BusinessStart = lazy(() => import("./BusinessStart"));
 const CopyItems = lazy(() => import("./CopyItems"));
 import "./office.css";
+import "./office-system.css";
 
 const storageKey = "kaamset_merchant_workspace_token";
 const legacyStorageKey = "kaamset_workspace_token";
@@ -170,6 +172,7 @@ const initial: BusinessSetup = {
   approved: true,
 };
 const label = (s: string) => s.replaceAll("_", " ");
+const setupSteps = ["Your business", "In your words", "Team & approval"];
 function Brand() {
   return (
     <a className="office-brand" href="/" aria-label="KaamSet home">
@@ -183,14 +186,6 @@ function Brand() {
         kaam<span>set</span>
       </strong>
     </a>
-  );
-}
-function Status({ value }: { value: string }) {
-  return (
-    <span className={`office-status status-${value}`}>
-      {["working", "queued"].includes(value) && <i />}
-      {label(value)}
-    </span>
   );
 }
 function Setup({
@@ -215,7 +210,11 @@ function Setup({
     }),
     [approved, setApproved] = useState(false),
     [error, setError] = useState("");
-  const file = useRef<HTMLInputElement>(null);
+  const file = useRef<HTMLInputElement>(null),
+    stepHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (step === 2) stepHeading.current?.focus();
+  }, [step]);
   function field(key: keyof BusinessSetup, value: string) {
     const next = { ...setup, [key]: value };
     setSetup(next);
@@ -234,70 +233,66 @@ function Setup({
     if (step < 2) setStep(step + 1);
     else await onFinish(setup);
   }
+  const chosen = readyTeams.find((t) => setup.goal === `Ready team: ${t.code}`);
+  const teamOption = (t: (typeof readyTeams)[number]) => {
+    const on = setup.goal === `Ready team: ${t.code}`;
+    return (
+      <button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={on} onClick={() => field("goal", `Ready team: ${t.code}`)}>
+        <span className="ready-onboarding-portrait" aria-hidden="true"><PixelTeammate id={t.id} name={teamLead(t)} /></span>
+        <span><strong>{teamLead(t)} <em>{teamRole(t)}</em></strong><small>{t.tag}</small></span>
+        {on && <Check className="ready-onboarding-check" size={16} aria-hidden="true" />}
+      </button>
+    );
+  };
   return (
     <div className="office-onboarding">
       <header>
         <Brand />
-        <button className="office-text" onClick={onSignIn}>
-          Already have a workspace? Sign in <ArrowUpRight size={15} />
+        <button type="button" className="office-text" onClick={onSignIn}>
+          Have a saved workspace? Sign in <ArrowUpRight size={15} />
         </button>
       </header>
       <main className="office-welcome">
         <aside className="office-story">
-          <span className="office-eyebrow">YOUR BUSINESS, WITH AN AI TEAM</span>
           <h1>
             Apni team chuniye.
-            <br />
-            <em>Team sambhal legi.</em>
+            <span>Team sambhal legi.</span>
           </h1>
           <p>
-            Ready AI teammates learn your business, prepare useful work,
-            and handle the live apps you connect from your cloud office.
+            Describe your business once. Pick a ready team for billing, udhaar,
+            customers, Instagram or your website. It prepares the work; you
+            approve what goes out.
           </p>
-          <div className="office-crew-scene">
-            <div className="scene-orbit" />
-            <div className="scene-member scene-riya">
-              <PixelTeammate id="baba" />
-              <span>
-                Arjun <small>Counter</small>
-              </span>
-            </div>
-            <div className="scene-member scene-milo">
-              <PixelTeammate id="ma" />
-              <span>
-                Naina <small>Khata</small>
-              </span>
-            </div>
-            <div className="scene-member scene-vijay">
-              <PixelTeammate id="tara" />
-              <span>
-                Tara <small>Dukaan</small>
-              </span>
-            </div>
-            <div className="scene-cloud">
-              <Cloud size={21} /> Your cloud office
-            </div>
-          </div>
-          <div className="office-promise">
-            <ShieldCheck size={18} />
-            <span>Your facts. Your accounts. Your approval.</span>
-          </div>
-        </aside>
-        <section className="office-setup-card">
-          <div className="setup-step">
-            <span>LET’S SET UP YOUR OFFICE</span>
-            <strong>{step + 1} / 3</strong>
-          </div>
-          <div className="setup-step-bars">
-            {[0, 1, 2].map((n) => (
-              <i key={n} className={n <= step ? "filled" : ""} />
+          <div className="onboarding-crew" aria-hidden="true">
+            {[["baba", "Arjun", "Counter"], ["ma", "Naina", "Khata"], ["chotu", "Sia", "Advisor"], ["tara", "Tara", "Dukaan"], ["vijay", "Vijay", "Website"]].map(([id, name, job]) => (
+              <figure key={id}>
+                <PixelTeammate id={id} name={name} />
+                <figcaption>{name}<small>{job}</small></figcaption>
+              </figure>
             ))}
           </div>
+          <ul className="onboarding-promises">
+            <li><MessageCircle size={17} aria-hidden="true" /><span>Write the way you speak. Hindi, Hinglish or English is fine.</span></li>
+            <li><ShieldCheck size={17} aria-hidden="true" /><span>Replies, posts and payment requests wait for your approval and your connected accounts.</span></li>
+            <li><Cloud size={17} aria-hidden="true" /><span>Approved jobs keep running in the cloud after you close this page.</span></li>
+          </ul>
+        </aside>
+        <section className="office-setup-card" aria-labelledby="setup-step-title">
+          <ol className="setup-progress" aria-label="Setup progress">
+            {setupSteps.map((name, n) => (
+              <li key={name} className={n < step ? "is-done" : n === step ? "is-current" : ""} aria-current={n === step ? "step" : undefined}>
+                <i aria-hidden="true">{n < step ? <Check size={12} /> : n + 1}</i>
+                <span>{name}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="setup-progress-text">Step {step + 1} of 3</p>
           <form onSubmit={next}>
+            <div className="setup-step-panel" key={step}>
             {step === 0 ? (
               <>
-                <h2>What’s your business?</h2>
-                <p>A few details help your team sound like you.</p>
+                <h2 id="setup-step-title">What’s your business?</h2>
+                <p>Just the basics. You can change these later.</p>
                 <label>
                   Business name
                   <input
@@ -315,13 +310,13 @@ function Setup({
                     value={setup.category}
                     onChange={(e) => field("category", e.target.value)}
                     maxLength={80}
-                    placeholder="Salon, kirana, coaching, clothing…"
+                    placeholder="Chai stall, kirana, salon, tailoring…"
                     required
                   />
                 </label>
                 <div className="office-form-row">
                   <label>
-                    City or service area <small>Optional</small>
+                    City or area <small>Optional</small>
                     <input
                       value={setup.city}
                       onChange={(e) => field("city", e.target.value)}
@@ -330,7 +325,7 @@ function Setup({
                     />
                   </label>
                   <label>
-                    Your preferred language
+                    Language you prefer
                     <select
                       value={setup.language}
                       onChange={(e) => field("language", e.target.value)}
@@ -344,22 +339,34 @@ function Setup({
               </>
             ) : step === 1 ? (
               <>
-                <h2>What should your team know?</h2>
+                <h2 id="setup-step-title">Tell us about it, in your words.</h2>
                 <p>
-                  Tell us what you offer and what customers usually ask. Add
-                  prices only if you want the team to use them.
+                  Explain it like you would to a new helper at the counter.
                 </p>
-                <label>
-                  Products, services and useful facts
+                <ul className="setup-prompts" aria-label="Things worth mentioning">
+                  <li>What you sell</li>
+                  <li>Who buys from you</li>
+                  <li>What takes most of your time</li>
+                </ul>
+                <label htmlFor="setup-description">
+                  <span id="setup-description-label">Your business, in your own words</span>
                   <textarea
+                    id="setup-description"
+                    aria-labelledby="setup-description-label"
                     autoFocus
                     value={setup.description}
-                    rows={6}
+                    rows={7}
                     maxLength={5000}
+                    aria-describedby="setup-description-count"
                     onChange={(e) => field("description", e.target.value)}
-                    placeholder="We’re a salon in Baner. Haircuts start at ₹500. We’re open Tuesday to Sunday, 10am–7pm. Appointments need confirmation…"
+                    placeholder="Main Pune mein chai aur snacks ka stall chalata hoon. Office customers WhatsApp par order poochte hain. Subah bahut busy hota hoon, payment aur udhaar ka record sambhalna mushkil hota hai…"
                     required
                   />
+                  <small id="setup-description-count" className="setup-count">
+                    {setup.description.trim().length < 20
+                      ? `A few more words, please (${20 - setup.description.trim().length} more characters)`
+                      : `${setup.description.length.toLocaleString("en-IN")} / 5,000 characters`}
+                  </small>
                 </label>
                 <input
                   type="file"
@@ -400,33 +407,67 @@ function Setup({
               </>
             ) : (
               <>
-                <h2>Who should help you first?</h2>
-                <p>Choose a ready teammate. No payment account is needed to start preparing work.</p>
-                <div className="ready-onboarding-grid" role="group" aria-label="Choose your first teammate">
-                  {readyTeams.map(t=><button className="ready-onboarding-option" type="button" key={t.code} aria-pressed={setup.goal===`Ready team: ${t.code}`} onClick={()=>field("goal",`Ready team: ${t.code}`)}><PixelTeammate id={t.id} name={t.name.split(' · ')[0]}/><span><strong>{t.name}</strong><small>{t.tag}</small></span>{setup.goal===`Ready team: ${t.code}`&&<Check size={16}/>}</button>)}
-                </div>
-                <label>
-                  When should your team ask you?
-                  <textarea
-                    rows={2}
-                    maxLength={2000}
-                    value={setup.rules}
-                    onChange={(e) => field("rules", e.target.value)}
-                  />
+                <h2 id="setup-step-title" ref={stepHeading} tabIndex={-1}>Pick your first team, then approve.</h2>
+                <p>All 12 ready teams share what you wrote. Start with one; add others any time. No payment account is needed to start.</p>
+                <label className="setup-team-picker">Your first ready team
+                  <select aria-label="Your first ready team" value={chosen?.code || ""} onChange={e=>field("goal",`Ready team: ${e.target.value}`)}>
+                    <option value="" disabled>Choose a team</option>
+                    <optgroup label="Everyday shop work">{readyTeams.filter(t=>merchantCodes.includes(t.code)).map(t=><option key={t.code} value={t.code}>{t.name}</option>)}</optgroup>
+                    <optgroup label="Customers & growth">{readyTeams.filter(t=>!merchantCodes.includes(t.code)).map(t=><option key={t.code} value={t.code}>{t.name}</option>)}</optgroup>
+                  </select>
                 </label>
-                <label className="office-check">
-                  <input
-                    type="checkbox"
-                    checked={approved}
-                    onChange={(e) => setApproved(e.target.checked)}
-                  />
-                  <span>
-                    I’ve checked these business facts and approve them for my
-                    team.
-                  </span>
-                </label>
+                {[
+                  { title: "Everyday shop work", list: readyTeams.filter((t) => merchantCodes.includes(t.code)) },
+                  { title: "Customers & growth", list: readyTeams.filter((t) => !merchantCodes.includes(t.code)) },
+                ].map((group) => (
+                  <div className="setup-team-group" key={group.title} role="group" aria-label={group.title}>
+                    <h3>{group.title}</h3>
+                    <div className="ready-onboarding-grid">{group.list.map(teamOption)}</div>
+                  </div>
+                ))}
+                {chosen && (
+                  <div className="setup-team-detail" aria-live="polite">
+                    <span className="ready-onboarding-portrait"><PixelTeammate id={chosen.id} name={teamLead(chosen)} /></span>
+                    <div>
+                      <strong>{chosen.name}</strong>
+                      <p>{chosen.description}</p>
+                      <small><Link2 size={13} aria-hidden="true" /> {chosen.connection}</small>
+                    </div>
+                  </div>
+                )}
+                <section className="setup-approval" aria-labelledby="setup-approval-title">
+                  <h3 id="setup-approval-title">Check and approve</h3>
+                  <dl>
+                    <div><dt>Business</dt><dd>{setup.name}, {setup.category}{setup.city.trim() ? `, ${setup.city}` : ""}</dd></div>
+                    <div><dt>Language</dt><dd>{setup.language}</dd></div>
+                    <div><dt>First team</dt><dd>{chosen?.name || "Not chosen"}</dd></div>
+                    <div className="setup-approval-words"><dt>In your words</dt><dd>{setup.description.trim().slice(0, 180)}{setup.description.trim().length > 180 ? "…" : ""}</dd></div>
+                  </dl>
+                  <label>
+                    When should your team ask you first?
+                    <textarea
+                      rows={2}
+                      maxLength={2000}
+                      value={setup.rules}
+                      onChange={(e) => field("rules", e.target.value)}
+                    />
+                  </label>
+                  <label className="office-check setup-approval-check">
+                    <input
+                      type="checkbox"
+                      checked={approved}
+                      onChange={(e) => setApproved(e.target.checked)}
+                    />
+                    <span>
+                      These facts are correct. My team may use them to prepare
+                      work. Anything sent, posted or charged still needs my
+                      approval.
+                    </span>
+                  </label>
+                </section>
               </>
             )}
+            </div>
             {error && (
               <p className="office-error" role="alert">
                 {error}
@@ -451,15 +492,15 @@ function Setup({
                   </>
                 ) : (
                   <>
-                    {step === 2 ? "Open my teammate" : "Continue"}
+                    {step === 2 ? "Approve and open my office" : "Continue"}
                     <ArrowRight size={17} />
                   </>
                 )}
               </button>
             </div>
             <p className="office-footnote">
-              Start without an account. Verify your email to save your business
-              workspace.
+              No account needed to start. Verify your email later to keep this
+              workspace on any device.
             </p>
           </form>
         </section>
@@ -981,7 +1022,7 @@ export default function MerchantOffice() {
     };
     void run();
     let timer:ReturnType<typeof setTimeout>;
-    const tick=async()=>{if(document.visibilityState==='visible')await run();if(!cancelled){const currentWork=workspaceRef.current;const pending=currentWork?.tasks.some(t=>['queued','working'].includes(t.state))||currentWork?.sites?.some(s=>['queued','designing','publishing'].includes(s.state));timer=setTimeout(tick,pending?4500:18000)}};
+    const tick=async()=>{if(document.visibilityState==='visible')await run();if(!cancelled){const currentWork=workspaceRef.current;const pending=currentWork?.tasks.some(t=>['queued','working'].includes(t.state))||currentWork?.sites?.some(s=>['queued','working'].includes(s.state))||!!currentWork?.businessGuideRun&&['queued','working'].includes(currentWork.businessGuideRun.state);timer=setTimeout(tick,pending?4500:18000)}};
     timer=setTimeout(tick,6000);
     const wake=()=>{if(document.visibilityState==='visible')void run()};document.addEventListener('visibilitychange',wake);window.addEventListener('focus',wake);
     return () => {
@@ -1066,8 +1107,8 @@ export default function MerchantOffice() {
       const b=await api.readyTeam(r.token,id);
       setSelected(b.id);
       await refresh(r.token);
-      setPage("team");
-      setNotice("Your teammate is ready for review. Activate it to prepare work; add live connections when you need them.");
+      navigate("business");
+      setNotice("Your description is saved. Get Sia’s simple setup guide, try a sample record, or review your chosen teammate.");
       if (r.workspace.providers?.cognee)
         void api
           .remember(r.token)
@@ -1115,13 +1156,9 @@ export default function MerchantOffice() {
   }
   const pending =
       (workspace?.tasks.filter((t) => ["queued", "working"].includes(t.state)).length || 0) +
-      (workspace?.sites?.filter((s) => ["queued", "working"].includes(s.state)).length || 0),
-    needsAttention =
-      (workspace?.brain?.snapshot.awaitingOwner || 0) +
-      (workspace?.blueprints.filter((b) => b.state === "proposed").length || 0),
-    completed =
-      (workspace?.tasks.filter((t) => t.state === "completed").length || 0) +
-      (workspace?.sites?.filter((s) => s.state === "published").length || 0);
+      (workspace?.sites?.filter((s) => ["queued", "working"].includes(s.state)).length || 0) +
+      (workspace?.businessGuideRun && ["queued", "working"].includes(workspace.businessGuideRun.state) ? 1 : 0),
+    inactiveTeams = workspace?.blueprints.filter((b) => b.state !== "active").length || 0;
   const recentWork = [
     ...(workspace?.tasks || []).map((value) => ({kind: "task" as const, value, time: value.createdAt})),
     ...(workspace?.sites || []).map((value) => ({kind: "site" as const, value,
@@ -1194,29 +1231,34 @@ export default function MerchantOffice() {
               <Settings size={15} />
             </button>
             <nav aria-label="Business workspace">
-              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading">{group==='daily'?'YOUR DUKAAN':group==='channels'?'CUSTOMER CHANNELS':'YOUR SETUP'}</span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
+              {(['daily','channels','settings'] as const).map(group=><div className="office-nav-group" key={group}><span className="office-nav-heading">{group==='daily'?'Your dukaan':group==='channels'?'Customer channels':'Your setup'}</span>{pages.filter(p=>group==='daily'?['work','team','counter','shop','khata','money','requests','assistant'].includes(p.id):group==='channels'?['customers','whatsapp','marketing','website','orders'].includes(p.id):['connections','business'].includes(p.id)).map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   className={page === id ? "selected" : ""}
                   aria-current={page === id ? "page" : undefined}
                   onClick={() => navigate(id)}
                 >
-                  <Icon size={18} />
-                  {label}
-                  {id === "work" && pending > 0 && <b>{pending}</b>}
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{label}</span>
+                  {id === "work" && pending > 0 && <><b className="nav-badge-running" aria-hidden="true">{pending}</b><span className="office-sr-only">, {pending} running</span></>}
+                  {id === "team" && inactiveTeams > 0 && <><b className="nav-badge-attention" aria-hidden="true">{inactiveTeams}</b><span className="office-sr-only">, {inactiveTeams} not active</span></>}
                 </button>
               ))}</div>)}
             </nav>
             <div className="office-sidebar-bottom">
-              <div className="office-cloud-state">
-                <Cloud size={18} />
+              <div className={`office-cloud-state ${pending > 0 ? "is-working" : ""}`}>
+                <Cloud size={18} aria-hidden="true" />
                 <div>
                   <strong>
                     {workspace.controls?.paused
                       ? "Office paused"
-                      : "Cloud office ready"}
+                      : workspace.controls?.humanTakeover
+                        ? "You’ve taken over"
+                        : pending > 0
+                          ? `${pending} job${pending > 1 ? "s" : ""} running`
+                          : "Cloud office ready"}
                   </strong>
-                  <small>Scheduled work runs while you’re away</small>
+                  <small>Approved jobs keep running after you close this page</small>
                 </div>
               </div>
               <button
@@ -1246,12 +1288,14 @@ export default function MerchantOffice() {
               >
                 <Menu size={22} />
               </button>
-              <span>{pages.find((p) => p.id === page)?.label}</span>
+              <span className="office-topbar-title">{pages.find((p) => p.id === page)?.label}</span>
               <div>
-                <span className="office-live-dot" />
-                {workspace.account?.saved
-                  ? "Saved business workspace"
-                  : "Guest workspace · save to keep"}
+                <span className={`office-live-dot ${workspace.account?.saved ? "" : "is-guest"}`} aria-hidden="true" />
+                <span className="office-topbar-account">
+                  {workspace.account?.saved
+                    ? "Saved workspace"
+                    : "Guest workspace, not saved yet"}
+                </span>
                 <button
                   className="office-icon-button"
                   aria-label="Refresh workspace"
@@ -1277,11 +1321,11 @@ export default function MerchantOffice() {
                 >
                   {workspace.controls?.humanTakeover ? (
                     <>
-                      <Play size={14} /> Resume team
+                      <Play size={14} aria-hidden="true" /> Resume team
                     </>
                   ) : (
                     <>
-                      <Pause size={14} /> Take over
+                      <Pause size={14} aria-hidden="true" /> Take over
                     </>
                   )}
                 </button>
@@ -1317,76 +1361,42 @@ export default function MerchantOffice() {
                 </div>
               )}
               {workspace.controls?.humanTakeover && (
-                <div className="office-notice">
-                  You’re in control. Automatic replies and publishing are
-                  stopped until you resume the team.
+                <div className="office-notice office-takeover-notice">
+                  You’ve taken over. Automatic replies and publishing are
+                  stopped until you choose Resume team at the top.
                 </div>
               )}
               <Suspense fallback={<DeskLoading label="Opening your teammate’s desk"/>}>
               {['counter','shop','khata','money','requests'].includes(page)&&<MerchantOps key={page} page={page as OpsPage} token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={setChoosingTeam} onCatalogue={()=>navigate('business')} onPayments={()=>navigate('connections')} onAsk={askReadyTeam}/>}
               {page === "work" && (
                 <>
-                  <div className="office-heading office-merchant-welcome">
-                    <div>
-                      <span className="office-eyebrow">
-                        YOUR DAY, WITH LESS BUSYWORK
-                      </span>
-                      <h1>Namaste, {workspace.business?.name}.</h1>
-                      <p>
-                        Choose a teammate. Give it work. Come back to a result
-                        you can use.
-                      </p>
-                    </div>
-                    <span className="office-heading-icon">
-                      <Cloud size={29} />
-                    </span>
-                  </div>
-                  <div className="office-summary">
-                    <div>
-                      <span>Saved bills</span>
-                      <strong>{workspace.merchantOps?.summary.bills||0}</strong>
-                    </div>
-                    <div>
-                      <span>Outstanding udhaar</span>
-                      <strong>
-                        ₹{((workspace.merchantOps?.summary.outstandingCreditPaise||0)/100).toLocaleString('en-IN')}
-                      </strong>
-                    </div>
-                    <div>
-                      <span>Unmet customer requests</span>
-                      <strong>{workspace.merchantOps?.summary.unmetRequests||0}</strong>
-                    </div>
-                    <div>
-                      <span>Verified collections</span>
-                      <strong>
-                        ₹
-                        {(
-                          (workspace.brain?.snapshot.verifiedCollectionPaise ||
-                            0) / 100
-                        ).toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-                  </div>
-                  <p className="office-cloud-summary"><Cloud size={15}/>{pending} cloud jobs running <span>·</span>{needsAttention} setups / orders need review <span>·</span>{completed} jobs completed <small>Totals cover saved workspace records.</small></p>
-                  <div className="office-merchant-shortcuts"><button onClick={()=>navigate('counter')}><ShoppingBag size={21}/><span><strong>Make a bill</strong><small>Arjun’s counter</small></span><ArrowRight size={17}/></button><button onClick={()=>navigate('khata')}><BookOpen size={21}/><span><strong>Check udhaar</strong><small>Naina’s ledger</small></span><ArrowRight size={17}/></button><button onClick={()=>navigate('shop')}><Globe size={21}/><span><strong>Share my shop</strong><small>Tara’s storefront</small></span><ArrowRight size={17}/></button></div>
+                  <WorkOverview
+                    workspace={workspace}
+                    busy={!!busy}
+                    onNavigate={navigate}
+                    onOpenTeam={(id) => { setSelected(id); setTask(null); navigate("team"); }}
+                    onShowTeams={() => { const heading = document.getElementById("ready-teams-title"); heading?.scrollIntoView({ behavior: "smooth", block: "start" }); heading?.focus({ preventScroll: true }); }}
+                  />
                   <ReadyTeamGallery workspace={workspace} busy={!!busy} onChoose={openReadyTeam}/>
                   <div className="office-section-heading">
                     <h2>Recent work</h2>
                     <button
+                      type="button"
                       className="office-text"
                       onClick={() => navigate("team")}
                     >
-                      Open my team <ChevronRight size={16} />
+                      Open my AI team <ChevronRight size={16} />
                     </button>
                   </div>
                   {!recentWork.length ? (
                     <section className="office-empty">
-                      <Cloud size={28} />
+                      <Cloud size={28} aria-hidden="true" />
                       <div>
-                        <h3>Your first result starts with a clear job.</h3>
+                        <h3>No results yet.</h3>
                         <p>
-                          Choose a teammate, review its setup, then give it work.
-                          Every result stays in this workspace.
+                          Open a ready team, approve its job and give it a short
+                          task. Finished results are saved here for you to read
+                          and copy.
                         </p>
                       </div>
                     </section>
@@ -1532,32 +1542,34 @@ export default function MerchantOffice() {
                 <>
                   <div className="office-heading">
                     <div>
-                      <span className="office-eyebrow">
-                        BUILT AROUND YOUR WORK
-                      </span>
-                      <h1>Your AI team.</h1>
+                      <h1>Your AI team</h1>
                       <p>
-                        Each team shares your business memory and works within
-                        its own job and permissions.
+                        Every team uses the same approved business facts and
+                        works only within its own job and permissions.
                       </p>
                     </div>
                     <button
-                      className="office-primary"
+                      type="button"
+                      className="office-secondary"
                       onClick={() => navigate("work")}
                     >
-                      <Plus size={16} /> Choose another teammate
+                      <Plus size={16} aria-hidden="true" /> Add a ready team
                     </button>
                   </div>
                   {!current ? (
                     <section className="office-empty">
-                      <Users size={30} />
-                      <h3>Choose your first ready teammate.</h3>
-                      <button
-                        className="office-primary"
-                        onClick={() => navigate("work")}
-                      >
-                        Choose a ready teammate
-                      </button>
+                      <Users size={30} aria-hidden="true" />
+                      <div>
+                        <h3>No team yet.</h3>
+                        <p>Pick one of the 12 ready teams on My work. It starts by preparing drafts for your review.</p>
+                        <button
+                          type="button"
+                          className="office-primary"
+                          onClick={() => navigate("work")}
+                        >
+                          See ready teams
+                        </button>
+                      </div>
                     </section>
                   ) : (
                     <div className="office-team-layout">
@@ -1579,9 +1591,7 @@ export default function MerchantOffice() {
                       </aside>
                       <section className="office-card office-team-detail" key={current.id}>
                         <div className="office-card-head">
-                          <span className="office-eyebrow">
-                            YOUR TEAM BRIEF
-                          </span>
+                          <span className="office-eyebrow">Team brief</span>
                           <Status value={current.state} />
                         </div>
                         <h2>{teamName(current)}</h2>
@@ -1800,13 +1810,11 @@ export default function MerchantOffice() {
                 <>
                   <div className="office-heading">
                     <div>
-                      <span className="office-eyebrow">
-                        YOUR ACCOUNTS. YOUR AUTHORITY.
-                      </span>
-                      <h1>Connect your business.</h1>
+                      <h1>Connections</h1>
                       <p>
-                        Connect the apps your team needs, then approve what it
-                        may do.
+                        Connect only the accounts a team needs. A connected
+                        account does nothing until you turn on its actions in
+                        that team’s desk.
                       </p>
                     </div>
                   </div>
@@ -1946,17 +1954,20 @@ export default function MerchantOffice() {
                 <>
                   <div className="office-heading">
                     <div>
-                      <span className="office-eyebrow">ONE BUSINESS BRAIN</span>
-                      <h1>Your team knows what you approve.</h1>
+                      <h1>Business &amp; memory</h1>
                       <p>
-                        Update your facts as your business changes. Your teams
-                        will ask for a fresh review.
+                        What your teams know about your business, where it came
+                        from, and what they may use. Changing your facts pauses
+                        affected teams until you review them again.
                       </p>
                     </div>
                   </div>
+                  <Suspense fallback={<DeskLoading/>}><BusinessStart token={token!} workspace={workspace} onChange={()=>refresh()} onChoose={openReadyTeam} onOpenTask={id=>{setSelected(id);sessionStorage.setItem("kaamset_selected_teammate",id);setTask(null);navigate("team")}}/></Suspense>
+                  <details className="business-optional-setup"><summary>Edit your business description</summary>
                   <section className="office-card">
+                    <p className="business-pause-note">Saving changed facts pauses the teams that use them. Review each team afterwards and activate it again.</p>
                     <label>
-                      Business playbook
+                      Business description your teams use
                       <textarea
                         rows={12}
                         maxLength={12000}
@@ -1996,18 +2007,17 @@ export default function MerchantOffice() {
                     >
                       Save approved facts <Check size={16} />
                     </button>
-                    <BusinessMemory
-                      token={token}
-                      enabled={!!workspace.providers?.cognee}
-                    />
                   </section>
+                  </details>
+                  <details className="business-optional-setup"><summary>Products, prices and stock for bills and quotes</summary>
                   <Catalogue
                     token={token}
                     workspace={workspace}
                     ensureToken={async () => token!}
                     onChange={() => refresh()}
                   />
-                  <SharedBrain workspace={workspace} />
+                  </details>
+                  <section className="office-card"><BusinessMemory token={token} enabled={!!workspace.providers?.cognee}/></section>
                   <section className="office-card">
                     <h3>Workspace & account</h3>
                     <p>
