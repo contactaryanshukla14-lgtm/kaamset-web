@@ -48,6 +48,7 @@ import { memberCharacter, teamName, websiteStageName } from "./team-identity";
 import { BusinessMemory, ContentStudio, VoiceInput } from "./OwnerTools";
 import {LanguagePicker,useLanguage} from './Language';
 import SiaAssistant,{showSia} from './SiaAssistant';
+import {connectionProblemMessage,needsFreshConnection} from './connection-help';
 import {AssetPicker,SavedBusinessAssets} from './BusinessAssets';
 import type {BusinessAssetInput} from './api';
 import {
@@ -1082,13 +1083,13 @@ const {t:localize}=useLanguage();
     const attempt = callback || sessionStorage.getItem(connectionAttemptKey);
     if (!attempt || !["instagram", "gmail", "googlecalendar", "googlesheets"].includes(attempt)) return;
     sessionStorage.removeItem(connectionAttemptKey);
-    if (callback) { params.delete("connected"); history.replaceState({}, "", `${location.pathname}${params.size ? `?${params}` : ""}`); }
+    if (callback) { for(const key of ['connected','status','connected_account_id','connectedAccountId','appName'])params.delete(key); history.replaceState({}, "", `${location.pathname}${params.size ? `?${params}` : ""}`); }
     void act("Checking your returned connection", async () => {
       const result = await api.refreshConnection(token!, attempt);
       await refresh();
       setNotice((result as {status?: string}).status === "connected"
         ? "Account connected. Review its permissions in the relevant desk before enabling actions."
-        : "Account authorization is not finished. Choose Continue connection to start a fresh authorization, or check again after completing it.");
+        : connectionProblemMessage(result.problem)||"Account authorization is not finished. Complete the permission screen, then check the connection.");
     });
   }, [!!workspace, page]);
   useEffect(() => {
@@ -1168,7 +1169,15 @@ const {t:localize}=useLanguage();
     const limit=Number(sessionStorage.getItem(`kaamset_connection_wait_${id}`)||'0');
     if(Date.now()<limit){showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.');return;}
     await act(`Opening ${title} connection`, async () => {
-      if (restart) await api.disconnect(token!, id);
+      if (restart) {
+        // Consent can finish in another tab while this view still looks pending.
+        // Verify before revoking an old attempt so a completed account is preserved.
+        const checked=await api.refreshConnection(token!,id);
+        if(checked.status==='connected'){
+          await refresh();setNotice('Account connected. Review its permissions in the relevant desk before enabling actions.');return;
+        }
+        await api.disconnect(token!, id);
+      }
       const r = await api.connect(token!, id);
       sessionStorage.setItem(pageKey, "connections");
       sessionStorage.setItem(connectionAttemptKey, id);
@@ -1364,7 +1373,7 @@ const {t:localize}=useLanguage();
               )}
               {notice && (
                 <div className="office-notice" role="status">
-                  {notice}
+                  {t(notice)}
                   <button
                     aria-label={localize("Dismiss notice")}
                     onClick={() => setNotice("")}
@@ -1853,6 +1862,8 @@ const {t:localize}=useLanguage();
                       const connected = workspace.connections.find(
                         (c) => c.toolkit === id,
                       );
+                      const restart=needsFreshConnection(connected);
+                      const problem=connectionProblemMessage(connected?.problem);
                       return (
                         <article key={id} className="office-card">
                           <span className={`office-app-icon app-${id}`}>
@@ -1863,16 +1874,17 @@ const {t:localize}=useLanguage();
                           <Status
                             value={connected?.status || "not_connected"}
                           />
+                          {problem&&<p className="office-error" role="alert">{t(problem)}</p>}
                           <div className="office-actions">
                             {connected?.status !== "connected" ? (
                               <button
                                 className="office-secondary"
                                 disabled={!!busy}
                                 onClick={() =>
-                                  connectApp(id, title, connected?.status==='needs_attention')
+                                  connectApp(id, title, restart)
                                 }
                               >
-                                <UiText text={connected ? "Continue connection" : "Connect"}/> <ArrowUpRight size={14} />
+                                <UiText text={restart ? "Reconnect" : connected ? "Continue connection" : "Connect"}/> <ArrowUpRight size={14} />
                               </button>
                             ) : (
                               <>
@@ -1891,11 +1903,13 @@ const {t:localize}=useLanguage();
                               </>
                             )}
                             {connected && <button className="office-secondary" disabled={!!busy} onClick={() => act("Checking app connection", async () => {
-                              const result = await api.refreshConnection(token!, id) as {status?: string};
+                              const result = await api.refreshConnection(token!, id);
                               await refresh();
-                              setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : `${title} still needs authorization. Choose Continue connection to try again.`);
+                              setNotice(result.status === "connected" ? `${title} is connected. Enable approved actions in its desk.` : connectionProblemMessage(result.problem)||"Account authorization is not finished. Complete the permission screen, then check the connection.");
                             })}><UiText text={"Check connection"}/></button>}
+                            {id!=='instagram'&&connected?.status==='pending'&&!restart&&<button className="office-text" disabled={!!busy} onClick={()=>connectApp(id,title,true)}><UiText text="Start fresh"/></button>}
                           </div>
+                          {id==='googlesheets'&&connected?.status!=='connected'&&<details className="instagram-recovery"><summary>{t('Trouble connecting Google Sheets?')}</summary><p>{t('Use the Google account that can access your spreadsheet. Complete the permission screen and return here to check the connection. If you declined access or the link expired, start fresh.')}</p><p>{t('If Google or your company blocks the app, follow the displayed guidance or ask your Google Workspace administrator to allow it.')}</p></details>}
                           {id==='instagram'&&connected?.status!=='connected'&&<details className="instagram-recovery"><summary>{t('Trouble connecting Instagram?')}</summary><p>{t('Instagram Business or Creator accounts are supported. A 429 comes from Instagram limiting sign-in attempts. Repeated retries can prolong the problem.')}</p><a href="https://www.instagram.com/" target="_blank" rel="noreferrer">{t('Open Instagram to check your account')}</a><button type="button" className="office-text" onClick={()=>{sessionStorage.setItem('kaamset_connection_wait_instagram',String(Date.now()+15*60000));showSia('instagram_limit','Instagram has limited sign-in attempts. Wait before trying again. You can continue setting up the rest of your business.')}}>{t('Instagram showed “Too many requests”')}</button>{connected&&<button type="button" className="office-text" disabled={!!busy} onClick={()=>{if(window.confirm(t('Start a new Instagram connection? Use this only after the old link expires or Instagram allows sign-in again.')))void connectApp(id,title,true)}}>{t('Start fresh')}</button>}<small>{t('KaamSet pauses retries for 15 minutes when you report this error. Instagram may require longer. Check connection first if consent already finished.')}</small></details>}
                           {connected?.identity && (
                             <small>@{connected.identity.username}</small>

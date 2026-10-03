@@ -350,7 +350,7 @@ export const api = {
   connect: (token: string, toolkit: string) =>
     request<{ url: string }>(`/connections/${toolkit}`, "POST", token),
   refreshConnection: (token: string, toolkit: string) =>
-    request(`/connections/${toolkit}/refresh`, "POST", token),
+    request<{toolkit:string;status:string;problem?:import('./connection-help').ConnectionProblem}>(`/connections/${toolkit}/refresh`, "POST", token),
   disconnect: (token: string, toolkit: string) =>
     request(`/connections/${toolkit}`, "DELETE", token),
   readiness: () =>
@@ -485,6 +485,7 @@ export type WorkspaceState = {
   connections: {
     toolkit: string;
     status: string;
+    problem?:import('./connection-help').ConnectionProblem;
     authorizationCreatedAt?:string;
     authorizationOpenedAt?:string;
     identity?: { username: string; accountType: string };
