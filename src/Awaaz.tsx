@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {ArrowLeft, ArrowRight, Check, CheckCircle2, ChevronDown, Cloud, Crown, FileCheck2, Headphones, LockKeyhole, Phone, ShieldCheck, Sparkles, X} from 'lucide-react';
 import {LanguagePicker,UiText} from './Language';
 import './awaaz.css';
@@ -23,6 +23,7 @@ function AwaazCharacter(){return <div className="awaaz-avatar" role="img" aria-l
 
 export default function Awaaz(){
  const gate=useRef<HTMLDialogElement>(null),[view,setView]=useState<'result'|'transcript'>('result');
+ useEffect(()=>{const previous=document.title;document.title='Awaaz · Premium calling | KaamSet';return()=>{document.title=previous;};},[]);
  function premium(){gate.current?.showModal();}
  return <div className="awaaz-page">
   <header className="awaaz-header"><a className="awaaz-brand" href="/"><img src="/kaamset-mark.svg" alt=""/><span>Kaam<span>Set</span></span></a><a href="/" className="awaaz-back"><ArrowLeft size={15}/><UiText text="Back to my team"/></a><LanguagePicker/></header>
