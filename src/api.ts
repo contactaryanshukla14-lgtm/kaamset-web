@@ -246,8 +246,10 @@ export const api = {
       undefined,
       { accepted: true, slotId },
     ),
-  channel: (token: string, channel: string, enabled: boolean) =>
-    request(`/channels/${channel}`, "POST", token, { enabled }),
+  channel: (token: string, channel: string, enabled: boolean, assignment?:{blueprintId:string;revision:number}) =>
+    request(`/channels/${channel}`, "POST", token, { enabled, assignment }),
+  startChannel: (token:string,channel:string,revision?:number) =>
+    request(`/channels/${channel}/start`,"POST",token,{approved:true,revision}),
   whatsapp: (token: string) =>
     request<WhatsAppState>("/whatsapp", "GET", token),
   whatsappSales: (token: string) =>
@@ -260,8 +262,8 @@ export const api = {
     request(`/whatsapp/sales/conversations/${encodeURIComponent(id)}/reply`, "POST", token, {
       text, approved: true, requestKey,
     }),
-  whatsappAction: (token: string, action: string) =>
-    request(`/whatsapp/${action}`, "POST", token),
+  whatsappAction: (token: string, action: string, assignment?:{blueprintId:string;revision:number}) =>
+    request(`/whatsapp/${action}`, "POST", token, assignment?{assignment}:undefined),
   speech: (token: string, audio: string, mime: string) =>
     request<{ transcript: string; language_code: string | null }>(
       "/speech",
@@ -477,7 +479,7 @@ export type WorkspaceState = {
   whatsappLinked?: boolean;
   channels?: Record<
     string,
-    { ready: boolean; enabled: boolean; error?: string }
+    { ready: boolean; enabled: boolean; error?: string;speakerBlueprintId?:string;lastScanAt?:string;lastMessageAt?:string }
   >;
   inbox?: {
     id: string;
@@ -645,6 +647,7 @@ export type WhatsAppSalesSetup = {
   blueprintId: string;
   language: "auto" | "en" | "hi" | "hinglish";
   tone: "friendly" | "professional";
+  replyOutsideQuietHours?: boolean;
   deliveryArea: string | null;
   discountLimitPercent: number;
   ownerHelp: string[];

@@ -35,6 +35,7 @@ function SalesRules({ teams, current, busy, onSave }: {
   const defaults = (): WhatsAppSalesSetup => ({
     approved: true, blueprintId: current?.blueprintId || teams.at(-1)?.id || "",
     language: current?.language || "auto", tone: current?.tone || "friendly",
+    replyOutsideQuietHours: current?current.replyOutsideQuietHours===true:true,
     deliveryArea: current?.deliveryArea || null, discountLimitPercent: current?.discountLimitPercent ?? 0,
     ownerHelp: current?.ownerHelp || ["Complaints, refunds and cancellations", "Missing stock, delivery facts or booking availability", "Discounts and commercial exceptions"],
     followup: current?.followup || { enabled: false, afterMinutes: [1440], quietStart: 21, quietEnd: 9 },
@@ -76,7 +77,7 @@ function SalesRules({ teams, current, busy, onSave }: {
     if (saved) { dirty.current = false; setApproved(false); setServerChanged(false); }
   }
   return <form className="wa-rules" onSubmit={submit}>
-    <div className="wa-section-title"><div><span className="office-eyebrow">ONLY THE RULES THIS JOB NEEDS</span><h3>How should Saathi work for you?</h3></div><Settings2 size={22} /></div>
+    <div className="wa-section-title"><div><span className="office-eyebrow">ONLY THE RULES THIS JOB NEEDS</span><h3>How should Aarav work for you?</h3></div><Settings2 size={22} /></div>
     {serverChanged && <div className="wa-approval-summary" role="status"><div><strong>Your saved sales rules changed.</strong><p>Your edits are preserved. Reload the latest rules before approving another change.</p><button type="button" className="office-text" disabled={busy} onClick={reload}>Reload saved rules</button></div></div>}
     <fieldset className="wa-rules-fields" disabled={busy}>
     <div className="office-form-row">
@@ -104,9 +105,9 @@ function SalesRules({ teams, current, busy, onSave }: {
         <p className="wa-help">Milan stops reminders after verified payment, customer opt-out or owner takeover.</p>
       </div>}
     </fieldset>
-    <fieldset className="wa-rule-group"><legend>WhatsApp sending hours · India time</legend><div className="office-form-row">{(["quietStart", "quietEnd"] as const).map((key) => <label key={key}>{key === "quietStart" ? "Quiet hours begin" : "Resume automatic sending at"}<select value={draft.followup[key]} onChange={(e) => edited({ ...draft, followup: { ...draft.followup, [key]: Number(e.target.value) } })}>{Array.from({ length: 24 }, (_,h) => <option key={h} value={h}>{String(h).padStart(2,"0")}:00 IST</option>)}</select></label>)}</div><p className="wa-help">Automatic and scheduled messages wait during your quiet hours.{draft.followup.quietStart === draft.followup.quietEnd && " Equal times mean no quiet period."}</p></fieldset>
+    <fieldset className="wa-rule-group"><legend>WhatsApp sending hours · India time</legend><label className="office-check"><input type="checkbox" checked={draft.replyOutsideQuietHours===true} onChange={e=>edited({...draft,replyOutsideQuietHours:e.target.checked})}/><span>Answer customer enquiries 24×7, including during quiet hours</span></label><div className="office-form-row">{(["quietStart", "quietEnd"] as const).map((key) => <label key={key}>{key === "quietStart" ? "Quiet hours begin" : "Resume scheduled sending at"}<select value={draft.followup[key]} onChange={(e) => edited({ ...draft, followup: { ...draft.followup, [key]: Number(e.target.value) } })}>{Array.from({ length: 24 }, (_,h) => <option key={h} value={h}>{String(h).padStart(2,"0")}:00 IST</option>)}</select></label>)}</div><p className="wa-help">Payment reminders and scheduled messages wait during quiet hours. {draft.replyOutsideQuietHours?'Replies to customer enquiries can continue.':'Customer replies also wait.'}{draft.followup.quietStart === draft.followup.quietEnd && " Equal times mean no quiet period."}</p></fieldset>
     <div className="wa-summary-option"><label className="office-check"><input type="checkbox" checked={draft.summary.enabled} onChange={(e) => edited({ ...draft, summary: { ...draft.summary, enabled: e.target.checked } })} /><span>Prepare my daily summary in this workspace</span></label>{draft.summary.enabled && <label>India time<input type="time" value={draft.summary.at} required onChange={(e) => edited({ ...draft, summary: { ...draft.summary, at: e.target.value } })} /></label>}</div>
-    <div className="wa-approval-summary"><ShieldCheck size={21} /><div><strong>Review the job before it goes live</strong><p>Tara handles enquiries and asks customers to accept an exact quote. Chotu requests and verifies Paytm payment. {draft.followup.enabled ? "Milan follows your reminder schedule." : "No automatic payment reminders."} Sending follows your quiet hours. Missing facts and commercial exceptions come to you. A payment is separate from delivery or fulfilment.</p></div></div>
+    <div className="wa-approval-summary"><ShieldCheck size={21} /><div><strong>Review the job before it goes live</strong><p>Aarav handles enquiries from approved facts. Quotes and Paytm requests run only if those modules are configured and ready. {draft.followup.enabled ? "Milan follows your approved reminder schedule." : "No automatic payment reminders."} Missing facts and commercial exceptions come to you. A payment is separate from fulfilment.</p></div></div>
     <label className="office-check"><input type="checkbox" checked={approved} disabled={serverChanged} onChange={(e) => setApproved(e.target.checked)} /><span>I approve these reply, payment and follow-up rules for my business.</span></label>
     </fieldset>
     <button className="office-primary" disabled={busy || serverChanged || !approved || !validTeam || !validReminders || !validHelp || !validArea || !validDiscount || !validSummary}>{busy ? <LoaderCircle size={16} className="spin" /> : <Check size={16} />} Save approved job rules</button>
@@ -120,22 +121,21 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   const [wa, setWa] = useState<WhatsAppState | null>(null), [sales, setSales] = useState<WhatsAppSalesState>(workspace.whatsappSales || empty);
   const [busy, setBusy] = useState(""), [error, setError] = useState(""), [readError, setReadError] = useState(""), [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState(""), [search, setSearch] = useState(""), [filter, setFilter] = useState("all"), [reply, setReply] = useState("");
-  const [editing, setEditing] = useState(false), [liveConsent, setLiveConsent] = useState(false);
+  const [editing, setEditing] = useState(false), [liveConsent, setLiveConsent] = useState(false),[enquiryConsent,setEnquiryConsent]=useState(false),[enquiryAlwaysOn,setEnquiryAlwaysOn]=useState(true);
   const actionInFlight = useRef(false), chat = useRef<HTMLDivElement>(null);
   const readSequence = useRef(0), tokenRef = useRef(token);
   tokenRef.current = token;
   const replyAttempt = useRef<{ conversationId: string; text: string; key: string } | null>(null);
   const teams = workspace.blueprints.filter((b) => b.plan.skills.includes("whatsapp_enquiries"));
   const assigned = teams.find((b) => b.id === sales.settings?.blueprintId);
-  const missingSkills = assigned ? [
-    ["order_capture", "Prepare approved quotes and capture orders"],
-    ["paytm_request", "Request and verify Paytm payments"],
-    ...(sales.settings?.followup.enabled ? [["whatsapp_sales_followup", "Follow up on unpaid accepted orders"]] : []),
+  const missingSkills = assigned&&sales.settings?.followup.enabled ? [
+    ["paytm_request", "Request and verify Paytm payments"],["whatsapp_sales_followup", "Follow up on unpaid accepted orders"],
   ].filter(([skill]) => !assigned.plan.skills.includes(skill)).map(([,description]) => description) : [];
   const connected = wa?.state === "connected", enabled = !!wa?.salesAutoReplyEnabled;
   const hasPaytm = !!workspace.paymentSetup?.configured, hasOffers = !!workspace.commerce?.offers.length;
+  const needsPaytm=!!assigned?.plan.skills.includes('paytm_request'),needsOffers=!!assigned?.plan.skills.includes('order_capture');
   const controlled = !!workspace.controls?.humanTakeover || !!workspace.controls?.paused;
-  const running = enabled && connected && !controlled && assigned?.state === "active";
+  const running = enabled && connected && !controlled && assigned?.state === "active" && !!workspace.channels?.whatsapp?.enabled && !!workspace.channels.whatsapp.ready && !workspace.channels.whatsapp.error && (!workspace.channels.whatsapp.speakerBlueprintId||workspace.channels.whatsapp.speakerBlueprintId===assigned.id) && workspace.limits.modelsRemaining>0 && workspace.limits.toolsRemaining>0;
   const current = sales.conversations.find((c) => c.id === selected);
   const rows = sales.conversations.filter((c) => (filter === "all" || c.stage === filter) &&
     `${c.customerName} ${c.recipient}`.toLowerCase().includes(search.toLowerCase())).sort((a,b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -145,7 +145,7 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   const pendingActions = currentOutbox.filter((o) => ["uncertain", "owner_needed"].includes(o.state));
   const queuedReplies = currentOutbox.filter((o) => o.kind !== "payment_followup" && ["pending", "sending"].includes(o.state));
   const speaker = workspace.blueprints.find((b) => b.id === current?.speakerBlueprintId);
-  const speakerName = speaker?.teamIdentity?.lead || "Tara";
+  const speakerName = speaker?.teamIdentity?.lead || "Aarav";
   const pairing = wa && ["pairing", "qr", "connecting", "reconnecting"].includes(wa.state);
   const showPairingQr = wa?.state === "qr" && !!wa.qr;
   const pairingError = pairing ? undefined : wa?.error && wa.canLink && /qr|pairing|expired|timed out/i.test(wa.error)
@@ -209,39 +209,33 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
   async function goLive() {
     await act("Checking and starting your WhatsApp team", async () => {
       if (!assigned || !liveConsent || !token || missingSkills.length) return;
-      let enabledForCheck = false;
-      try {
-        if (!enabled) { await api.whatsappAction(token, "enable"); enabledForCheck = true; }
-        const checked = await api.recheckTeammate(token, assigned);
-        if (checked.feasibility.state !== "ready_to_test") throw new Error(checked.feasibility.blockers.join(" ") || "Review the remaining team setup before going live.");
-        await api.teammateControl(token, checked, "activate");
-        setLiveConsent(false);
-      } catch (error) {
-        if (enabledForCheck) {
-          try { await api.whatsappAction(token, "disable"); }
-          catch { throw new Error(`${error instanceof Error ? error.message : "Activation failed."} Automatic reply status could not be confirmed. Refresh the desk and pause WhatsApp before retrying.`); }
-        }
-        throw error;
-      }
+      await api.whatsappAction(token,"enable",{blueprintId:assigned.id,revision:assigned.revision});setLiveConsent(false);
     });
   }
+  async function startEnquiries(){await act('Starting Aarav’s enquiry replies',async()=>{
+    if(!token||!enquiryConsent)return;
+    const old=workspace.blueprints.find(b=>b.presetId==='saathi'),team=await api.readyTeam(token,'saathi',{whatsapp:true},old?.revision),previous=sales.settings;
+    await api.configureWhatsAppSales(token,{approved:true,blueprintId:team.id,language:previous?.language||'auto',tone:previous?.tone||'friendly',replyOutsideQuietHours:enquiryAlwaysOn,deliveryArea:previous?.deliveryArea||null,discountLimitPercent:0,ownerHelp:previous?.ownerHelp||['Complaints, refunds and cancellations','Missing stock, delivery facts or booking availability','Discounts and commercial exceptions'],followup:{enabled:false,afterMinutes:[],quietStart:previous?.followup.quietStart??22,quietEnd:previous?.followup.quietEnd??7},summary:{enabled:false,at:'19:00'}});
+    await api.whatsappAction(token,'enable',{blueprintId:team.id,revision:team.revision});setEnquiryConsent(false);
+  })}
 
   return <section className="wa-desk">
-    <div className="office-heading wa-heading"><div><span className="office-eyebrow">SAATHI · WHATSAPP SALES & PAYMENTS</span><h1>From “Kitna hai?” to paid.</h1><p>Your customer talks to one teammate. Your sales team does the work behind the scenes.</p></div><PixelTeammate id="tara" state={enabled && connected && !controlled ? "active" : "idle"} /></div>
+    <div className="office-heading wa-heading"><div><span className="office-eyebrow">SALES CIRCLE · WHATSAPP</span><h1>Customer enquiries, handled.</h1><p>Aarav replies from your business facts. Add quotes, bookings and payments when you need them.</p></div><PixelTeammate id="tara" name="Aarav" state={running ? "active" : "idle"} /></div>
     {(error || readError) && <div className="office-error" role="alert"><span>{error || `Could not refresh the desk. ${readError}`}</span><button aria-label="Dismiss message" onClick={() => { setError(""); setReadError(""); }}>×</button></div>}
     {busy && <div className="office-busy" role="status"><LoaderCircle size={16} className="spin" />{busy}</div>}
     <div className="wa-health">
       <div><span className={`wa-connection-icon ${connected ? "is-connected" : ""}`}>{connected ? <Wifi size={20} /> : <WifiOff size={20} />}</span><div><strong>{connected ? "WhatsApp connected" : pairing ? "Pair your account" : wa?.canReconnect ? "Reconnect required" : "Connect WhatsApp"}</strong><small>{wa?.phone || (loaded ? "Your own isolated linked-device session" : "Checking your cloud session…")}</small></div></div>
-      <div><Status value={enabled && connected && !controlled && assigned?.state === "active" ? "active" : "paused"}>{enabled && connected && !controlled && assigned?.state === "active" ? "Teammate is live" : "Automatic replies paused"}</Status><button className="office-icon-button" aria-label="Refresh WhatsApp desk" disabled={!!busy} onClick={() => act("Refreshing your desk", read)}><RefreshCw size={16} /></button></div>
+      <div><Status value={running ? "active" : "paused"}>{running ? "Teammate is live" : "Automatic replies paused"}</Status><button className="office-icon-button" aria-label="Refresh WhatsApp desk" disabled={!!busy} onClick={() => act("Refreshing your desk", read)}><RefreshCw size={16} /></button></div>
     </div>
     <div className="wa-journey" aria-label="Customer journey">{["Enquiry", "Approved quote", "Customer accepts", "Paytm checkout", "Verified payment"].map((step,i) => <div key={step}><span>{String(i+1).padStart(2,"0")}</span>{step}{i < 4 && <ChevronRight size={15} />}</div>)}</div>
 
-    <details className="office-card wa-setup" open={!sales.settings || !connected || !hasPaytm || !hasOffers || assigned?.state !== "active" || editing} onToggle={(e) => { if (!e.currentTarget.open) setEditing(false); }}>
+    {!running&&<section className="office-card wa-enquiry-launch"><span className="office-eyebrow">START WITH THE JOB YOU NEED</span><h2>Let Aarav answer your customer enquiries.</h2><p>Use your paired WhatsApp and approved business facts. No Paytm credentials, catalogue or calendar are needed for routine replies. Orders, payments and follow-ups stay off in this starter job.</p><label className="office-check"><input type="checkbox" checked={enquiryAlwaysOn} onChange={e=>{setEnquiryAlwaysOn(e.target.checked);setEnquiryConsent(false)}}/><span>Answer incoming customer enquiries 24×7. Scheduled reminders still respect quiet hours.</span></label><label className="office-check"><input type="checkbox" checked={enquiryConsent} onChange={e=>setEnquiryConsent(e.target.checked)}/><span>I approve Aarav’s enquiry-only job. Use my approved facts; ask me about discounts, complaints, uncertain stock or bookings.</span></label><button className="office-primary" disabled={!!busy||!connected||controlled||!workspace.briefApproved||!enquiryConsent||!!readError} onClick={()=>void startEnquiries()}><Play size={16}/>Start enquiry replies</button>{!connected&&<small>Pair your WhatsApp below first. No payment account is required.</small>}</section>}
+    <details className="office-card wa-setup" open={!connected || editing} onToggle={(e) => { if (!e.currentTarget.open) setEditing(false); }}>
       <summary><div><Settings2 size={19} /><strong>{sales.settings && connected && hasPaytm && hasOffers ? "Your setup & approved rules" : "Let’s get your sales team ready"}</strong></div><span>3 simple steps <ChevronRight size={16} /></span></summary>
       <div className="wa-setup-body">
         <div className="wa-setup-steps">
           <article><span className={`wa-step-number ${workspace.briefApproved && hasOffers ? "done" : ""}`}>{workspace.briefApproved && hasOffers ? <Check size={16} /> : "1"}</span><h3>Tell us your business</h3><p>{hasOffers ? `${workspace.commerce!.offers.length} approved offers. Review stock, prices and business hours.` : "Add your products or services, approved prices, stock and hours."}</p><button className="office-text" onClick={onBusiness}>Edit business facts <ArrowRight size={14} /></button></article>
-          <article><span className={`wa-step-number ${connected && hasPaytm ? "done" : ""}`}>{connected && hasPaytm ? <Check size={16} /> : "2"}</span><h3>Connect your accounts</h3><p>Scan WhatsApp’s QR. Connect Paytm once for this business.</p><Status value={hasPaytm ? "connected" : "needs_setup"}>{hasPaytm ? `Paytm ${workspace.paymentSetup?.mode === "production" ? "live mode" : "test mode"}` : "Paytm needs setup"}</Status></article>
+          <article><span className={`wa-step-number ${connected ? "done" : ""}`}>{connected ? <Check size={16} /> : "2"}</span><h3>Pair WhatsApp</h3><p>Scan WhatsApp’s QR to start enquiries. Paytm is optional unless you enable payment requests.</p><Status value={hasPaytm ? "connected" : "optional"}>{hasPaytm ? `Paytm ${workspace.paymentSetup?.mode === "production" ? "live mode" : "test mode"}` : "Payments · add when needed"}</Status></article>
           <article><span className={`wa-step-number ${sales.settings && assigned?.state === "active" && enabled ? "done" : ""}`}>{sales.settings && assigned?.state === "active" && enabled ? <Check size={16} /> : "3"}</span><h3>Approve & go live</h3><p>Review who replies, when to follow up and when the team asks you.</p>{!teams.length ? <button className="office-text" onClick={onBuild}>Set up Aarav <ArrowRight size={14} /></button> : <button className="office-text" onClick={() => onTeam(assigned?.id || teams.at(-1)!.id)}>Review my team <ArrowRight size={14} /></button>}</article>
         </div>
         <section className="wa-pairing">
@@ -259,7 +253,7 @@ export default function WhatsAppSalesDesk({ token, workspace, onChange, onBuild,
 
     {!!sales.settings && <section className="office-card wa-live-control">
       <div><strong>{assigned ? teamName(assigned) : "Select a WhatsApp team"}</strong><p>{running ? "Routine replies follow your approved business facts and rules." : "Your rules are saved. Complete the setup, then start your team."}</p>{controlled && <p className="wa-form-error">Your whole office is paused or in owner takeover. Resume it from the top bar first.</p>}{!!missingSkills.length && <div className="wa-form-error"><p>This team still needs these jobs before it can handle the full sale:</p><ul>{missingSkills.map((s) => <li key={s}>{s}</li>)}</ul><button className="office-text" onClick={onBuild}>Configure Aarav’s live modules <ArrowRight size={14} /></button></div>}</div>
-      {running ? <button className="office-secondary" disabled={!!busy} onClick={() => act("Pausing WhatsApp automation", () => api.whatsappAction(token!,"disable"))}><Pause size={16} /> Pause WhatsApp</button> : <div><label className="office-check"><input type="checkbox" checked={liveConsent} onChange={(e) => setLiveConsent(e.target.checked)} /><span>Let this team handle new eligible customer messages using my approved rules.</span></label><button className="office-primary" disabled={!!busy || !assigned || !connected || !hasPaytm || !hasOffers || !liveConsent || controlled || !!readError || !!missingSkills.length} onClick={goLive}><Play size={16} /> Check setup & go live</button></div>}
+      {running ? <button className="office-secondary" disabled={!!busy} onClick={() => act("Pausing WhatsApp automation", () => api.whatsappAction(token!,"disable"))}><Pause size={16} /> Pause WhatsApp</button> : <div><label className="office-check"><input type="checkbox" checked={liveConsent} onChange={(e) => setLiveConsent(e.target.checked)} /><span>Let this team handle new eligible customer messages using my approved rules.</span></label><button className="office-primary" disabled={!!busy || !assigned || !connected || needsPaytm&&!hasPaytm || needsOffers&&!hasOffers || !liveConsent || controlled || !!readError || !!missingSkills.length} onClick={goLive}><Play size={16} /> Check setup & go live</button></div>}
     </section>}
     {assigned?.team?.length ? <div className="wa-roster" aria-label="Saathi specialists">{assigned.team.map((m) => <article key={m.id}><PixelTeammate id={memberCharacter(m)} /><div><strong>{m.name}</strong><small>{m.role}</small></div></article>)}</div> : null}
     <div className="wa-cloud-note"><Cloud size={16} /><span>Authorised work continues in the cloud while your browser is closed. Connection loss or an owner decision pauses the relevant work.</span></div>
