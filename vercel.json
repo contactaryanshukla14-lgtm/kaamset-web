@@ -1,1 +1,1 @@
-{"rewrites":[{"source":"/((?!assets/).*)","destination":"/index.html"}]}
+{"rewrites":[{"source":"/((?!assets/|submission/).*)","destination":"/index.html"}]}

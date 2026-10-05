@@ -1,0 +1,82 @@
+{
+  "verifiedDate": "2026-10-05",
+  "frontendCommit": "f6fc2a4c8ec0ca366d2aa0322f1da7c1cb109d96",
+  "backendCommit": "02ca9d18109d3b8d7a3bdc647bfd9400789d60cc",
+  "cleanBundle": {
+    "frontendBuild": "passed",
+    "backendBuild": "passed",
+    "unitTests": {
+      "passed": 2699,
+      "failed": 0
+    },
+    "foundationMigrationsApplied": 56,
+    "databaseReleaseChecks": {
+      "passed": 19,
+      "failed": 0
+    },
+    "apiHealth": "ok",
+    "apiReadiness": "ready; restricted app and reviewer databases connected",
+    "productionDependencyAudit": {
+      "vulnerabilities": 0
+    },
+    "developmentDependencyAudit": {
+      "vulnerabilities": 7,
+      "boundary": "Known development-tool alerts. Do not expose Vitest UI or development servers to the public."
+    }
+  },
+  "browserChecks": {
+    "canonicalDemo": "Opens without Vercel authentication",
+    "sourceMemory": "Cognee returned exact approved delivery and business source excerpts",
+    "collection": {
+      "teammate": "Milan",
+      "invoice": "DEMO-CAFE-2480",
+      "amountInr": 2480,
+      "result": "Actual model prepared reply and saved a demo payment request",
+      "channel": "simulated",
+      "simulatedPaymentResult": {
+        "state": "paid",
+        "successfulAllocationInr": 2480,
+        "outstandingInr": 0,
+        "ledgerTransactions": 601
+      }
+    },
+    "quote": {
+      "job": "ff9bf09a-cd8e-4af8-a58f-4fbe2e319486",
+      "amountInr": 3180,
+      "model": "gemini-3.7-flash",
+      "inputTokens": 4763,
+      "outputTokens": 252,
+      "boundary": "Recorded one quote; not an all-inclusive delivery-cost measurement"
+    },
+    "cloud": {
+      "job": "81bd3394-32c3-4b37-acd9-0ad8a4fe80c4",
+      "receipt": "49f0686d-2300-4fb3-9be1-4a92b8333b16",
+      "closedWhile": "Cloud worker reading approved records",
+      "merchantTabClosedAt": "2026-10-05T12:05:45.022Z",
+      "reopenedResult": "Completed Milan owner summary with saved receipt",
+      "inputTokens": 5171,
+      "outputTokens": 180,
+      "memoryState": "source_verified"
+    },
+    "privateRecord": {
+      "rows": 8,
+      "change": "DEMO-007 status pending → received",
+      "otherFields": "unchanged; exported CSV compared with original",
+      "boundary": "Owner-reported fictional history; not bank verification"
+    },
+    "website": {
+      "publicUrl": "https://kaamset-web.vercel.app/business/sharma-daily-mart-7ffd65b1",
+      "independentlyOpened": true,
+      "approvedAssets": 3,
+      "preservedSnapshot": "https://kaamset-web.vercel.app/submission/website-example/",
+      "guestLifetime": "Expires 6 October 2026, 17:10 IST"
+    }
+  },
+  "knownLimits": [
+    "Customer channels and payments in Merchant Lab are simulations; no real payment or external message was verified in this run.",
+    "A Riya three-post campaign failed approved-price validation in this session. It is excluded from verified-success claims.",
+    "Live model workers require supported credentials; the clean local API check does not claim credential-free worker operation.",
+    "Guest workspaces and live guest websites expire; the published output is preserved as a labelled static example.",
+    "No paid-pilot economics or human candidate contributions have been inferred."
+  ]
+}
